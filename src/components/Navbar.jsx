@@ -1,62 +1,59 @@
-import React from "react";
-
-const Navbar = () => {
-    return (
-        <nav className="navbar navbar-expand-lg navbar-dark bg-success sticky-top shadow-sm py-3">
-            {" "}
-            <div className="container">
-                <a
-                    className="navbar-brand d-flex align-items-center fw-bold fs-4"
-                    href="/"
-                >
-                    <span
-                        className="bg-white text-success rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm"
-                        style={{ width: "40px", height: "40px" }}
-                    >
-                        Y
-                    </span>
-                    Nubix Market
-                </a>
-
-                <div className="d-none d-md-flex flex-grow-1 mx-5">
-                    {" "}
-                    <div className="input-group">
-                        <input
-                            type="text"
-                            className="form-control rounded-pill ps-4 py-2"
-                            placeholder="Buscar productos..."
-                        />
-                    </div>
-                </div>
-
-                <div className="d-flex align-items-center gap-4">
-                    {" "}
-                    <a
-                        className="text-white text-decoration-none d-none d-md-block fw-medium"
-                        href="/"
-                    >
-                        Inicio
-                    </a>
-                    <a
-                        className="text-white text-decoration-none d-none d-md-block fw-medium"
-                        href="/shop"
-                    >
-                        Tienda
-                    </a>
-                    <a
-                        className="text-white text-decoration-none d-flex align-items-center fw-medium"
-                        href="/login"
-                    >
-                        <i className="bi bi-person fs-4 me-1"></i>
-                        <span className="d-none d-md-inline">Login</span>
-                    </a>
-                    <a className="text-white position-relative" href="/cart">
-                        <i className="bi bi-cart3 fs-3"></i>
-                    </a>
-                </div>
+return (
+    <div style={styles.loginPage}>
+      
+      {/* SECCIÓN 1: NAVBAR (Buscador incluido) */}
+      <nav style={styles.navbar}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ backgroundColor: "white", borderRadius: "50%", padding: "5px", display: "flex" }}>
+               <img src={logoImage} alt="Logo" style={{ height: "20px" }} />
             </div>
-        </nav>
-    );
-};
+            <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>SuperMarket</span>
+          </div>
 
-export default Navbar;
+          <div style={styles.searchContainer}>
+            <span style={{ position: "absolute", left: "10px", color: "white" }}>🔍</span>
+            <input type="text" placeholder="Search for products..." style={styles.searchInput} />
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "25px", alignItems: "center" }}>
+          <span>Home</span>
+          <span>Shop</span>
+          <span>👤 Login</span>
+          <span style={{ fontSize: "1.3rem" }}>🛒</span>
+        </div>
+      </nav>
+
+      {/* SECCIÓN 2: TARJETA DE LOGIN */}
+      <main style={styles.mainContent}>
+        <div style={styles.card}>
+          <div style={{ fontSize: "40px", marginBottom: "10px" }}>🔓</div>
+          <h2 style={{ fontSize: "1.7rem", marginBottom: "10px" }}>Sign in to your account</h2>
+          <p style={{ color: "#6b7280", marginBottom: "30px" }}>
+            Or <span style={{ color: "#22c55e", fontWeight: "600" }}>start your 14-day free trial</span>
+          </p>
+
+          <form>
+            <div style={styles.inputGroup}>
+              <span style={{ position: "absolute", left: "12px", top: "14px" }}>✉️</span>
+              <input type="email" style={styles.input} placeholder="Email address" />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <span style={{ position: "absolute", left: "12px", top: "14px" }}>🔒</span>
+              <input type="password" style={styles.input} placeholder="Password" />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", marginBottom: "20px" }}>
+              <label><input type="checkbox" /> Remember me</label>
+              <a href="#" style={{ color: "#22c55e", textDecoration: "none" }}>Forgot your password?</a>
+            </div>
+
+            <button type="submit" style={styles.submitButton}>Sign in</button>
+          </form>
+        </div>
+      </main>
+
+    </div>
+  );

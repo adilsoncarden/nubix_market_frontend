@@ -1,191 +1,212 @@
-// src/pages/Login.jsx
 import React from "react";
-// Importamos las imágenes que guardaste en assets
 import logoImage from "../assets/logo.png";
-import supermarketImage from "../assets/supermarket.jpg";
 
 function Login() {
   const styles = {
+    // 1. FONDO GENERAL: Verde menta clarito y centrado total
     loginPage: {
       display: "flex",
+      flexDirection: "column", // Para que el Navbar esté arriba y el contenido abajo
       minHeight: "100vh",
       width: "100%",
+      backgroundColor: "#f0fdf4", // El verde clarito de la imagen
+      fontFamily: "'Inter', sans-serif",
     },
-    formColumn: {
-      flex: 1,
-      padding: "40px 60px",
+    // 2. NAVBAR: Barra superior verde
+    navbar: {
       display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
+      justifyContent: "space-between",
+      alignItems: "center",
+      padding: "10px 50px",
+      backgroundColor: "#22c55e", // Verde vibrante
+      color: "white",
+    },
+    navLinks: {
+      display: "flex",
+      gap: "20px",
       alignItems: "center",
     },
-    formContent: {
-      maxWidth: "500px",
-      width: "100%",
-    },
-    imageColumn: {
+    // 3. CONTENEDOR DE LA TARJETA
+    mainContent: {
       flex: 1,
-      backgroundImage: `url(${supermarketImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-      display: "none", 
-    },
-    logoContainer: {
       display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-start", 
-      marginBottom: "70px",
-      width: "600%", 
+      justifyContent: "center",
+      alignItems: "center",
+      padding: "20px",
     },
-    logoImage: {
-      height: "120px",
-      marginBottom: "100px",
+    // 4. LA TARJETA BLANCA (Card)
+    card: {
+      backgroundColor: "white",
+      padding: "40px",
+      borderRadius: "16px",
+      boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
+      width: "100%",
+      maxWidth: "450px",
+      textAlign: "center", // Centra el texto y el icono
+    },
+    iconCircle: {
+      width: "60px",
+      height: "60px",
+      backgroundColor: "#f0fdf4",
+      borderRadius: "50%",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      margin: "0 auto 20px",
+      color: "#22c55e",
+      fontSize: "24px",
+      border: "1px solid #dcfce7"
     },
     title: {
-      fontSize: "2rem",
-      fontWeight: "1000",
-      marginBottom: "10px",
+      fontSize: "1.8rem",
+      fontWeight: "700",
+      color: "#111827",
+      marginBottom: "8px",
     },
     subtitle: {
-      fontSize: "1rem",
-      color: "var(--text-sub)",
+      fontSize: "0.95rem",
+      color: "#6b7280",
       marginBottom: "30px",
     },
     inputGroup: {
+      textAlign: "left",
       marginBottom: "20px",
-    },
-    label: {
-      display: "block",
-      fontWeight: "600",
-      marginBottom: "5px",
+      position: "relative",
     },
     input: {
       width: "100%",
-      padding: "12px 15px",
-      border: `1px solid var(--border-color)`,
-      borderRadius: "8px",
+      padding: "12px 12px 12px 40px", // Espacio para el icono a la izquierda
+      border: "1px solid #e5e7eb",
+      borderRadius: "10px",
       fontSize: "1rem",
+      backgroundColor: "#fff",
+      boxSizing: "border-box", // Evita que el input se salga del borde
     },
     rowBetween: {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
-      marginBottom: "20px",
-    },
-    rememberContainer: {
-      display: "flex",
-      alignItems: "center",
-      gap: "5px",
-      fontSize: "0.9rem",
-    },
-    forgotPassword: {
-      fontSize: "0.9rem",
-      color: "var(--text-sub)",
-      textDecoration: "none",
+      fontSize: "0.85rem",
+      marginBottom: "25px",
     },
     submitButton: {
-      width: "100%",           
-      padding: "12px",        
-      backgroundColor: "#3f6027", 
-      color: "white",       
+      width: "100%",
+      padding: "14px",
+      backgroundColor: "#22c55e", // Verde del botón
+      color: "white",
       border: "none",
-      borderRadius: "8px",
+      borderRadius: "10px",
       fontSize: "1rem",
-      fontWeight: "bold",
+      fontWeight: "600",
       cursor: "pointer",
-      marginTop: "20px",       
-      display: "block",     
-    },
-    socialButtons: {
-      display: "flex",
-      gap: "15px",
-      marginBottom: "30px",
-    },
-    socialButton: {
-      flex: 1,
-      padding: "10px",
-      border: `1px solid var(--border-color)`,
-      borderRadius: "8px",
-      backgroundColor: "white",
+      transition: "background 0.3s",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      gap: "10px",
-      cursor: "pointer",
+      gap: "10px"
     },
-    registerPrompt: {
-      textAlign: "center",
-      fontSize: "1rem",
+    searchContainer: {
+      position: "relative",
+      display: "flex",
+      alignItems: "center",
+      // CAMBIA ESTA LÍNEA:
+      backgroundColor: "rgba(255, 255, 255, 0.2)", 
+      borderRadius: "8px",
+      padding: "5px 15px",
+      width: "500px",
+      marginLeft: "30px",
     },
-    registerLink: {
-      color: "var(--primary-color)",
-      fontWeight: "600",
-      textDecoration: "none",
+    searchInput: {
+      background: "none",
+      border: "none",
+      color: "white",
+      padding: "5px 5px 5px 20px",
+      fontSize: "0.9rem",
+      width: "100%",
+      outline: "none",
+    },
+    searchIcon: {
+      position: "absolute",
+      left: "10px",
+      color: "white",
+      fontSize: "0.8rem"
     },
   };
 
   return (
     <div style={styles.loginPage}>
-      {/* Columna del Formulario */}
-      <div style={styles.formColumn}>
-        <div style={styles.formContent}>
+      {/* Barra de Navegación */}
+      {/* Barra de Navegación */}
+      <nav style={styles.navbar}>
+        {/* Este div agrupa el Logo, el Nombre y el Buscador a la izquierda */}
+        <div style={{ display: "flex", alignItems: "center" }}>
           
-          {/* Logo */}
-          <div style={styles.logoContainer}>
-            <img src={logoImage} alt="NUBIX MARKET" style={styles.logoImage} />
-            <h1 style={{fontSize: '1.2rem', margin: '0', color: 'var(--primary-color)'}}>NUBIX MARKET</h1>
-          </div>
-
-          {/* Título */}
-          <h2 style={styles.title}>Iniciar Sesión</h2>
-          <p style={styles.subtitle}>Ingrese sus credenciales, para navegar por la bodega.</p>
-          
-          <form>
-            {/* Correo */}
-            <div style={styles.inputGroup}>
-              <label htmlFor="email" style={styles.label}>Correo :</label>
-              <input type="email" id="email" style={styles.input} placeholder="Escribe tu correo" />
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ backgroundColor: "white", borderRadius: "50%", padding: "5px", display: "flex" }}>
+              <img src={logoImage} alt="S" style={{ height: "25px" }} />
             </div>
-
-            {/* Contraseña y Olvidaste tu contraseña */}
-            <div style={styles.inputGroup}>
-              <label htmlFor="password" style={styles.label}>Contraseña :</label>
-              <input type="password" id="password" style={styles.input} placeholder="Escribe tu contraseña" />
-            </div>
-
-            {/* Recordar por 30 días y Olvidaste */}
-            <div style={styles.rowBetween}>
-                <div style={styles.rememberContainer}>
-                    <input type="checkbox" id="remember" />
-                    <label htmlFor="remember">Recordar por 30 días</label>
-                </div>
-                <a href="#" style={styles.forgotPassword}>¿Olvidaste tu contraseña?</a>
-            </div>
-
-            {/* Botón Ingresar */}
-            <button type="submit" style={styles.submitButton}>Ingresar</button>
-          </form>
-
-          {/* Botones Sociales */}
-          <div style={styles.socialButtons}>
-            <button style={styles.socialButton}>
-                {/* Puedes usar iconos de react-icons aquí más adelante */}
-                <span>Icon Google</span> Sign in with Google
-            </button>
-            <button style={styles.socialButton}>
-                <span>Icon Apple</span> Sign in with Apple
-            </button>
-          </div>
-
-          {/* Registro */}
-          <p style={styles.registerPrompt}>
-            No tienes cuenta? <a href="#" style={styles.registerLink}>Registrarme</a>
-          </p>
+          <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>SuperMarket</span>
         </div>
-      </div>
 
-      {/* Columna de la Imagen (visible en pantallas grandes) */}
-      <div style={{...styles.imageColumn, display: 'block'}}></div>
+          {/* AQUÍ ESTÁ EL BUSCADOR QUE TE FALTABA */}
+        <div style={styles.searchContainer}>
+            <span style={styles.searchIcon}>🔍</span>
+            <input 
+              type="text" 
+              placeholder="Search for products..." 
+              style={styles.searchInput} 
+            />
+              </div>
+        </div>
+
+        {/* Los links de la derecha se mantienen igual */}
+        <div style={styles.navLinks}>
+          <span>Home</span>
+          <span>Shop</span>
+          <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>👤 Login</span>
+          <span>🛒</span>
+        </div>
+      </nav>
+
+      {/* Contenido Principal con la Tarjeta */}
+      <main style={styles.mainContent}>
+        <div style={styles.card}>
+          {/* Icono del Candado */}
+          <div style={styles.iconCircle}>🔒</div>
+
+          <h2 style={styles.title}>Sign in to your account</h2>
+          <p style={styles.subtitle}>
+            Or <span style={{ color: "#22c55e", cursor: "pointer" }}>start your 14-day free trial</span>
+          </p>
+
+          <form>
+            <div style={styles.inputGroup}>
+              <span style={{ position: "absolute", left: "12px", top: "38px", color: "#9ca3af" }}>✉️</span>
+              <label style={{ fontSize: "0.85rem", color: "#374151", fontWeight: "500" }}>Email address</label>
+              <input type="email" style={styles.input} placeholder="Email address" />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <span style={{ position: "absolute", left: "12px", top: "38px", color: "#9ca3af" }}>🔒</span>
+              <label style={{ fontSize: "0.85rem", color: "#374151", fontWeight: "500" }}>Password</label>
+              <input type="password" style={styles.input} placeholder="Password" />
+              <span style={{ position: "absolute", right: "12px", top: "38px", cursor: "pointer" }}>👁️</span>
+            </div>
+
+            <div style={styles.rowBetween}>
+              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <input type="checkbox" id="remember" />
+                <label htmlFor="remember" style={{ color: "#4b5563" }}>Remember me</label>
+              </div>
+              <a href="#" style={{ color: "#22c55e", textDecoration: "none", fontWeight: "500" }}>Forgot your password?</a>
+            </div>
+
+            <button type="submit" style={styles.submitButton}>
+              <span>🔒</span> Sign in
+            </button>
+          </form>
+        </div>
+      </main>
     </div>
   );
 }
