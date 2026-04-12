@@ -1,0 +1,130 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #f5f7fa;
+}
+
+/* LOGO */
+.logo {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 90px;
+}
+
+/* CONTENEDOR PRINCIPAL */
+.container {
+  display: flex;
+  width: 900px;
+  max-width: 100%;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+/* FORMULARIO */
+.formulario {
+  width: 50%;
+  padding: 40px;
+  text-align: center;
+}
+
+h2 {
+  margin-bottom: 5px;
+}
+
+.sub {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 20px;
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: 0.3s;
+}
+
+input:focus {
+  border-color: #4facfe;
+  box-shadow: 0 0 5px rgba(79,172,254,0.5);
+}
+
+/* BOTÓN */
+button {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #4facfe;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #007bff;
+}
+
+/* TEXTO LOGIN */
+.login {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.login a {
+  color: #4facfe;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* IMAGEN DERECHA */
+.imagen {
+  width: 50%;
+}
+
+.imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.85);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .formulario {
+    width: 100%;
+  }
+
+  .imagen {
+    width: 100%;
+    height: 200px;
+  }
+
+  .logo {
+    width: 70px;
+    top: 10px;
+    left: 10px;
+  }
+}
