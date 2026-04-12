@@ -1,62 +1,26 @@
 import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar"; // Ajusta la ruta si es necesario
+import MainContent from "./components/MainContent";
+import Footer from "./components/Footer";
+import Register from "./pages/Register";
+import "./App.css"; // Archivo CSS para estilos personalizados
 
-const Navbar = () => {
+function App() {
     return (
-        <nav className="navbar navbar-expand-lg navbar-dark bg-success sticky-top shadow-sm py-3">
-            {" "}
-            <div className="container">
-                <a
-                    className="navbar-brand d-flex align-items-center fw-bold fs-4"
-                    href="/"
-                >
-                    <span
-                        className="bg-white text-success rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm"
-                        style={{ width: "40px", height: "40px" }}
-                    >
-                        Y
-                    </span>
-                    Nubix Market
-                </a>
+        // "min-vh-100" asegura que el sitio ocupe toda la pantalla
+        // "d-flex flex-column" ayuda a que el footer se quede abajo si hay poco contenido
+        <div className="min-vh-100 d-flex flex-column">
+            {/* 1. Navegación superior */}
+            <Navbar />
 
-                <div className="d-none d-md-flex flex-grow-1 mx-5">
-                    {" "}
-                    <div className="input-group">
-                        <input
-                            type="text"
-                            className="form-control rounded-pill ps-4 py-2"
-                            placeholder="Buscar productos..."
-                        />
-                    </div>
-                </div>
+            {/* 2. Contenido dinámico (Main) */}
+            <MainContent />
 
-                <div className="d-flex align-items-center gap-4">
-                    {" "}
-                    <a
-                        className="text-white text-decoration-none d-none d-md-block fw-medium"
-                        href="/"
-                    >
-                        Inicio
-                    </a>
-                    <a
-                        className="text-white text-decoration-none d-none d-md-block fw-medium"
-                        href="/shop"
-                    >
-                        Tienda
-                    </a>
-                    <a
-                        className="text-white text-decoration-none d-flex align-items-center fw-medium"
-                        href="/login"
-                    >
-                        <i className="bi bi-person fs-4 me-1"></i>
-                        <span className="d-none d-md-inline">Login</span>
-                    </a>
-                    <a className="text-white position-relative" href="/cart">
-                        <i className="bi bi-cart3 fs-3"></i>
-                    </a>
-                </div>
-            </div>
-        </nav>
+            {/* 3. Pie de página */}
+            <Footer />
+        </div>
     );
-};
+}
 
-export default Navbar;
+export default App;
