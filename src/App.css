@@ -18,3 +18,59 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+:root {
+  --primary-green: #0acf83; 
+  --soft-green-bg: #E0FBEF; 
+}
+
+/* Contenedor que centra todo */
+.login-page-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--soft-green-bg);
+  padding: 40px 20px;
+}
+
+/* Tarjeta Blanca */
+.login-card {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  width: 100%;
+  max-width: 420px;
+  border: none;
+}
+
+.login-link {
+  color: var(--primary-green);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+  color: #08a86a;
+}
+
+/* Botón personalizado */
+.btn-login {
+  background-color: var(--primary-green);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.btn-login:hover {
+  background-color: #08a86a;
+}
+
+/* Estilo para los inputs de Bootstrap */
+.form-control:focus {
+  border-color: var(--primary-green);
+  box-shadow: 0 0 0 0.25rem rgba(10, 207, 131, 0.25);
+}
