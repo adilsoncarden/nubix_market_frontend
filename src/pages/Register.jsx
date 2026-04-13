@@ -34,17 +34,17 @@ const Register = () => {
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3 text-start">
                         <label className="form-label small fw-bold text-muted">Nombre Completo</label>
-                        <input type="text" className="form-control" placeholder="Tu nombre" required />
+                        <input type="text" className="form-control" placeholder= "" required />
                     </div>
 
                     <div className="mb-3 text-start">
                         <label className="form-label small fw-bold text-muted">Correo Electrónico</label>
-                        <input type="email" className="form-control" placeholder="Email address" required />
+                        <input type="email" className="form-control" placeholder="" required />
                     </div>
                     
                     <div className="mb-3 text-start">
                         <label className="form-label small fw-bold text-muted">Contraseña</label>
-                        <input type="password" className="form-control" placeholder="Password" required />
+                        <input type="password" className="form-control" placeholder="" required />
                     </div>
 
                     {/* BOTÓN CON EFECTO DE PARPADEO AL PASAR EL CURSOR */}
