@@ -1,9 +1,10 @@
 import React from "react";
+// 1. Importa la imagen desde tu carpeta de assets
+import logoImage from "../assets/logo.png"; 
 
 const Navbar = () => {
     return (
         <nav className="navbar navbar-expand-lg navbar-dark bg-success sticky-top shadow-sm py-3">
-            {" "}
             <div className="container">
                 <a
                     className="navbar-brand d-flex align-items-center fw-bold fs-4"
@@ -11,15 +12,20 @@ const Navbar = () => {
                 >
                     <span
                         className="bg-white text-success rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm"
-                        style={{ width: "40px", height: "40px" }}
+                        style={{ width: "40px", height: "40px", overflow: "hidden" }}
                     >
-                        Y
+                        {/* 2. Reemplazamos la "Y" por la etiqueta img */}
+                        <img 
+                            src={logoImage} 
+                            alt="Nubix Logo" 
+                            style={{ width: "100%", height: "100%", objectFit: "contain" }} 
+                        />
                     </span>
                     Nubix Market
                 </a>
 
+                {/* ... resto del código intacto ... */}
                 <div className="d-none d-md-flex flex-grow-1 mx-5">
-                    {" "}
                     <div className="input-group">
                         <input
                             type="text"
@@ -30,23 +36,9 @@ const Navbar = () => {
                 </div>
 
                 <div className="d-flex align-items-center gap-4">
-                    {" "}
-                    <a
-                        className="text-white text-decoration-none d-none d-md-block fw-medium"
-                        href="/"
-                    >
-                        Inicio
-                    </a>
-                    <a
-                        className="text-white text-decoration-none d-none d-md-block fw-medium"
-                        href="/shop"
-                    >
-                        Tienda
-                    </a>
-                    <a
-                        className="text-white text-decoration-none d-flex align-items-center fw-medium"
-                        href="/login"
-                    >
+                    <a className="text-white text-decoration-none d-none d-md-block fw-medium" href="/">Inicio</a>
+                    <a className="text-white text-decoration-none d-none d-md-block fw-medium" href="/shop">Tienda</a>
+                    <a className="text-white text-decoration-none d-flex align-items-center fw-medium" href="/login">
                         <i className="bi bi-person fs-4 me-1"></i>
                         <span className="d-none d-md-inline">Login</span>
                     </a>
