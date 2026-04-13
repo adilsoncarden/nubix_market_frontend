@@ -1,173 +1,120 @@
 import React from "react";
-import logoImage from "../assets/logo.png";
+import logoImage from "../assets/logo.png"; // Asegúrate de que el nombre sea exacto
 
-function Login() {
-  const styles = {
-    loginPage: {
-      display: "flex",
-      flexDirection: "column",
-      minHeight: "100vh",
-      width: "100%",
-      backgroundColor: "#f0fdf4", 
-      fontFamily: "sans-serif",
-    },
-    // NAVBAR: Se mantiene igual a como lo configuramos
-    navbar: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "10px 50px",
-      backgroundColor: "#22c55e",
-      color: "white",
-    },
-    searchContainer: {
-      position: "relative",
-      display: "flex",
-      alignItems: "center",
-      backgroundColor: "rgba(255, 255, 255, 0.2)", 
-      borderRadius: "8px",
-      padding: "5px 15px",
-      width: "500px", 
-      marginLeft: "20px",
-    },
-    searchInput: {
-      background: "none",
-      border: "none",
-      color: "white",
-      padding: "5px 5px 5px 25px",
-      fontSize: "0.9rem",
-      width: "100%",
-      outline: "none",
-    },
-    mainContent: {
-      flex: 1,
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      padding: "20px",
-    },
-    // TARJETA: Estilo limpio y funcional
-    card: {
-      backgroundColor: "white",
-      padding: "40px",
-      borderRadius: "12px",
-      boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-      width: "100%",
-      maxWidth: "400px",
-      textAlign: "center",
-    },
-    iconCircle: {
-      width: "60px",
-      height: "60px",
-      backgroundColor: "#f0fdf4",
-      borderRadius: "50%",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      margin: "0 auto 20px",
-      color: "#22c55e",
-      fontSize: "24px",
-      border: "1px solid #dcfce7"
-    },
-    inputGroup: {
-      textAlign: "left",
-      marginBottom: "20px",
-    },
-    label: {
-      fontSize: "0.9rem",
-      color: "#333",
-      fontWeight: "bold",
-      display: "block",
-      marginBottom: "8px"
-    },
-    input: {
-      width: "100%",
-      padding: "12px",
-      border: "1px solid #ccc",
-      borderRadius: "6px",
-      fontSize: "1rem",
-      boxSizing: "border-box",
-    },
-    submitButton: {
-      width: "100%",
-      padding: "12px",
-      backgroundColor: "#22c55e",
-      color: "white",
-      border: "none",
-      borderRadius: "6px",
-      fontSize: "1rem",
-      fontWeight: "bold",
-      cursor: "pointer",
-      marginTop: "10px"
-    },
-  };
 
-  return (
-    <div style={styles.loginPage}>
-      {/* NAVBAR */}
-      <nav style={styles.navbar}>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ backgroundColor: "white", borderRadius: "50%", padding: "5px", display: "flex" }}>
-              <img src={logoImage} alt="Logo" style={{ height: "25px" }} />
-            </div>
-            <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>NUBIX MARKET</span>
-          </div>
+const Login = () => {
+    return (
+        <div className="container-fluid p-0" style={{ backgroundColor: "#f0fdf4", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+            
+            {/* NAVBAR (Tal cual la imagen que enviaste) */}
+            <nav style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "15px 40px",
+                backgroundColor: "#1a733c", 
+                color: "white"
+            }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ 
+                        backgroundColor: "white", 
+                        borderRadius: "50%", 
+                        width: "35px", 
+                        height: "35px", 
+                        display: "flex", 
+                        justifyContent: "center", 
+                        alignItems: "center",
+                        overflow: "hidden"
+                    }}>
+                    <img 
+                        src={logoImage} 
+                        alt="Logo" 
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }} 
+                    />
+                    </div>
+                    <span style={{ fontWeight: "600", fontSize: "1.3rem" }}>Nubix Market</span>
+                </div>
 
-          <div style={styles.searchContainer}>
-            <span style={{ position: "absolute", left: "10px" }}>🔍</span>
-            <input type="text" placeholder="Buscar productos..." style={styles.searchInput} />
-          </div>
+                <div style={{ flex: 1, maxWidth: "600px", margin: "0 40px" }}>
+                    <input 
+                        type="text" 
+                        placeholder="Buscar productos..." 
+                        style={{
+                            width: "100%",
+                            padding: "10px 20px",
+                            borderRadius: "25px",
+                            border: "none",
+                            outline: "none"
+                        }} 
+                    />
+                </div>
+
+                <div style={{ display: "flex", gap: "25px" }}>
+                    <span>Inicio</span>
+                    <span>Tienda</span>
+                    <span>Login</span>
+                </div>
+            </nav>
+
+            {/* CONTENIDO CENTRADO (Sin imagen lateral) */}
+            <main style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center", padding: "40px 20px" }}>
+                <div style={{ 
+                    backgroundColor: "white", 
+                    padding: "40px", 
+                    borderRadius: "16px", 
+                    boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
+                    width: "100%",
+                    maxWidth: "450px"
+                }}>
+                    {/* Icono del Market arriba */}
+                    <div style={{ fontSize: "2.5rem", textAlign: "center", marginBottom: "10px" }}>🛒</div>
+                    
+                    <h2 className="text-center fw-bold mb-1">Iniciar Sesión</h2>
+                    <p className="text-muted text-center mb-4">¡Bienvenido a Nubix Market!</p>
+                    
+                    <form>
+                        <div className="mb-3 text-start">
+                            <label className="form-label fw-bold">Correo Electrónico :</label>
+                            <input type="email" className="form-control" placeholder="Escribe tu correo" style={{ borderRadius: "8px", padding: "12px" }} />
+                        </div>
+                        
+                        <div className="mb-3 text-start">
+                            <label className="form-label fw-bold">Contraseña :</label>
+                            <input type="password" className="form-control" placeholder="********" style={{ borderRadius: "8px", padding: "12px" }} />
+                        </div>
+                        
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <div className="form-check">
+                                <input className="form-check-input" type="checkbox" id="remember" />
+                                <label className="form-check-label small" htmlFor="remember">Recordarme</label>
+                            </div>
+                            <a href="#" className="small text-decoration-none" style={{ color: "#1a733c", fontWeight: "500" }}>¿Olvidaste tu contraseña?</a>
+                        </div>
+
+                        <button type="submit" className="btn w-100 fw-bold" style={{ backgroundColor: "#1a733c", color: "white", padding: "12px", borderRadius: "8px" }}>
+                            Entrar
+                        </button>
+                    </form>
+                    
+                    <div className="text-center mt-4">
+                        <p className="small text-muted">o entrar con</p>
+                        <div className="d-flex gap-2 mb-4">
+                            <button className="btn btn-outline-secondary w-50">Google</button>
+                            <button className="btn btn-outline-secondary w-50">Apple</button>
+                        </div>
+                        <p className="small">
+                            ¿No tienes una cuenta? <a href="/register" className="fw-bold text-decoration-none" style={{ color: "#1a733c" }}>Regístrate aquí</a>
+                        </p>
+                    </div>
+                </div>
+            </main>
+
+            {/* FOOTER ORIGINAL AL FINAL */}
+            <footer style={{ textAlign: "center", padding: "20px", color: "#666", fontSize: "0.85rem", backgroundColor: "white", borderTop: "1px solid #eee" }}>
+                © 2026 NUBIX MARKET - Todos los derechos reservados
+            </footer>
         </div>
-
-        <div style={{ display: "flex", gap: "25px", alignItems: "center" }}>
-          <span>Inicio</span>
-          <span>Tienda</span>
-          <span>Acceder</span>
-          <span style={{ fontSize: "1.2rem" }}>🛒</span>
-        </div>
-      </nav>
-
-      {/* LOGIN */}
-      <main style={styles.mainContent}>
-        <div style={styles.card}>
-          <div style={styles.iconCircle}>🛒</div> 
-          
-          <h2 style={{ marginBottom: "10px" }}>Iniciar Sesión</h2>
-          <p style={{ color: "#666", marginBottom: "30px", fontSize: "0.9rem" }}>
-            Ingresa tus credenciales para continuar
-          </p>
-
-          <form>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Correo Electrónico</label>
-              <input type="email" style={styles.input} placeholder="correo@ejemplo.com" />
-            </div>
-
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Contraseña</label>
-              <input type="password" style={styles.input} placeholder="********" />
-            </div>
-
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "20px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                <input type="checkbox" /> Recordarme
-              </label>
-              <a href="#" style={{ color: "#22c55e", textDecoration: "none" }}>¿Olvidaste tu contraseña?</a>
-            </div>
-
-            <button type="submit" style={styles.submitButton}>
-              Entrar
-            </button>
-          </form>
-
-          <p style={{ marginTop: "25px", fontSize: "0.9rem", color: "#666" }}>
-            ¿Nuevo por aquí? <span style={{ color: "#22c55e", fontWeight: "bold", cursor: "pointer" }}>Regístrate</span>
-          </p>
-        </div>
-      </main>
-    </div>
-  );
-}
+    );
+};
 
 export default Login;
