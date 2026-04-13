@@ -3,30 +3,42 @@ import logoImage from "../assets/logo.png";
 
 function Login() {
   const styles = {
-    // 1. FONDO GENERAL: Verde menta clarito y centrado total
     loginPage: {
       display: "flex",
-      flexDirection: "column", // Para que el Navbar esté arriba y el contenido abajo
+      flexDirection: "column",
       minHeight: "100vh",
       width: "100%",
-      backgroundColor: "#f0fdf4", // El verde clarito de la imagen
-      fontFamily: "'Inter', sans-serif",
+      backgroundColor: "#f0fdf4", 
+      fontFamily: "sans-serif",
     },
-    // 2. NAVBAR: Barra superior verde
+    // NAVBAR: Se mantiene igual a como lo configuramos
     navbar: {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
       padding: "10px 50px",
-      backgroundColor: "#22c55e", // Verde vibrante
+      backgroundColor: "#22c55e",
       color: "white",
     },
-    navLinks: {
+    searchContainer: {
+      position: "relative",
       display: "flex",
-      gap: "20px",
       alignItems: "center",
+      backgroundColor: "rgba(255, 255, 255, 0.2)", 
+      borderRadius: "8px",
+      padding: "5px 15px",
+      width: "500px", 
+      marginLeft: "20px",
     },
-    // 3. CONTENEDOR DE LA TARJETA
+    searchInput: {
+      background: "none",
+      border: "none",
+      color: "white",
+      padding: "5px 5px 5px 25px",
+      fontSize: "0.9rem",
+      width: "100%",
+      outline: "none",
+    },
     mainContent: {
       flex: 1,
       display: "flex",
@@ -34,15 +46,15 @@ function Login() {
       alignItems: "center",
       padding: "20px",
     },
-    // 4. LA TARJETA BLANCA (Card)
+    // TARJETA: Estilo limpio y funcional
     card: {
       backgroundColor: "white",
       padding: "40px",
-      borderRadius: "16px",
-      boxShadow: "0 10px 25px rgba(0,0,0,0.05)",
+      borderRadius: "12px",
+      boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
       width: "100%",
-      maxWidth: "450px",
-      textAlign: "center", // Centra el texto y el icono
+      maxWidth: "400px",
+      textAlign: "center",
     },
     iconCircle: {
       width: "60px",
@@ -57,154 +69,101 @@ function Login() {
       fontSize: "24px",
       border: "1px solid #dcfce7"
     },
-    title: {
-      fontSize: "1.8rem",
-      fontWeight: "700",
-      color: "#111827",
-      marginBottom: "8px",
-    },
-    subtitle: {
-      fontSize: "0.95rem",
-      color: "#6b7280",
-      marginBottom: "30px",
-    },
     inputGroup: {
       textAlign: "left",
       marginBottom: "20px",
-      position: "relative",
+    },
+    label: {
+      fontSize: "0.9rem",
+      color: "#333",
+      fontWeight: "bold",
+      display: "block",
+      marginBottom: "8px"
     },
     input: {
       width: "100%",
-      padding: "12px 12px 12px 40px", // Espacio para el icono a la izquierda
-      border: "1px solid #e5e7eb",
-      borderRadius: "10px",
+      padding: "12px",
+      border: "1px solid #ccc",
+      borderRadius: "6px",
       fontSize: "1rem",
-      backgroundColor: "#fff",
-      boxSizing: "border-box", // Evita que el input se salga del borde
-    },
-    rowBetween: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      fontSize: "0.85rem",
-      marginBottom: "25px",
+      boxSizing: "border-box",
     },
     submitButton: {
       width: "100%",
-      padding: "14px",
-      backgroundColor: "#22c55e", // Verde del botón
+      padding: "12px",
+      backgroundColor: "#22c55e",
       color: "white",
       border: "none",
-      borderRadius: "10px",
+      borderRadius: "6px",
       fontSize: "1rem",
-      fontWeight: "600",
+      fontWeight: "bold",
       cursor: "pointer",
-      transition: "background 0.3s",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      gap: "10px"
-    },
-    searchContainer: {
-      position: "relative",
-      display: "flex",
-      alignItems: "center",
-      // CAMBIA ESTA LÍNEA:
-      backgroundColor: "rgba(255, 255, 255, 0.2)", 
-      borderRadius: "8px",
-      padding: "5px 15px",
-      width: "500px",
-      marginLeft: "30px",
-    },
-    searchInput: {
-      background: "none",
-      border: "none",
-      color: "white",
-      padding: "5px 5px 5px 20px",
-      fontSize: "0.9rem",
-      width: "100%",
-      outline: "none",
-    },
-    searchIcon: {
-      position: "absolute",
-      left: "10px",
-      color: "white",
-      fontSize: "0.8rem"
+      marginTop: "10px"
     },
   };
 
   return (
     <div style={styles.loginPage}>
-      {/* Barra de Navegación */}
-      {/* Barra de Navegación */}
+      {/* NAVBAR */}
       <nav style={styles.navbar}>
-        {/* Este div agrupa el Logo, el Nombre y el Buscador a la izquierda */}
         <div style={{ display: "flex", alignItems: "center" }}>
-          
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ backgroundColor: "white", borderRadius: "50%", padding: "5px", display: "flex" }}>
-              <img src={logoImage} alt="S" style={{ height: "25px" }} />
+              <img src={logoImage} alt="Logo" style={{ height: "25px" }} />
             </div>
-          <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>SuperMarket</span>
+            <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>NUBIX MARKET</span>
+          </div>
+
+          <div style={styles.searchContainer}>
+            <span style={{ position: "absolute", left: "10px" }}>🔍</span>
+            <input type="text" placeholder="Buscar productos..." style={styles.searchInput} />
+          </div>
         </div>
 
-          {/* AQUÍ ESTÁ EL BUSCADOR QUE TE FALTABA */}
-        <div style={styles.searchContainer}>
-            <span style={styles.searchIcon}>🔍</span>
-            <input 
-              type="text" 
-              placeholder="Search for products..." 
-              style={styles.searchInput} 
-            />
-              </div>
-        </div>
-
-        {/* Los links de la derecha se mantienen igual */}
-        <div style={styles.navLinks}>
-          <span>Home</span>
-          <span>Shop</span>
-          <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>👤 Login</span>
-          <span>🛒</span>
+        <div style={{ display: "flex", gap: "25px", alignItems: "center" }}>
+          <span>Inicio</span>
+          <span>Tienda</span>
+          <span>Acceder</span>
+          <span style={{ fontSize: "1.2rem" }}>🛒</span>
         </div>
       </nav>
 
-      {/* Contenido Principal con la Tarjeta */}
+      {/* LOGIN */}
       <main style={styles.mainContent}>
         <div style={styles.card}>
-          {/* Icono del Candado */}
-          <div style={styles.iconCircle}>🔒</div>
-
-          <h2 style={styles.title}>Sign in to your account</h2>
-          <p style={styles.subtitle}>
-            Or <span style={{ color: "#22c55e", cursor: "pointer" }}>start your 14-day free trial</span>
+          <div style={styles.iconCircle}>🛒</div> 
+          
+          <h2 style={{ marginBottom: "10px" }}>Iniciar Sesión</h2>
+          <p style={{ color: "#666", marginBottom: "30px", fontSize: "0.9rem" }}>
+            Ingresa tus credenciales para continuar
           </p>
 
           <form>
             <div style={styles.inputGroup}>
-              <span style={{ position: "absolute", left: "12px", top: "38px", color: "#9ca3af" }}>✉️</span>
-              <label style={{ fontSize: "0.85rem", color: "#374151", fontWeight: "500" }}>Email address</label>
-              <input type="email" style={styles.input} placeholder="Email address" />
+              <label style={styles.label}>Correo Electrónico</label>
+              <input type="email" style={styles.input} placeholder="correo@ejemplo.com" />
             </div>
 
             <div style={styles.inputGroup}>
-              <span style={{ position: "absolute", left: "12px", top: "38px", color: "#9ca3af" }}>🔒</span>
-              <label style={{ fontSize: "0.85rem", color: "#374151", fontWeight: "500" }}>Password</label>
-              <input type="password" style={styles.input} placeholder="Password" />
-              <span style={{ position: "absolute", right: "12px", top: "38px", cursor: "pointer" }}>👁️</span>
+              <label style={styles.label}>Contraseña</label>
+              <input type="password" style={styles.input} placeholder="********" />
             </div>
 
-            <div style={styles.rowBetween}>
-              <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                <input type="checkbox" id="remember" />
-                <label htmlFor="remember" style={{ color: "#4b5563" }}>Remember me</label>
-              </div>
-              <a href="#" style={{ color: "#22c55e", textDecoration: "none", fontWeight: "500" }}>Forgot your password?</a>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", marginBottom: "20px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                <input type="checkbox" /> Recordarme
+              </label>
+              <a href="#" style={{ color: "#22c55e", textDecoration: "none" }}>¿Olvidaste tu contraseña?</a>
             </div>
 
             <button type="submit" style={styles.submitButton}>
-              <span>🔒</span> Sign in
+              Entrar
             </button>
           </form>
+
+          <p style={{ marginTop: "25px", fontSize: "0.9rem", color: "#666" }}>
+            ¿Nuevo por aquí? <span style={{ color: "#22c55e", fontWeight: "bold", cursor: "pointer" }}>Regístrate</span>
+          </p>
         </div>
       </main>
     </div>
