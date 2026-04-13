@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react"; // Cambia el import normal por este
 import logoImage from "../assets/logo.png"; // Asegúrate de que el nombre sea exacto
 
 
 const Login = () => {
+const [isHover, setIsHover] = useState(false);
     return (
         <div className="container-fluid p-0" style={{ backgroundColor: "#f0fdf4", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
             
@@ -67,8 +68,6 @@ const Login = () => {
                     maxWidth: "450px"
                 }}>
                     {/* Icono del Market arriba */}
-                    <div style={{ fontSize: "2.5rem", textAlign: "center", marginBottom: "10px" }}>🛒</div>
-                    
                     <h2 className="text-center fw-bold mb-1">Iniciar Sesión</h2>
                     <p className="text-muted text-center mb-4">¡Bienvenido a Nubix Market!</p>
                     
@@ -91,18 +90,27 @@ const Login = () => {
                             <a href="#" className="small text-decoration-none" style={{ color: "#1a733c", fontWeight: "500" }}>¿Olvidaste tu contraseña?</a>
                         </div>
 
-                        <button type="submit" className="btn w-100 fw-bold" style={{ backgroundColor: "#1a733c", color: "white", padding: "12px", borderRadius: "8px" }}>
+                        <button 
+                            type="submit" 
+                            className="btn w-100 fw-bold" 
+                            onMouseEnter={() => setIsHover(true)}
+                            onMouseLeave={() => setIsHover(false)}
+                            style={{ 
+                                backgroundColor: isHover ? "#24a154" : "#1a733c", 
+                                color: isHover ? "#d1fae5" : "white", 
+                                padding: "12px", 
+                                borderRadius: "8px",
+                                transition: "all 0.2s ease", 
+                                cursor: "pointer",
+                                border: "none"
+                            }}
+                            >
                             Entrar
                         </button>
                     </form>
                     
                     <div className="text-center mt-4">
-                        <p className="small text-muted">o entrar con</p>
-                        <div className="d-flex gap-2 mb-4">
-                            <button className="btn btn-outline-secondary w-50">Google</button>
-                            <button className="btn btn-outline-secondary w-50">Apple</button>
-                        </div>
-                        <p className="small">
+                        <p className="small">   
                             ¿No tienes una cuenta? <a href="/register" className="fw-bold text-decoration-none" style={{ color: "#1a733c" }}>Regístrate aquí</a>
                         </p>
                     </div>
