@@ -1,22 +1,69 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
+        username: "",
+        email: "",
+        password: "",
     });
-    
-    // Estado para controlar el efecto de parpadeo/hover
+    const [alertMessage, setAlertMessage] = useState("");
+    const [alertType, setAlertType] = useState("");
     const [isHovered, setIsHovered] = useState(false);
-    
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Datos de registro:', formData);
-        navigate('/login');
+        setAlertMessage("");
+        setAlertType("");
+
+        try {
+            const response = await fetch(
+                "http://localhost:8080/api/auth/register",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        username: formData.username.trim(),
+                        email: formData.email.trim(),
+                        password: formData.password,
+                    }),
+                },
+            );
+
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                setAlertType("danger");
+                setAlertMessage(
+                    data.message || "Error al registrar el usuario",
+                );
+                return;
+            }
+
+            setAlertType("success");
+            setAlertMessage("Registro exitoso. Redirigiendo al login...");
+
+            setTimeout(() => {
+                navigate("/login");
+            }, 1400);
+        } catch (error) {
+            setAlertType("danger");
+            setAlertMessage(
+                "No se pudo conectar con el servidor. Intenta de nuevo.",
+            );
+            console.error("Register error:", error);
+        }
     };
 
     return (
@@ -24,7 +71,7 @@ const Register = () => {
             <div className="login-card shadow">
                 <div className="text-center mb-4">
                     <div className="mb-3">
-                        <span style={{ fontSize: '45px', color: '#1a733c' }}>
+                        <span style={{ fontSize: "45px", color: "#1a733c" }}>
                             <i className="bi bi-person-plus-fill"></i>
                         </span>
                     </div>
@@ -32,36 +79,74 @@ const Register = () => {
                 </div>
 
                 <form onSubmit={handleSubmit}>
+                    {alertMessage && (
+                        <div
+                            className={`alert alert-${alertType} text-center`}
+                            role="alert"
+                        >
+                            {alertMessage}
+                        </div>
+                    )}
+
                     <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">Nombre Completo</label>
-                        <input type="text" className="form-control" placeholder= "" required />
+                        <label className="form-label small fw-bold text-muted">
+                            Usuario
+                        </label>
+                        <input
+                            type="text"
+                            name="username"
+                            className="form-control"
+                            placeholder=""
+                            value={formData.username}
+                            onChange={handleChange}
+                            required
+                        />
                     </div>
 
                     <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">Correo Electrónico</label>
-                        <input type="email" className="form-control" placeholder="" required />
-                    </div>
-                    
-                    <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">Contraseña</label>
-                        <input type="password" className="form-control" placeholder="" required />
+                        <label className="form-label small fw-bold text-muted">
+                            Correo Electrónico
+                        </label>
+                        <input
+                            type="email"
+                            name="email"
+                            className="form-control"
+                            placeholder=""
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
                     </div>
 
-                    {/* BOTÓN CON EFECTO DE PARPADEO AL PASAR EL CURSOR */}
-                    <button 
-                        type="submit" 
+                    <div className="mb-3 text-start">
+                        <label className="form-label small fw-bold text-muted">
+                            Contraseña
+                        </label>
+                        <input
+                            type="password"
+                            name="password"
+                            className="form-control"
+                            placeholder=""
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
                         className="btn w-100 mb-3 fw-bold"
                         onMouseEnter={() => setIsHovered(true)}
                         onMouseLeave={() => setIsHovered(false)}
-                        style={{ 
-                            backgroundColor: '#1a733c', 
-                            color: 'white', 
-                            border: 'none',
-                            padding: '10px',
-                            borderRadius: '8px',
-                            transition: 'all 0.2s ease', // Suaviza el parpadeo
-                            opacity: isHovered ? '0.8' : '1', // Aquí ocurre el "parpadeo"
-                            transform: isHovered ? 'scale(1.02)' : 'scale(1)' // Un pequeño pulso
+                        style={{
+                            backgroundColor: "#1a733c",
+                            color: "white",
+                            border: "none",
+                            padding: "10px",
+                            borderRadius: "8px",
+                            transition: "all 0.2s ease",
+                            opacity: isHovered ? "0.8" : "1",
+                            transform: isHovered ? "scale(1.02)" : "scale(1)",
                         }}
                     >
                         Registrarse
@@ -69,11 +154,11 @@ const Register = () => {
 
                     <div className="text-center mt-3">
                         <p className="text-muted small">
-                            ¿Ya tienes una cuenta?{' '}
-                            <Link 
-                                to="/login" 
+                            ¿Ya tienes una cuenta?{" "}
+                            <Link
+                                to="/login"
                                 className="fw-bold text-decoration-none"
-                                style={{ color: '#1a733c' }}
+                                style={{ color: "#1a733c" }}
                             >
                                 Inicia sesión aquí
                             </Link>
