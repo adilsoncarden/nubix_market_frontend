@@ -75,18 +75,20 @@ const Register = () => {
                             <i className="bi bi-person-plus-fill"></i>
                         </span>
                     </div>
-                    <h2 className="fw-bold">Crear Cuenta</h2>
+                    <h2 className="fw-bold">Registrarse</h2>
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    {alertMessage && (
-                        <div
-                            className={`alert alert-${alertType} text-center`}
-                            role="alert"
-                        >
-                            {alertMessage}
-                        </div>
-                    )}
+                    <div style={{ minHeight: "3.5rem" }}>
+                        {alertMessage && (
+                            <div
+                                className={`alert alert-${alertType} text-center m-0`}
+                                role="alert"
+                            >
+                                {alertMessage}
+                            </div>
+                        )}
+                    </div>
 
                     <div className="mb-3 text-start">
                         <label className="form-label small fw-bold text-muted">
@@ -154,13 +156,13 @@ const Register = () => {
 
                     <div className="text-center mt-3">
                         <p className="text-muted small">
-                            ¿Ya tienes una cuenta?{" "}
+                            ¿Ya tienes una cuenta?{"  "}
                             <Link
                                 to="/login"
                                 className="fw-bold text-decoration-none"
                                 style={{ color: "#1a733c" }}
                             >
-                                Inicia sesión aquí
+                                Iniciar Sesión
                             </Link>
                         </p>
                     </div>

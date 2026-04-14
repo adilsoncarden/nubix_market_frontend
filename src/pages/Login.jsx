@@ -39,6 +39,7 @@ const Login = () => {
 
             localStorage.setItem("token", data.token);
             localStorage.setItem("username", data.username);
+            window.dispatchEvent(new Event("localStorageChanged"));
             setAlertType("success");
             setAlertMessage(
                 "Inicio de sesión exitoso. Bienvenido " + data.username + "!",
@@ -69,14 +70,16 @@ const Login = () => {
                 </div>
 
                 <form onSubmit={handleSubmit}>
-                    {alertMessage && (
-                        <div
-                            className={`alert alert-${alertType} text-center`}
-                            role="alert"
-                        >
-                            {alertMessage}
-                        </div>
-                    )}
+                    <div style={{ minHeight: "3.5rem" }}>
+                        {alertMessage && (
+                            <div
+                                className={`alert alert-${alertType} text-center m-0`}
+                                role="alert"
+                            >
+                                {alertMessage}
+                            </div>
+                        )}
+                    </div>
 
                     <div className="mb-3 text-start">
                         <label className="form-label small fw-bold text-muted">
@@ -146,7 +149,7 @@ const Login = () => {
                             cursor: "pointer",
                         }}
                     >
-                        Ingresar
+                        Iniciar Sesión
                     </button>
 
                     <div className="text-center mt-3">
@@ -157,7 +160,7 @@ const Login = () => {
                                 className="fw-bold text-decoration-none"
                                 style={{ color: "#1a733c" }}
                             >
-                                Regístrate aquí
+                                Registrate
                             </Link>
                         </p>
                     </div>

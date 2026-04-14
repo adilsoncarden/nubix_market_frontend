@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import logoImage from "../assets/logo.png";
 
 const Navbar = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [username, setUsername] = useState(
-        localStorage.getItem("username") || "",
+        () => localStorage.getItem("username") || "",
     );
 
     useEffect(() => {
@@ -12,15 +15,23 @@ const Navbar = () => {
         };
 
         window.addEventListener("storage", handleStorage);
-        return () => window.removeEventListener("storage", handleStorage);
+        window.addEventListener("localStorageChanged", handleStorage);
+        return () => {
+            window.removeEventListener("storage", handleStorage);
+            window.removeEventListener("localStorageChanged", handleStorage);
+        };
     }, []);
+
+    useEffect(() => {
+        setUsername(localStorage.getItem("username") || "");
+    }, [location]);
 
     const handleLogout = (e) => {
         e.preventDefault();
         localStorage.removeItem("token");
         localStorage.removeItem("username");
         setUsername("");
-        window.location.href = "/";
+        navigate("/");
     };
 
     return (
