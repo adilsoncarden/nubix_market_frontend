@@ -8,8 +8,8 @@ const Footer = () => {
                     <div className="col-12 col-md-4">
                         <h5 className="fw-bold mb-3">Nubix Market</h5>
                         <p className="text-light small">
-                            Tu market ideal para encontrar abarrotes frescos y
-                            productos esenciales del día a día.
+                            Digitalizando la experiencia de compra en Comas.<br />
+                            Haz tu pedido online y recógelo sin colas con nuestro sistema Fast Line.
                         </p>
                     </div>
 
