@@ -6,19 +6,19 @@ import Footer from "./components/Footer";
 import MainContent from "./components/MainContent";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
+import Categorias from "./pages/Categorias";
 import "./App.css";
 
-// Creamos un componente interno para poder usar useLocation
 function AppContent() {
     const location = useLocation();
     
-    // Definimos en qué ruta queremos ocultar el Navbar y Footer
-    const isDashboard = location.pathname === "/dashboard";
+    // Convertimos a minúsculas para asegurar que detecte la ruta correctamente
+    const isDashboard = 
+        location.pathname.toLowerCase() === "/dashboard" || 
+        location.pathname.toLowerCase() === "/categorias";
 
     return (
         <div className="min-vh-100 d-flex flex-column">
-            {/* Solo muestra el Navbar si NO estamos en dashboard */}
             {!isDashboard && <Navbar />}
             
             <main className="d-flex flex-column flex-grow-1">
@@ -27,12 +27,12 @@ function AppContent() {
                         <Route path="/" element={<MainContent />} />
                         <Route path="/login" element={<Login />} />
                         <Route path="/register" element={<Register />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
+                        {/* Usamos minúsculas aquí también por estándar de frontend */}
+                        <Route path="/categorias" element={<Categorias />} />
                     </Routes>
                 </div>
             </main>
 
-            {/* Solo muestra el Footer si NO estamos en dashboard */}
             {!isDashboard && <Footer />}
         </div>
     );
