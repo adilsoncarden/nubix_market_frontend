@@ -8,6 +8,9 @@ import { RiAddCircleLine } from "react-icons/ri";
 import { AiOutlineUnorderedList } from "react-icons/ai";
 import { FaUserTie } from "react-icons/fa";
 
+// IMPORTACIÓN DEL NUEVO ARCHIVO (Asegúrate de que Productos.jsx exista en la misma carpeta)
+import Productos from "./Productos";
+
 const Categorias = () => {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem("nubix-theme") || "light";
@@ -33,16 +36,15 @@ const Categorias = () => {
     { id: '#CAT-005', icon: <LuCookie size={20}/>, name: 'Snacks', popularity: 70, pColor: 'danger' },
   ];
 
-  // --- MEJORA DE MODO OSCURO (COLOR PALETTE WOW) ---
   const darkThemeColors = {
-    bodyBg: "#0b0e14",       // Negro profundo (Obsidiana)
-    sidebarBg: "#11141d",    // Un tono más claro para separar
-    cardBg: "#161b26",       // Gris azulado oscuro para tarjetas
+    bodyBg: "#0b0e14",
+    sidebarBg: "#11141d",
+    cardBg: "#161b26",
     headerBg: "rgba(11, 14, 20, 0.8)", 
     textPrimary: "#ffffff",
-    textSecondary: "#94a3b8", // Slate para suavizar la vista
-    border: "rgba(255, 255, 255, 0.06)", // Borde casi invisible pero que da forma
-    accent: "#10b981"        // Verde esmeralda para el switch y botones
+    textSecondary: "#94a3b8",
+    border: "rgba(255, 255, 255, 0.06)",
+    accent: "#10b981"
   };
 
   const getSidebarBtnStyle = (id) => ({
@@ -186,6 +188,7 @@ const Categorias = () => {
         </header>
 
         <main className="p-4 p-lg-5">
+          {/* LÓGICA DE NAVEGACIÓN ENTRE CATEGORÍAS Y PRODUCTOS */}
           {activeModule === 'cat' ? (
             <>
               <div className="mb-5">
@@ -282,6 +285,9 @@ const Categorias = () => {
                 </Card.Body>
               </Card>
             </>
+          ) : activeModule === 'prod' ? (
+            /* LLAMADA AL COMPONENTE EXTERNO PRODUCTOS */
+            <Productos theme={theme} darkThemeColors={darkThemeColors} />
           ) : (
             <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
                 <h3 className="fw-bold mb-0 text-muted" style={{ opacity: '0.4' }}>Módulo en construcción</h3>
