@@ -125,10 +125,10 @@ const Categorias = () => {
           {[
             { id: 'cat', name: 'Categorias', icon: <HiOutlineTag size={20} /> },
             { id: 'prod', name: 'Productos', icon: <HiOutlineCube size={20} /> },
-            { id: 'cred', name: 'Créditos', icon: <HiOutlineCreditCard size={20} /> },
-            { id: 'ped', name: 'Pedidos', icon: <HiOutlineShoppingCart size={20} /> },
-            { id: 'cata', name: 'Catálogo', icon: <HiOutlineBookOpen size={20} /> },
-            { id: 'seg', name: 'Seguridad', icon: <HiOutlineShieldCheck size={20} /> },
+            { id: 'cred', name: 'Clientes', icon: <HiOutlineCreditCard size={20} /> },
+            { id: 'ped', name: 'Proveedores', icon: <HiOutlineShoppingCart size={20} /> },
+            { id: 'cata', name: 'Compras', icon: <HiOutlineBookOpen size={20} /> },
+            { id: 'seg', name: 'Ventas', icon: <HiOutlineShieldCheck size={20} /> },
           ].map((item) => (
             <button key={item.id} style={getSidebarBtnStyle(item.id)} onMouseEnter={() => setHoveredBtn(item.id)} onMouseLeave={() => setHoveredBtn(null)} onClick={() => setActiveModule(item.id)} className="w-100">
               <span className="me-3 d-flex align-items-center">{item.icon}</span> {item.name}
