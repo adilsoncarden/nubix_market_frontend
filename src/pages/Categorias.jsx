@@ -8,8 +8,9 @@ import { RiAddCircleLine } from "react-icons/ri";
 import { AiOutlineUnorderedList } from "react-icons/ai";
 import { FaUserTie } from "react-icons/fa";
 
-// IMPORTACIÓN DEL NUEVO ARCHIVO (Asegúrate de que Productos.jsx exista en la misma carpeta)
+// IMPORTACIONES DE MÓDULOS EXTERNOS
 import Productos from "./Productos";
+import Clientes from "./Clientes"; 
 
 const Categorias = () => {
   const [theme, setTheme] = useState(() => {
@@ -188,7 +189,6 @@ const Categorias = () => {
         </header>
 
         <main className="p-4 p-lg-5">
-          {/* LÓGICA DE NAVEGACIÓN ENTRE CATEGORÍAS Y PRODUCTOS */}
           {activeModule === 'cat' ? (
             <>
               <div className="mb-5">
@@ -286,8 +286,9 @@ const Categorias = () => {
               </Card>
             </>
           ) : activeModule === 'prod' ? (
-            /* LLAMADA AL COMPONENTE EXTERNO PRODUCTOS */
             <Productos theme={theme} darkThemeColors={darkThemeColors} />
+          ) : activeModule === 'cred' ? ( // <--- Agregado para Clientes
+            <Clientes theme={theme} darkThemeColors={darkThemeColors} />
           ) : (
             <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: "60vh" }}>
                 <h3 className="fw-bold mb-0 text-muted" style={{ opacity: '0.4' }}>Módulo en construcción</h3>
