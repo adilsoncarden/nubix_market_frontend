@@ -1,15 +1,33 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./store/AuthContext";
-import AdminLogin from "./pages/AdminLogin";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminLayout from "./components/AdminLayout";
 
-// Componente temporal para probar el éxito
+// Importación de Páginas
+import AdminLogin from "./pages/AdminLogin";
+import CategoriesPage from "./pages/CategoriesPage";
+
+/**
+ * Componente temporal para el Dashboard
+ * En el futuro se moverá a su propio archivo en src/pages/AdminDashboard.jsx
+ */
 const AdminDashboard = () => (
-    <div className="container mt-5">
-        <div className="alert alert-success shadow">
-            <h1>¡Login Exitoso!</h1>
-            <p>Bienvenido al Panel de Administración de Nubix Market.</p>
+    <div className="container-fluid">
+        <div className="row">
+            <div className="col-12">
+                <div className="card shadow-sm border-0 p-4 bg-white">
+                    <h2 className="fw-bold text-primary">Panel de Control</h2>
+                    <p className="text-muted">
+                        Bienvenido al sistema de gestión de{" "}
+                        <strong>Nubix Market</strong>. Desde aquí puedes
+                        administrar categorías, productos y usuarios.
+                    </p>
+                    <div className="alert alert-success d-inline-block shadow-sm">
+                        <i className="bi bi-check-circle-fill me-2"></i>
+                        Sesión administrativa activa correctamente.
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 );
@@ -19,25 +37,45 @@ function App() {
         <BrowserRouter>
             <AuthProvider>
                 <Routes>
-                    {/* 1. RUTAS PÚBLICAS: No tienen Sidebar ni protección */}
+                    {/* 
+                        RUTAS PÚBLICAS 
+                        No requieren token y no muestran el Sidebar.
+                    */}
                     <Route path="/admin-login" element={<AdminLogin />} />
 
-                    {/* 2. CAPA DE SEGURIDAD: Verifica que sea ADMIN */}
+                    {/* 
+                        RUTAS PROTEGIDAS (SISTEMA ADMINISTRATIVO) 
+                        1. Verificamos que el usuario esté autenticado y sea ADMIN.
+                        2. Aplicamos el Layout (Sidebar + Header) a todas las rutas internas.
+                    */}
                     <Route
                         element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
                     >
-                        {/* 3. CAPA DE DISEÑO: Envuelve las rutas con el Sidebar y Header */}
                         <Route element={<AdminLayout />}>
+                            {/* Dashboard Principal */}
                             <Route
                                 path="/admin/dashboard"
                                 element={<AdminDashboard />}
                             />
-                            {/* Los nuevos módulos se agregan aquí dentro para que hereden el Layout */}
-                            {/* <Route path="/admin/categorias" element={<CategoriasPage />} /> */}
+
+                            {/* Gestión de Categorías (CRUD con Modales) */}
+                            <Route
+                                path="/admin/categorias"
+                                element={<CategoriesPage />}
+                            />
+
+                            {/* 
+                                Espacio para futuros módulos:
+                                <Route path="/admin/productos" element={<ProductsPage />} />
+                                <Route path="/admin/usuarios" element={<UsersPage />} />
+                            */}
                         </Route>
                     </Route>
 
-                    {/* Redirección por defecto */}
+                    {/* 
+                        GESTIÓN DE RUTAS NO ENCONTRADAS
+                        Redirige automáticamente al login si la ruta no existe.
+                    */}
                     <Route
                         path="*"
                         element={<Navigate to="/admin-login" replace />}
