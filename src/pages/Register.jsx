@@ -1,3 +1,4 @@
+// src/pages/Register.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -67,106 +68,179 @@ const Register = () => {
     };
 
     return (
-        <div className="login-page-container">
-            <div className="login-card shadow">
-                <div className="text-center mb-4">
-                    <div className="mb-3">
-                        <span style={{ fontSize: "45px", color: "#1a733c" }}>
-                            <i className="bi bi-person-plus-fill"></i>
-                        </span>
-                    </div>
-                    <h2 className="fw-bold">Registrarse</h2>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-                    <div style={{ minHeight: "3.5rem" }}>
-                        {alertMessage && (
-                            <div
-                                className={`alert alert-${alertType} text-center m-0`}
-                                role="alert"
-                            >
-                                {alertMessage}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">
-                            Usuario
-                        </label>
-                        <input
-                            type="text"
-                            name="username"
-                            className="form-control"
-                            placeholder=""
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">
-                            Correo Electrónico
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            className="form-control"
-                            placeholder=""
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">
-                            Contraseña
-                        </label>
-                        <input
-                            type="password"
-                            name="password"
-                            className="form-control"
-                            placeholder=""
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="btn w-100 mb-3 fw-bold"
-                        onMouseEnter={() => setIsHovered(true)}
-                        onMouseLeave={() => setIsHovered(false)}
-                        style={{
-                            backgroundColor: "#1a733c",
-                            color: "white",
-                            border: "none",
-                            padding: "10px",
-                            borderRadius: "8px",
-                            transition: "all 0.2s ease",
-                            opacity: isHovered ? "0.8" : "1",
-                            transform: isHovered ? "scale(1.02)" : "scale(1)",
-                        }}
+        <div className="container py-5">
+            <div className="row justify-content-center">
+                {/* Ajustamos a col-xl-4 para que coincida exactamente con el Login */}
+                <div className="col-12 col-md-8 col-lg-5 col-xl-4">
+                    <div
+                        className="card shadow-lg border-0"
+                        style={{ borderRadius: "20px", overflow: "hidden" }}
                     >
-                        Registrarse
-                    </button>
+                        <div className="card-body p-4 p-sm-5">
+                            <div className="text-center mb-4">
+                                <div
+                                    className="mb-3 d-inline-block p-3 rounded-circle"
+                                    style={{ backgroundColor: "#e8f5e9" }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: "40px",
+                                            color: "#1a733c",
+                                        }}
+                                    >
+                                        <i className="bi bi-person-plus-fill"></i>
+                                    </span>
+                                </div>
+                                <h2 className="fw-bold mb-1">Crea tu cuenta</h2>
+                                <p className="text-muted small">
+                                    Únete a la comunidad de Nubix Market
+                                </p>
+                            </div>
 
-                    <div className="text-center mt-3">
-                        <p className="text-muted small">
-                            ¿Ya tienes una cuenta?{"  "}
-                            <Link
-                                to="/login"
-                                className="fw-bold text-decoration-none"
-                                style={{ color: "#1a733c" }}
-                            >
-                                Iniciar Sesión
-                            </Link>
-                        </p>
+                            <div style={{ minHeight: "60px" }} className="mb-3">
+                                {alertMessage && (
+                                    <div
+                                        className={`alert alert-${alertType} text-center border-0 small shadow-sm`}
+                                        role="alert"
+                                        style={{ borderRadius: "10px" }}
+                                    >
+                                        <i
+                                            className={`bi ${alertType === "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"} me-2`}
+                                        ></i>
+                                        {alertMessage}
+                                    </div>
+                                )}
+                            </div>
+
+                            <form onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold text-muted ms-1">
+                                        Nombre de Usuario
+                                    </label>
+                                    <div className="input-group">
+                                        <span
+                                            className="input-group-text bg-light border-end-0"
+                                            style={{
+                                                borderRadius: "10px 0 0 10px",
+                                            }}
+                                        >
+                                            <i className="bi bi-person text-muted"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            name="username"
+                                            className="form-control bg-light border-start-0 py-2"
+                                            placeholder="Tu nombre de usuario"
+                                            style={{
+                                                borderRadius: "0 10px 10px 0",
+                                                fontSize: "0.95rem",
+                                            }}
+                                            value={formData.username}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold text-muted ms-1">
+                                        Correo Electrónico
+                                    </label>
+                                    <div className="input-group">
+                                        <span
+                                            className="input-group-text bg-light border-end-0"
+                                            style={{
+                                                borderRadius: "10px 0 0 10px",
+                                            }}
+                                        >
+                                            <i className="bi bi-envelope text-muted"></i>
+                                        </span>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            className="form-control bg-light border-start-0 py-2"
+                                            placeholder="ejemplo@nubix.com"
+                                            style={{
+                                                borderRadius: "0 10px 10px 0",
+                                                fontSize: "0.95rem",
+                                            }}
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="form-label small fw-bold text-muted ms-1">
+                                        Contraseña
+                                    </label>
+                                    <div className="input-group">
+                                        <span
+                                            className="input-group-text bg-light border-end-0"
+                                            style={{
+                                                borderRadius: "10px 0 0 10px",
+                                            }}
+                                        >
+                                            <i className="bi bi-lock text-muted"></i>
+                                        </span>
+                                        <input
+                                            type="password"
+                                            name="password"
+                                            className="form-control bg-light border-start-0 py-2"
+                                            placeholder="Crea una clave segura"
+                                            style={{
+                                                borderRadius: "0 10px 10px 0",
+                                                fontSize: "0.95rem",
+                                            }}
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="btn w-100 shadow-sm fw-bold mb-3"
+                                    onMouseEnter={() => setIsHovered(true)}
+                                    onMouseLeave={() => setIsHovered(false)}
+                                    style={{
+                                        backgroundColor: "#1a733c",
+                                        color: "white",
+                                        border: "none",
+                                        padding: "12px",
+                                        borderRadius: "12px",
+                                        transition: "all 0.3s ease",
+                                        transform: isHovered
+                                            ? "translateY(-2px)"
+                                            : "translateY(0)",
+                                        boxShadow: isHovered
+                                            ? "0 5px 15px rgba(26, 115, 60, 0.3)"
+                                            : "none",
+                                    }}
+                                >
+                                    {isHovered
+                                        ? "¡Empezar ahora! ✨"
+                                        : "Registrarse"}
+                                </button>
+
+                                <div className="text-center mt-3">
+                                    <p className="text-muted small">
+                                        ¿Ya tienes una cuenta?{" "}
+                                        <Link
+                                            to="/login"
+                                            className="fw-bold text-decoration-none"
+                                            style={{ color: "#1a733c" }}
+                                        >
+                                            Inicia Sesión
+                                        </Link>
+                                    </p>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );
