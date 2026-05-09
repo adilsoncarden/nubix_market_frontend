@@ -1,9 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
+import { useState } from "react";
 
 const Sidebar = () => {
     const location = useLocation();
     const { logout } = useAuth();
+
+    // Estado para controlar el despliegue de Usuarios
+    const [isUsersOpen, setIsUsersOpen] = useState(
+        location.pathname.includes("/admin/usuarios"),
+    );
 
     const menuItems = [
         {
@@ -13,7 +19,6 @@ const Sidebar = () => {
         },
         { path: "/admin/categorias", icon: "bi-tags", label: "Categorías" },
         { path: "/admin/productos", icon: "bi-box-seam", label: "Productos" },
-        { path: "/admin/usuarios", icon: "bi-people", label: "Usuarios" },
     ];
 
     return (
@@ -30,9 +35,11 @@ const Sidebar = () => {
                 </span>
             </Link>
             <hr />
+
             <ul className="nav nav-pills flex-column mb-auto">
+                {/* Items normales */}
                 {menuItems.map((item) => (
-                    <li key={item.path} className="nav-item">
+                    <li key={item.path} className="nav-item mb-1">
                         <Link
                             to={item.path}
                             className={`nav-link text-white ${location.pathname === item.path ? "active" : ""}`}
@@ -42,7 +49,54 @@ const Sidebar = () => {
                         </Link>
                     </li>
                 ))}
+
+                {/* Item Desplegable: Usuarios */}
+                <li className="nav-item mb-1">
+                    <button
+                        onClick={() => setIsUsersOpen(!isUsersOpen)}
+                        className={`nav-link text-white w-100 text-start d-flex justify-content-between align-items-center ${
+                            location.pathname.includes("/admin/usuarios")
+                                ? "bg-secondary bg-opacity-25"
+                                : ""
+                        }`}
+                        style={{ border: "none", background: "none" }}
+                    >
+                        <span>
+                            <i className="bi bi-people me-2"></i>
+                            Usuarios
+                        </span>
+                        <i
+                            className={`bi bi-chevron-${isUsersOpen ? "down" : "right"} small`}
+                        ></i>
+                    </button>
+
+                    <div
+                        className={`collapse ${isUsersOpen ? "show" : ""} ms-3`}
+                    >
+                        <ul className="btn-toggle-nav list-unstyled fw-normal pb-1 small">
+                            <li>
+                                <Link
+                                    to="/admin/usuarios/clientes"
+                                    className={`nav-link text-white opacity-75 ${location.pathname === "/admin/usuarios/clientes" ? "active fw-bold text-primary opacity-100" : ""}`}
+                                >
+                                    <i className="bi bi-person-badge me-2"></i>{" "}
+                                    Clientes
+                                </Link>
+                            </li>
+                            <li>
+                                <Link
+                                    to="/admin/usuarios/empleados"
+                                    className={`nav-link text-white opacity-75 ${location.pathname === "/admin/usuarios/empleados" ? "fw-bold text-primary opacity-100" : ""}`}
+                                >
+                                    <i className="bi bi-person-workspace me-2"></i>{" "}
+                                    Empleados
+                                </Link>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
             </ul>
+
             <hr />
             <button
                 onClick={logout}
