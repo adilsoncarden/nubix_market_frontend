@@ -6,8 +6,9 @@ import AdminLayout from "./components/AdminLayout";
 // Importación de Páginas
 import AdminLogin from "./pages/AdminLogin";
 import CategoriesPage from "./pages/CategoriesPage";
-import ProductsPage from "./pages/ProductsPage"; 
+import ProductsPage from "./pages/ProductsPage";
 import ClientsPage from "./pages/ClientsPage";
+import EmployeesPage from "./pages/EmployeesPage";
 
 /**
  * Componente temporal para el Dashboard
@@ -64,7 +65,12 @@ function App() {
                                 element={<ProductsPage />}
                             />
 
-                            <Route path="/admin/usuarios/clientes" element={<ClientsPage />} />
+                            <Route
+                                path="/admin/usuarios/clientes"
+                                element={<ClientsPage />}
+                            />
+
+                            <Route path="/admin/usuarios/empleados" element={<EmployeesPage />} />
                             {/* Futuros módulos */}
                             {/* <Route path="/admin/usuarios" element={<UsersPage />} /> */}
                         </Route>
