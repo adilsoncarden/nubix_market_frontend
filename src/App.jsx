@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminLayout from "./components/AdminLayout";
 
 // Importación de Páginas
+import LandingPage from "./pages/LandingPage";
 import AdminLogin from "./pages/AdminLogin";
 import CategoriesPage from "./pages/CategoriesPage";
 import ProductsPage from "./pages/ProductsPage";
@@ -39,7 +40,10 @@ function App() {
         <BrowserRouter>
             <AuthProvider>
                 <Routes>
-                    {/* RUTAS PÚBLICAS */}
+                    {/* LA WEB PÚBLICA (Lo primero que se ve) */}
+                    <Route path="/" element={<LandingPage />} />
+
+                    {/* LOGIN ADMINISTRATIVO */}
                     <Route path="/admin-login" element={<AdminLogin />} />
 
                     {/* RUTAS PROTEGIDAS (ADMIN) */}
@@ -47,40 +51,31 @@ function App() {
                         element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
                     >
                         <Route element={<AdminLayout />}>
-                            {/* Dashboard */}
                             <Route
                                 path="/admin/dashboard"
                                 element={<AdminDashboard />}
                             />
-
-                            {/* Gestión de Categorías */}
                             <Route
                                 path="/admin/categorias"
                                 element={<CategoriesPage />}
                             />
-
-                            {/* Gestión de Productos */}
                             <Route
                                 path="/admin/productos"
                                 element={<ProductsPage />}
                             />
-
                             <Route
                                 path="/admin/usuarios/clientes"
                                 element={<ClientsPage />}
                             />
-
-                            <Route path="/admin/usuarios/empleados" element={<EmployeesPage />} />
-                            {/* Futuros módulos */}
-                            {/* <Route path="/admin/usuarios" element={<UsersPage />} /> */}
+                            <Route
+                                path="/admin/usuarios/empleados"
+                                element={<EmployeesPage />}
+                            />
                         </Route>
                     </Route>
 
-                    {/* REDIRECCIÓN POR DEFECTO */}
-                    <Route
-                        path="*"
-                        element={<Navigate to="/admin-login" replace />}
-                    />
+                    {/* SI ESCRIBEN CUALQUIER OTRA COSA, VOLVER A LA WEB */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </AuthProvider>
         </BrowserRouter>
