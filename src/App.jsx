@@ -6,10 +6,10 @@ import AdminLayout from "./components/AdminLayout";
 // Importación de Páginas
 import AdminLogin from "./pages/AdminLogin";
 import CategoriesPage from "./pages/CategoriesPage";
+import ProductsPage from "./pages/ProductsPage"; // Nuevo módulo
 
 /**
  * Componente temporal para el Dashboard
- * En el futuro se moverá a su propio archivo en src/pages/AdminDashboard.jsx
  */
 const AdminDashboard = () => (
     <div className="container-fluid">
@@ -37,45 +37,38 @@ function App() {
         <BrowserRouter>
             <AuthProvider>
                 <Routes>
-                    {/* 
-                        RUTAS PÚBLICAS 
-                        No requieren token y no muestran el Sidebar.
-                    */}
+                    {/* RUTAS PÚBLICAS */}
                     <Route path="/admin-login" element={<AdminLogin />} />
 
-                    {/* 
-                        RUTAS PROTEGIDAS (SISTEMA ADMINISTRATIVO) 
-                        1. Verificamos que el usuario esté autenticado y sea ADMIN.
-                        2. Aplicamos el Layout (Sidebar + Header) a todas las rutas internas.
-                    */}
+                    {/* RUTAS PROTEGIDAS (ADMIN) */}
                     <Route
                         element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
                     >
                         <Route element={<AdminLayout />}>
-                            {/* Dashboard Principal */}
+                            {/* Dashboard */}
                             <Route
                                 path="/admin/dashboard"
                                 element={<AdminDashboard />}
                             />
 
-                            {/* Gestión de Categorías (CRUD con Modales) */}
+                            {/* Gestión de Categorías */}
                             <Route
                                 path="/admin/categorias"
                                 element={<CategoriesPage />}
                             />
 
-                            {/* 
-                                Espacio para futuros módulos:
-                                <Route path="/admin/productos" element={<ProductsPage />} />
-                                <Route path="/admin/usuarios" element={<UsersPage />} />
-                            */}
+                            {/* Gestión de Productos */}
+                            <Route
+                                path="/admin/productos"
+                                element={<ProductsPage />}
+                            />
+
+                            {/* Futuros módulos */}
+                            {/* <Route path="/admin/usuarios" element={<UsersPage />} /> */}
                         </Route>
                     </Route>
 
-                    {/* 
-                        GESTIÓN DE RUTAS NO ENCONTRADAS
-                        Redirige automáticamente al login si la ruta no existe.
-                    */}
+                    {/* REDIRECCIÓN POR DEFECTO */}
                     <Route
                         path="*"
                         element={<Navigate to="/admin-login" replace />}
