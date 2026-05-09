@@ -53,7 +53,7 @@ const AdminLogin = () => {
                                 type="email"
                                 name="email"
                                 className="form-control form-control-lg"
-                                placeholder="admin@nubix.com"
+                                // placeholder="admin@nubix.com"
                                 value={credentials.email}
                                 onChange={handleChange}
                                 required
@@ -68,7 +68,7 @@ const AdminLogin = () => {
                                 type="password"
                                 name="password"
                                 className="form-control form-control-lg"
-                                placeholder="••••••••"
+                                // placeholder="••••••••"
                                 value={credentials.password}
                                 onChange={handleChange}
                                 required

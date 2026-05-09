@@ -1,40 +1,45 @@
-import "bootstrap/dist/css/bootstrap.min.css";
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import MainContent from "./components/MainContent";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Categorias from "./pages/Categorias"; // Este será tu Dashboard principal
-import "./App.css";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./store/AuthContext";
+import AdminLogin from "./pages/AdminLogin";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
-function AppContent() {
-    return (
-        <div className="min-vh-100 d-flex flex-column">
-            <Routes>
-                {/* RUTAS PÚBLICAS (Con Navbar y Footer) */}
-                <Route path="/" element={<><Navbar /><MainContent /><Footer /></>} />
-                <Route path="/login" element={<><Navbar /><Login /><Footer /></>} />
-                <Route path="/register" element={<><Navbar /><Register /><Footer /></>} />
-
-                {/* RUTA DEL DASHBOARD (Categorias gestiona internamente Clientes y Productos) */}
-                <Route path="/categorias" element={<Categorias />} />
-                
-                {/* 
-                   BORRA LA RUTA /clientes DE AQUÍ. 
-                   Ahora Clientes vive dentro de Categorias.jsx 
-                */}
-            </Routes>
+// Componente temporal para probar el éxito
+const AdminDashboard = () => (
+    <div className="container mt-5">
+        <div className="alert alert-success shadow">
+            <h1>¡Login Exitoso!</h1>
+            <p>Bienvenido al Panel de Administración de Nubix Market.</p>
         </div>
-    );
-}
+    </div>
+);
 
 function App() {
     return (
-        <Router>
-            <AppContent />
-        </Router>
+        <BrowserRouter>
+            <AuthProvider>
+                <Routes>
+                    {/* Rutas Públicas */}
+                    <Route path="/admin-login" element={<AdminLogin />} />
+
+                    {/* Rutas Protegidas de Administración */}
+                    <Route
+                        element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
+                    >
+                        <Route
+                            path="/admin/dashboard"
+                            element={<AdminDashboard />}
+                        />
+                        {/* Aquí irán /admin/categorias, /admin/productos, etc. */}
+                    </Route>
+
+                    {/* Redirección por defecto */}
+                    <Route
+                        path="*"
+                        element={<Navigate to="/admin-login" replace />}
+                    />
+                </Routes>
+            </AuthProvider>
+        </BrowserRouter>
     );
 }
 
