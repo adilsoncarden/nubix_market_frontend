@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./store/AuthContext";
 import AdminLogin from "./pages/AdminLogin";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import AdminLayout from "./components/AdminLayout";
 
 // Componente temporal para probar el éxito
 const AdminDashboard = () => (
@@ -18,18 +19,22 @@ function App() {
         <BrowserRouter>
             <AuthProvider>
                 <Routes>
-                    {/* Rutas Públicas */}
+                    {/* 1. RUTAS PÚBLICAS: No tienen Sidebar ni protección */}
                     <Route path="/admin-login" element={<AdminLogin />} />
 
-                    {/* Rutas Protegidas de Administración */}
+                    {/* 2. CAPA DE SEGURIDAD: Verifica que sea ADMIN */}
                     <Route
                         element={<ProtectedRoute allowedRoles={["ADMIN"]} />}
                     >
-                        <Route
-                            path="/admin/dashboard"
-                            element={<AdminDashboard />}
-                        />
-                        {/* Aquí irán /admin/categorias, /admin/productos, etc. */}
+                        {/* 3. CAPA DE DISEÑO: Envuelve las rutas con el Sidebar y Header */}
+                        <Route element={<AdminLayout />}>
+                            <Route
+                                path="/admin/dashboard"
+                                element={<AdminDashboard />}
+                            />
+                            {/* Los nuevos módulos se agregan aquí dentro para que hereden el Layout */}
+                            {/* <Route path="/admin/categorias" element={<CategoriasPage />} /> */}
+                        </Route>
                     </Route>
 
                     {/* Redirección por defecto */}
