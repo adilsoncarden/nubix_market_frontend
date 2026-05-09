@@ -32,7 +32,6 @@ const AdminLogin = () => {
         subText: darkMode ? "#b0b0b0" : "#6c757d", 
         inputBg: darkMode ? "#2b3035" : "#f8f9fa",
         inputBorder: darkMode ? "#444" : "#dee2e6",
-        // Color de la letra que escribes
         inputText: darkMode ? "#ffffff" : "#212529" 
     };
 
@@ -92,7 +91,7 @@ const AdminLogin = () => {
                                         style={{ 
                                             borderRadius: "0 12px 12px 0", height: "48px", 
                                             backgroundColor: colors.inputBg, 
-                                            color: colors.inputText, // Letra blanca en dark
+                                            color: colors.inputText, 
                                             borderColor: colors.inputBorder 
                                         }}
                                         value={credentials.email}
@@ -116,7 +115,7 @@ const AdminLogin = () => {
                                         style={{ 
                                             borderRadius: "0 12px 12px 0", height: "48px", 
                                             backgroundColor: colors.inputBg, 
-                                            color: colors.inputText, // Letra blanca en dark
+                                            color: colors.inputText, 
                                             borderColor: colors.inputBorder 
                                         }}
                                         value={credentials.password}
@@ -148,11 +147,18 @@ const AdminLogin = () => {
                 </div>
             </div>
 
-            {/* Estilo para asegurar que el placeholder también se vea bien */}
             <style>{`
                 .custom-placeholder::placeholder {
                     color: ${darkMode ? "#888" : "#adb5bd"} !important;
                     opacity: 1;
+                }
+
+                input:-webkit-autofill,
+                input:-webkit-autofill:hover, 
+                input:-webkit-autofill:focus {
+                    -webkit-text-fill-color: ${colors.inputText} !important;
+                    -webkit-box-shadow: 0 0 0px 1000px ${colors.inputBg} inset !important;
+                    transition: background-color 5000s ease-in-out 0s;
                 }
             `}</style>
         </div>
