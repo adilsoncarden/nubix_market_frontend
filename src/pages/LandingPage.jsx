@@ -1,16 +1,9 @@
+// src/pages/LandingPage.jsx
 import React from "react";
-import Navbar from "../components/Navbar";
 import MainContent from "../components/MainContent";
-import Footer from "../components/Footer";
 
 const LandingPage = () => {
-    return (
-        <div className="d-flex flex-column min-vh-100">
-            <Navbar />
-            <MainContent />
-            <Footer />
-        </div>
-    );
+    return <MainContent />; // El Navbar y Footer ya vienen desde App.jsx
 };
 
 export default LandingPage;
