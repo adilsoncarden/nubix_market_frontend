@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Modal } from "bootstrap";
 import { useProducts } from "../features/products/hooks/useProducts";
-import { useCategories } from "../features/categories/hooks/useCategories"; // Reutilizamos el hook de categorías
+import { useCategories } from "../features/categories/hooks/useCategories"; 
 import { productService } from "../features/products/services/productService";
 import ProductForm from "../features/products/components/ProductForm";
 import Swal from "sweetalert2";
 
 const ProductsPage = () => {
-    const { products, setProducts, handleDelete, fetchProducts } =
-        useProducts();
+    const { products, setProducts, handleDelete, fetchProducts } = useProducts();
     const { categories } = useCategories();
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [saving, setSaving] = useState(false);
@@ -16,8 +15,14 @@ const ProductsPage = () => {
     const modalRef = useRef();
     const bsModal = useRef();
 
+    // Lógica para métricas dinámicas
+    const totalProductos = products.length;
+    const valorInversion = products.reduce((acc, curr) => acc + (curr.precioVenta * curr.stock), 0);
+
     useEffect(() => {
-        bsModal.current = new Modal(modalRef.current);
+        if (modalRef.current) {
+            bsModal.current = new Modal(modalRef.current);
+        }
     }, []);
 
     const openModal = (product = null) => {
@@ -29,30 +34,13 @@ const ProductsPage = () => {
         setSaving(true);
         try {
             if (selectedProduct) {
-                const updated = await productService.update(
-                    selectedProduct.id,
-                    formData,
-                );
-                setProducts(
-                    products.map((p) =>
-                        p.id === selectedProduct.id ? updated : p,
-                    ),
-                );
-                Swal.fire({
-                    icon: "success",
-                    title: "Producto actualizado",
-                    timer: 1500,
-                    showConfirmButton: false,
-                });
+                const updated = await productService.update(selectedProduct.id, formData);
+                setProducts(products.map((p) => p.id === selectedProduct.id ? updated : p));
+                Swal.fire({ icon: "success", title: "Producto actualizado", timer: 1500, showConfirmButton: false });
             } else {
                 const created = await productService.create(formData);
                 setProducts([...products, created]);
-                Swal.fire({
-                    icon: "success",
-                    title: "Producto creado",
-                    timer: 1500,
-                    showConfirmButton: false,
-                });
+                Swal.fire({ icon: "success", title: "Producto creado", timer: 1500, showConfirmButton: false });
             }
             bsModal.current.hide();
         } catch (err) {
@@ -63,122 +51,125 @@ const ProductsPage = () => {
     };
 
     return (
-        <div className="container-fluid">
+        <div className="container-fluid animate__animated animate__fadeIn p-4">
+            
+            {/* CABECERA CON BOTÓN VERDE */}
             <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="fw-bold">Gestión de Productos</h2>
+                <div>
+                    <h2 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em', color: '#1a1d23' }}>
+                        Gestión de Productos
+                    </h2>
+                    <p className="text-muted small mb-0">
+                        Administra el inventario y precios de <span className="fw-semibold text-primary">Nubix Market</span>
+                    </p>
+                </div>
                 <button
-                    className="btn btn-primary shadow-sm"
+                    className="btn btn-success shadow-sm px-4 d-flex align-items-center"
                     onClick={() => openModal()}
+                    style={{ height: '40px', backgroundColor: "#198754", border: "none" }}
                 >
                     <i className="bi bi-box-seam me-2"></i> Nuevo Producto
                 </button>
             </div>
 
-            <div className="card shadow-sm border-0 overflow-hidden">
+            {/* MÉTRICAS DINÁMICAS */}
+            <div className="row g-4 mb-4">
+                <div className="col-md-6">
+                    <div className="card border-0 shadow-sm p-3" style={{ borderRadius: '15px' }}>
+                        <div className="d-flex align-items-center px-2">
+                            <div className="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
+                                <i className="bi bi-box-fill fs-4"></i>
+                            </div>
+                            <div className="ms-3">
+                                <small className="text-muted d-block fw-bold text-uppercase" style={{ fontSize: '11px' }}>Total Productos</small>
+                                <h3 className="fw-bold mb-0">{totalProductos}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-md-6">
+                    <div className="card border-0 shadow-sm p-3" style={{ borderRadius: '15px' }}>
+                        <div className="d-flex align-items-center px-2">
+                            <div className="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center" style={{ width: '48px', height: '48px' }}>
+                                <i className="bi bi-currency-dollar fs-4"></i>
+                            </div>
+                            <div className="ms-3">
+                                <small className="text-muted d-block fw-bold text-uppercase" style={{ fontSize: '11px' }}>Valor en Stock</small>
+                                <h3 className="fw-bold mb-0">S/ {valorInversion.toLocaleString()}</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* TABLA LIMPIA */}
+            <div className="card shadow-sm border-0 overflow-hidden" style={{ borderRadius: '12px' }}>
                 <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0 text-nowrap">
                         <thead className="bg-light">
                             <tr>
-                                <th className="px-4">Código</th>
-                                <th>Nombre</th>
-                                <th>Categoría</th>
-                                <th>P. Venta</th>
-                                <th>Stock</th>
-                                <th className="text-end px-4">Acciones</th>
+                                <th className="px-4 py-3 text-secondary small fw-bold">CÓDIGO</th>
+                                <th className="py-3 text-secondary small fw-bold">NOMBRE</th>
+                                <th className="py-3 text-secondary small fw-bold">CATEGORÍA</th>
+                                <th className="py-3 text-secondary small fw-bold">P. VENTA</th>
+                                <th className="py-3 text-secondary small fw-bold">STOCK</th>
+                                <th className="text-end px-4 py-3 text-secondary small fw-bold">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {products.map((prod) => (
-                                <tr key={prod.id}>
-                                    <td className="px-4 text-muted small">
-                                        {prod.codigo}
-                                    </td>
-                                    <td>
-                                        <span className="fw-bold">
-                                            {prod.nombre}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span className="badge bg-info text-dark">
-                                            {prod.categoriaNombre}
-                                        </span>
-                                    </td>
-                                    <td className="fw-bold text-success">
-                                        S/ {prod.precioVenta.toFixed(2)}
-                                    </td>
-                                    <td>
-                                        <span
-                                            className={`badge ${prod.stock < 10 ? "bg-danger" : "bg-success"}`}
-                                        >
-                                            {prod.stock} un.
-                                        </span>
-                                    </td>
-                                    <td className="text-end px-4">
-                                        <button
-                                            className="btn btn-sm btn-outline-primary me-2"
-                                            onClick={() => openModal(prod)}
-                                        >
-                                            <i className="bi bi-pencil"></i>
-                                        </button>
-                                        <button
-                                            className="btn btn-sm btn-outline-danger"
-                                            onClick={() =>
-                                                handleDelete(prod.id)
-                                            }
-                                        >
-                                            <i className="bi bi-trash"></i>
-                                        </button>
-                                    </td>
+                            {products.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-5 text-muted">No hay productos registrados.</td>
                                 </tr>
-                            ))}
+                            ) : (
+                                products.map((prod) => (
+                                    <tr key={prod.id}>
+                                        <td className="px-4 text-muted small">{prod.codigo}</td>
+                                        <td><span className="fw-bold text-dark">{prod.nombre}</span></td>
+                                        <td>
+                                            <span className="badge border text-dark fw-normal bg-light">
+                                                {prod.categoriaNombre}
+                                            </span>
+                                        </td>
+                                        <td><span className="fw-bold text-dark">S/ {prod.precioVenta.toFixed(2)}</span></td>
+                                        <td>
+                                            <span className="badge border text-dark fw-normal bg-light">
+                                                {prod.stock} un.
+                                            </span>
+                                        </td>
+                                        <td className="text-end px-4">
+                                            <button className="btn btn-sm btn-outline-primary me-2 border-0 shadow-none" onClick={() => openModal(prod)}>
+                                                <i className="bi bi-pencil"></i>
+                                            </button>
+                                            <button className="btn btn-sm btn-outline-danger border-0 shadow-none" onClick={() => handleDelete(prod.id)}>
+                                                <i className="bi bi-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
             </div>
 
             {/* MODAL */}
-            <div
-                className="modal fade"
-                ref={modalRef}
-                tabIndex="-1"
-                data-bs-backdrop="static"
-            >
+            <div className="modal fade" ref={modalRef} tabIndex="-1" data-bs-backdrop="static">
                 <div className="modal-dialog modal-lg modal-dialog-centered">
-                    <div className="modal-content border-0 shadow-lg">
+                    <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
                         <div className="modal-header border-0 pb-0">
                             <h5 className="modal-title fw-bold">
-                                {selectedProduct
-                                    ? "Editar Producto"
-                                    : "Nuevo Producto"}
+                                {selectedProduct ? "Editar Producto" : "Nuevo Producto"}
                             </h5>
-                            <button
-                                type="button"
-                                className="btn-close"
-                                onClick={() => bsModal.current.hide()}
-                            ></button>
+                            <button type="button" className="btn-close" onClick={() => bsModal.current.hide()}></button>
                         </div>
                         <div className="modal-body py-4">
-                            <ProductForm
-                                product={selectedProduct}
-                                categories={categories}
-                                onSave={handleSave}
-                                loading={saving}
-                            />
+                            <ProductForm product={selectedProduct} categories={categories} onSave={handleSave} loading={saving} />
                         </div>
-                        <div className="modal-footer border-0 pt-0">
-                            <button
-                                type="button"
-                                className="btn btn-light"
-                                onClick={() => bsModal.current.hide()}
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                type="submit"
-                                form="productForm"
-                                className="btn btn-primary px-4"
-                                disabled={saving}
-                            >
+                        <div className="modal-footer border-0 pt-0 px-4 pb-4">
+                            <button type="button" className="btn btn-light px-4" onClick={() => bsModal.current.hide()}>Cancelar</button>
+                            <button type="submit" form="productForm" className="btn btn-success px-4" disabled={saving}>
                                 {saving ? "Guardando..." : "Guardar Producto"}
                             </button>
                         </div>
