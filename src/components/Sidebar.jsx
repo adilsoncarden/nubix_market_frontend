@@ -19,6 +19,8 @@ const Sidebar = () => {
         },
         { path: "/admin/categorias", icon: "bi-tags", label: "Categorías" },
         { path: "/admin/productos", icon: "bi-box-seam", label: "Productos" },
+        // Módulo de Proveedores añadido siguiendo tu estándar
+        { path: "/admin/proveedores", icon: "bi-truck", label: "Proveedores" },
     ];
 
     return (
@@ -37,7 +39,7 @@ const Sidebar = () => {
             <hr />
 
             <ul className="nav nav-pills flex-column mb-auto">
-                {/* Items normales */}
+                {/* Items normales (Incluye ahora Suppliers) */}
                 {menuItems.map((item) => (
                     <li key={item.path} className="nav-item mb-1">
                         <Link

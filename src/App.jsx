@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./store/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -15,6 +14,7 @@ import CategoriesPage from "./pages/CategoriesPage";
 import ProductsPage from "./pages/ProductsPage";
 import ClientsPage from "./pages/ClientsPage";
 import EmployeesPage from "./pages/EmployeesPage";
+import SuppliersPage from "./pages/SuppliersPage";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
@@ -66,6 +66,7 @@ function App() {
                             <Route path="/admin/productos" element={<ProductsPage />} />
                             <Route path="/admin/usuarios/clientes" element={<ClientsPage />} />
                             <Route path="/admin/usuarios/empleados" element={<EmployeesPage />} />
+                            <Route path="/admin/proveedores" element={<SuppliersPage />} />
                         </Route>
                     </Route>
                 </Routes>
