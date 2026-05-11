@@ -7,6 +7,10 @@ const EmployeesPage = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
     
+    // --- LÓGICA DE PAGINACIÓN ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     // Referencias para el Modal de Bootstrap
     const modalRef = useRef();
     const bsModal = useRef();
@@ -38,9 +42,21 @@ const EmployeesPage = () => {
         }
     }, []);
 
-    // MÉTRICAS DINÁMICAS
+    // --- CÁLCULOS DE SEGMENTACIÓN Y MÉTRICAS ---
     const totalPersonal = employees.length;
     const totalAdmins = employees.filter(e => e.rolNombre === "ADMIN").length;
+    
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = employees.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(totalPersonal / itemsPerPage);
+
+    // Ajuste automático de página si queda vacía tras eliminar
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [employees, totalPages, currentPage]);
 
     const openModal = (employee = null) => {
         if (employee) {
@@ -100,7 +116,7 @@ const EmployeesPage = () => {
     return (
         <div className="container-fluid animate__animated animate__fadeIn p-4">
             
-            {/* CABECERA CON BOTÓN VERDE ILUMINADO */}
+            {/* CABECERA */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em', color: '#1a1d23' }}>
@@ -113,7 +129,7 @@ const EmployeesPage = () => {
                 <button
                     className="btn btn-success shadow-sm px-4 d-flex align-items-center btn-glow-green"
                     onClick={() => openModal()}
-                    style={{ height: '40px', backgroundColor: "#198754", border: "none", transition: "all 0.3s ease", fontWeight: "600" }}
+                    style={{ height: '40px', backgroundColor: "#198754", border: "none", transition: "all 0.3s ease", fontWeight: "600", borderRadius: '10px' }}
                 >
                     <i className="bi bi-person-plus-fill me-2"></i> Nuevo Empleado
                 </button>
@@ -150,7 +166,7 @@ const EmployeesPage = () => {
                 </div>
             </div>
 
-            {/* TABLA ESTILIZADA */}
+            {/* TABLA ESTILIZADA CON PAGINACIÓN */}
             <div className="card shadow-sm border-0 overflow-hidden" style={{ borderRadius: '12px' }}>
                 <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0 text-nowrap">
@@ -166,8 +182,10 @@ const EmployeesPage = () => {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan="5" className="text-center py-5 text-muted">Cargando personal...</td></tr>
+                            ) : totalPersonal === 0 ? (
+                                <tr><td colSpan="5" className="text-center py-5 text-muted">No hay empleados registrados.</td></tr>
                             ) : (
-                                employees.map((emp) => (
+                                currentItems.map((emp) => (
                                     <tr key={emp.id} className="row-hover">
                                         <td className="px-4 text-muted small">#{emp.id}</td>
                                         <td><span className="fw-bold text-dark">{emp.username}</span></td>
@@ -179,10 +197,10 @@ const EmployeesPage = () => {
                                         </td>
                                         <td className="text-end px-4">
                                             <button className="btn-action-mini btn-edit-blue" onClick={() => openModal(emp)}>
-                                                <i className="bi bi-pencil"></i>
+                                                <i className="bi bi-pencil-square"></i>
                                             </button>
                                             <button className="btn-action-mini btn-delete-red ms-2" onClick={() => handleDelete(emp.id)}>
-                                                <i className="bi bi-trash"></i>
+                                                <i className="bi bi-trash3"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -191,6 +209,44 @@ const EmployeesPage = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* PAGINACIÓN FOOTER */}
+                {!loading && totalPages > 1 && (
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
+                        <div className="text-muted small">
+                            Mostrando <span className="fw-semibold text-dark">{indexOfFirstItem + 1}</span> a <span className="fw-semibold text-dark">{Math.min(indexOfLastItem, totalPersonal)}</span> de <span className="fw-semibold text-dark">{totalPersonal}</span> empleados
+                        </div>
+                        <nav>
+                            <ul className="pagination pagination-sm mb-0">
+                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage - 1)}>
+                                        <i className="bi bi-chevron-left text-dark"></i>
+                                    </button>
+                                </li>
+                                
+                                {[...Array(totalPages)].map((_, index) => (
+                                    <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                                        <button 
+                                            className="page-link border-0 shadow-none mx-1 rounded-3" 
+                                            style={currentPage === index + 1 ? 
+                                                { backgroundColor: '#198754', color: 'white' } : 
+                                                { backgroundColor: '#f8f9fa', color: '#1a1d23' }}
+                                            onClick={() => setCurrentPage(index + 1)}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    </li>
+                                ))}
+
+                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage + 1)}>
+                                        <i className="bi bi-chevron-right text-dark"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                )}
             </div>
 
             {/* MODAL ESTILIZADO */}
@@ -209,7 +265,7 @@ const EmployeesPage = () => {
                                     <label className="form-label small fw-bold text-muted text-uppercase">Nombre de Usuario</label>
                                     <input
                                         type="text"
-                                        className="form-control bg-light border-0"
+                                        className="form-control bg-light border-0 py-2"
                                         value={formData.username}
                                         onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                                         required
@@ -219,7 +275,7 @@ const EmployeesPage = () => {
                                     <label className="form-label small fw-bold text-muted text-uppercase">Correo Institucional</label>
                                     <input
                                         type="email"
-                                        className="form-control bg-light border-0"
+                                        className="form-control bg-light border-0 py-2"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                         required
@@ -230,7 +286,7 @@ const EmployeesPage = () => {
                                         <label className="form-label small fw-bold text-muted text-uppercase">Contraseña Temporal</label>
                                         <input
                                             type="password"
-                                            className="form-control bg-light border-0"
+                                            className="form-control bg-light border-0 py-2"
                                             value={formData.password}
                                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                             required
@@ -240,7 +296,7 @@ const EmployeesPage = () => {
                                 <div className="mb-3">
                                     <label className="form-label small fw-bold text-muted text-uppercase">Rol Asignado</label>
                                     <select
-                                        className="form-select bg-light border-0"
+                                        className="form-select bg-light border-0 py-2"
                                         value={formData.rolNombre}
                                         onChange={(e) => setFormData({ ...formData, rolNombre: e.target.value })}
                                     >
@@ -250,8 +306,8 @@ const EmployeesPage = () => {
                                 </div>
                             </div>
                             <div className="modal-footer border-0 p-4 pt-0">
-                                <button type="button" className="btn btn-light px-4" onClick={() => bsModal.current.hide()}>Cancelar</button>
-                                <button type="submit" className={`btn px-4 fw-semibold ${formData.id ? "btn-primary" : "btn-success"}`}>
+                                <button type="button" className="btn btn-light px-4 fw-semibold text-muted" onClick={() => bsModal.current.hide()}>Cancelar</button>
+                                <button type="submit" className={`btn px-4 fw-bold shadow-sm ${formData.id ? "btn-primary" : "btn-success"}`} style={{ borderRadius: '8px' }}>
                                     {formData.id ? "Guardar Cambios" : "Registrar Ahora"}
                                 </button>
                             </div>
@@ -260,7 +316,6 @@ const EmployeesPage = () => {
                 </div>
             </div>
 
-            {/* ESTILOS PERSONALIZADOS */}
             <style>{`
                 .btn-glow-green:hover {
                     background-color: #157347 !important;
@@ -270,7 +325,6 @@ const EmployeesPage = () => {
                 
                 .row-hover:hover { background-color: #f8f9fa !important; }
 
-                /* Estilo de Roles */
                 .role-badge {
                     font-size: 10px;
                     font-weight: 700;
@@ -282,7 +336,6 @@ const EmployeesPage = () => {
                 .role-admin { background-color: #ffe5e5; color: #d63031; }
                 .role-emp { background-color: #e1f5fe; color: #0288d1; }
 
-                /* Botones de acción minimalistas */
                 .btn-action-mini {
                     background: transparent;
                     border: none;
@@ -296,6 +349,10 @@ const EmployeesPage = () => {
                 
                 .btn-delete-red { color: #dc3545; }
                 .btn-delete-red:hover { background-color: #fff0f0; transform: scale(1.1); }
+
+                .pagination .page-link:hover:not(.active) {
+                    background-color: #e9ecef !important;
+                }
 
                 .modal.show { backdrop-filter: blur(4px); background-color: rgba(0,0,0,0.4); }
             `}</style>
