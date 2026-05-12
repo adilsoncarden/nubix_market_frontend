@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { Modal } from "bootstrap"; 
 import { useSuppliers } from "../features/suppliers/hooks/useSuppliers";
 import SupplierForm from "../features/suppliers/components/SupplierForm";
 import Swal from "sweetalert2";
@@ -11,43 +12,40 @@ const SuppliersPage = () => {
         saveSupplier,
         removeSupplier,
     } = useSuppliers();
+    
     const [selectedSupplier, setSelectedSupplier] = useState(null);
-    const [showModal, setShowModal] = useState(false);
 
-    // --- LÓGICA DE PAGINACIÓN ---
+    // --- ESTADOS PARA PAGINACIÓN ---
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    const modalRef = useRef();
+    const bsModal = useRef();
+
     useEffect(() => {
         refreshSuppliers();
+        if (modalRef.current) {
+            bsModal.current = new Modal(modalRef.current);
+        }
     }, []);
 
-    // MÉTRICAS DINÁMICAS
-    const totalProveedores = suppliers.length;
-    const conContacto = suppliers.filter(s => s.email || s.telefono).length;
-
-    // --- CÁLCULOS DE SEGMENTACIÓN ---
+    // --- LÓGICA DE PAGINACIÓN ---
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = suppliers.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(totalProveedores / itemsPerPage);
+    const currentSuppliers = suppliers.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(suppliers.length / itemsPerPage);
 
-    // Ajuste de página si se eliminan elementos
-    useEffect(() => {
-        if (currentPage > totalPages && totalPages > 0) {
-            setCurrentPage(totalPages);
-        }
-    }, [suppliers, totalPages, currentPage]);
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     const handleOpenModal = (supplier = null) => {
         setSelectedSupplier(supplier);
-        setShowModal(true);
+        bsModal.current.show();
     };
 
     const handleSave = async (data) => {
         const success = await saveSupplier(data);
         if (success) {
-            setShowModal(false);
+            bsModal.current.hide();
             Swal.fire({ 
                 icon: "success", 
                 title: selectedSupplier ? "Actualizado correctamente" : "Registrado con éxito", 
@@ -95,7 +93,6 @@ const SuppliersPage = () => {
                         height: '40px', 
                         backgroundColor: "#198754", 
                         border: "none",
-                        transition: "all 0.3s ease",
                         fontWeight: "600",
                         borderRadius: '10px'
                     }}
@@ -104,7 +101,7 @@ const SuppliersPage = () => {
                 </button>
             </div>
 
-            {/* MÉTRICAS */}
+            {/* MÉTRICAS (Recuperadas) */}
             <div className="row g-4 mb-4">
                 <div className="col-md-6">
                     <div className="card border-0 shadow-sm p-3" style={{ borderRadius: '15px' }}>
@@ -114,7 +111,7 @@ const SuppliersPage = () => {
                             </div>
                             <div className="ms-3">
                                 <small className="text-muted d-block fw-bold text-uppercase" style={{ fontSize: '11px' }}>Total Proveedores</small>
-                                <h3 className="fw-bold mb-0">{totalProveedores}</h3>
+                                <h3 className="fw-bold mb-0">{suppliers.length}</h3>
                             </div>
                         </div>
                     </div>
@@ -128,7 +125,7 @@ const SuppliersPage = () => {
                             </div>
                             <div className="ms-3">
                                 <small className="text-muted d-block fw-bold text-uppercase" style={{ fontSize: '11px' }}>Con Datos de Contacto</small>
-                                <h3 className="fw-bold mb-0">{conContacto}</h3>
+                                <h3 className="fw-bold mb-0">{suppliers.filter(s => s.email || s.telefono).length}</h3>
                             </div>
                         </div>
                     </div>
@@ -149,73 +146,72 @@ const SuppliersPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {loading ? (
-                                <tr><td colSpan="5" className="text-center py-4">Cargando...</td></tr>
-                            ) : totalProveedores === 0 ? (
-                                <tr><td colSpan="5" className="text-center py-5 text-muted">No hay proveedores registrados.</td></tr>
-                            ) : (
-                                currentItems.map((s) => (
-                                    <tr key={s.id}>
-                                        <td className="px-4 text-muted small fw-bold">{s.ruc || `#${s.id}`}</td>
-                                        <td><span className="fw-bold text-dark">{s.nombre}</span></td>
-                                        <td><span className="text-muted">{s.telefono || '---'}</span></td>
-                                        <td>
-                                            <span className="badge border text-dark fw-normal bg-light">
-                                                {s.email || 'Sin correo'}
-                                            </span>
-                                        </td>
-                                        <td className="text-end px-4">
-                                            <button 
-                                                className="btn btn-sm btn-outline-primary me-2 border-0 shadow-none" 
-                                                onClick={() => handleOpenModal(s)}
-                                            >
-                                                <i className="bi bi-pencil-square fs-6"></i>
-                                            </button>
-                                            <button 
-                                                className="btn btn-sm btn-outline-danger border-0 shadow-none" 
-                                                onClick={() => handleDelete(s.id)}
-                                            >
-                                                <i className="bi bi-trash3 fs-6"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                            {!loading && currentSuppliers.map((s) => (
+                                <tr key={s.id} className="row-hover">
+                                    <td className="px-4 text-muted small fw-bold">{s.ruc || `#${s.id}`}</td>
+                                    <td><span className="fw-bold text-dark">{s.nombre}</span></td>
+                                    <td><span className="text-muted">{s.telefono || '---'}</span></td>
+                                    <td>
+                                        <span className="badge border text-dark fw-normal bg-light" style={{ borderRadius: '6px' }}>
+                                            {s.email || 'Sin correo'}
+                                        </span>
+                                    </td>
+                                    <td className="text-end px-4">
+                                        <button className="btn-icon-highlight edit me-3" onClick={() => handleOpenModal(s)}>
+                                            <i className="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button className="btn-icon-highlight delete" onClick={() => handleDelete(s.id)}>
+                                            <i className="bi bi-trash-fill"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                 </div>
 
-                {/* PAGINACIÓN FOOTER */}
+                {/* PAGINACIÓN ESTILO image_09dd60.png */}
                 {!loading && totalPages > 1 && (
                     <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
                         <div className="text-muted small">
-                            Mostrando <span className="fw-semibold text-dark">{indexOfFirstItem + 1}</span> a <span className="fw-semibold text-dark">{Math.min(indexOfLastItem, totalProveedores)}</span> de <span className="fw-semibold text-dark">{totalProveedores}</span> proveedores
+                            Mostrando <span className="fw-bold text-dark">{indexOfFirstItem + 1}</span> a <span className="fw-bold text-dark">{Math.min(indexOfLastItem, suppliers.length)}</span> de <span className="fw-bold text-dark">{suppliers.length}</span> proveedores
                         </div>
                         <nav>
-                            <ul className="pagination pagination-sm mb-0">
+                            <ul className="pagination pagination-sm mb-0 align-items-center">
                                 <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage - 1)}>
-                                        <i className="bi bi-chevron-left text-dark"></i>
+                                    <button 
+                                        className="page-link border-0 bg-transparent text-success shadow-none p-2" 
+                                        onClick={() => paginate(currentPage - 1)}
+                                    >
+                                        <i className="bi bi-chevron-left"></i>
                                     </button>
                                 </li>
                                 
-                                {[...Array(totalPages)].map((_, index) => (
-                                    <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                                {[...Array(totalPages).keys()].map(num => (
+                                    <li key={num + 1} className={`page-item ${currentPage === num + 1 ? 'active' : ''}`}>
                                         <button 
-                                            className="page-link border-0 shadow-none mx-1 rounded-3" 
-                                            style={currentPage === index + 1 ? 
-                                                { backgroundColor: '#198754', color: 'white' } : 
-                                                { backgroundColor: '#f8f9fa', color: '#1a1d23' }}
-                                            onClick={() => setCurrentPage(index + 1)}
+                                            className="page-link border-0 mx-1 d-flex align-items-center justify-content-center shadow-none" 
+                                            onClick={() => paginate(num + 1)}
+                                            style={{
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '8px',
+                                                fontWeight: '600',
+                                                backgroundColor: currentPage === num + 1 ? '#198754' : '#f8f9fa',
+                                                color: currentPage === num + 1 ? '#fff' : '#1a1d23'
+                                            }}
                                         >
-                                            {index + 1}
+                                            {num + 1}
                                         </button>
                                     </li>
                                 ))}
 
                                 <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage + 1)}>
-                                        <i className="bi bi-chevron-right text-dark"></i>
+                                    <button 
+                                        className="page-link border-0 bg-transparent text-success shadow-none p-2" 
+                                        onClick={() => paginate(currentPage + 1)}
+                                    >
+                                        <i className="bi bi-chevron-right"></i>
                                     </button>
                                 </li>
                             </ul>
@@ -225,42 +221,75 @@ const SuppliersPage = () => {
             </div>
 
             {/* MODAL */}
-            {showModal && (
-                <div className="modal show d-block animate__animated animate__fadeIn" style={{ backgroundColor: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}>
-                    <div className="modal-dialog modal-dialog-centered">
-                        <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
-                            <div className="modal-header border-0 pb-0 px-4 pt-4">
-                                <h5 className="modal-title fw-bold">
-                                    {selectedSupplier ? "Editar Proveedor" : "Nuevo Proveedor"}
-                                </h5>
-                                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
-                            </div>
-                            <div className="modal-body p-4">
-                                <SupplierForm
-                                    supplier={selectedSupplier}
-                                    onSave={handleSave}
-                                    onClose={() => setShowModal(false)}
-                                />
-                            </div>
+            <div className="modal fade" ref={modalRef} tabIndex="-1" data-bs-backdrop="static">
+                <div className="modal-dialog modal-dialog-centered">
+                    <div className="modal-content border-0 shadow-lg modal-proveedor-custom" style={{ borderRadius: '15px' }}>
+                        <div className="modal-header border-0 pb-0 pt-4 px-4">
+                            <h5 className="modal-title fw-bold">
+                                {selectedSupplier ? "Editar Proveedor" : "Nuevo Proveedor"}
+                            </h5>
+                            <button type="button" className="btn-close shadow-none" onClick={() => bsModal.current.hide()}></button>
+                        </div>
+                        <div className="modal-body p-4">
+                            <SupplierForm
+                                supplier={selectedSupplier}
+                                onSave={handleSave}
+                                onClose={() => bsModal.current.hide()}
+                            />
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
 
             <style>{`
+                .row-hover:hover { background-color: #fcfcfc !important; }
+                .modal.fade { backdrop-filter: blur(4px); }
+                
+                .btn-icon-highlight {
+                    background: none;
+                    border: none;
+                    padding: 8px;
+                    font-size: 1.1rem;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .btn-icon-highlight.edit { color: #198754; }
+                .btn-icon-highlight.edit:hover {
+                    transform: scale(1.25);
+                    color: #157347;
+                    filter: drop-shadow(0 0 8px rgba(25, 135, 84, 0.6));
+                }
+
+                .btn-icon-highlight.delete { color: #dc3545; }
+                .btn-icon-highlight.delete:hover {
+                    transform: scale(1.25);
+                    color: #bb2d3b;
+                    filter: drop-shadow(0 0 8px rgba(220, 53, 69, 0.6));
+                }
+
                 .btn-nuevo-proveedor:hover {
                     background-color: #157347 !important;
                     box-shadow: 0 0 15px rgba(25, 135, 84, 0.5) !important;
                     transform: translateY(-1px);
                 }
-                .btn-nuevo-proveedor:active {
-                    transform: translateY(0);
+
+                .modal-proveedor-custom input:focus, 
+                .modal-proveedor-custom select:focus {
+                    border-color: #198754 !important;
+                    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important;
                 }
-                .table-hover tbody tr:hover {
-                    background-color: rgba(0,0,0,.01);
-                }
-                .pagination .page-link:hover:not(.active) {
-                    background-color: #e9ecef !important;
+
+                .modal-proveedor-custom button[type="submit"] {
+                    background-color: #198754 !important;
+                    border: none !important;
+                    color: white !important;
+                    padding: 10px 24px !important;
+                    border-radius: 12px !important;
+                    font-weight: 700 !important;
                 }
             `}</style>
         </div>
