@@ -5,7 +5,10 @@ import { Tooltip } from "bootstrap";
 const AdminLogin = () => {
     const [credentials, setCredentials] = useState({ email: "", password: "" });
     const [isHovered, setIsHovered] = useState(false);
-    const [darkMode, setDarkMode] = useState(true); 
+    
+    // --- Lógica de Modo Oscuro Comentada para el futuro ---
+    // const [darkMode, setDarkMode] = useState(true); 
+    const darkMode = false; // Forzado a modo claro por ahora
 
     const { handleAdminLogin, loading, error } = useAdminAuth();
 
@@ -39,7 +42,8 @@ const AdminLogin = () => {
         <div className="container-fluid vh-100 d-flex align-items-center justify-content-center" 
              style={{ backgroundColor: colors.bodyBg, transition: "0.3s" }}>
             
-            <button 
+            {/* --- Botón de Switch de modo oscuro comentado --- */}
+            {/* <button 
                 type="button"
                 onClick={() => setDarkMode(!darkMode)}
                 className="btn btn-sm position-absolute top-0 end-0 m-3 rounded-circle shadow-sm"
@@ -52,7 +56,8 @@ const AdminLogin = () => {
                 }}
             >
                 <i className={`bi bi-${darkMode ? "sun-fill" : "moon-fill"}`}></i>
-            </button>
+            </button> 
+            */}
 
             <div style={{ width: "100%", maxWidth: "360px" }}>
                 <div className="card shadow-lg border-0" 
