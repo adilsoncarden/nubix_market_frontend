@@ -14,6 +14,10 @@ const SuppliersPage = () => {
     const [selectedSupplier, setSelectedSupplier] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
+    // --- LÓGICA DE PAGINACIÓN ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     useEffect(() => {
         refreshSuppliers();
     }, []);
@@ -21,6 +25,19 @@ const SuppliersPage = () => {
     // MÉTRICAS DINÁMICAS
     const totalProveedores = suppliers.length;
     const conContacto = suppliers.filter(s => s.email || s.telefono).length;
+
+    // --- CÁLCULOS DE SEGMENTACIÓN ---
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = suppliers.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(totalProveedores / itemsPerPage);
+
+    // Ajuste de página si se eliminan elementos
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [suppliers, totalPages, currentPage]);
 
     const handleOpenModal = (supplier = null) => {
         setSelectedSupplier(supplier);
@@ -61,7 +78,7 @@ const SuppliersPage = () => {
     return (
         <div className="container-fluid animate__animated animate__fadeIn p-4">
             
-            {/* CABECERA CON BOTÓN VERDE ILUMINADO */}
+            {/* CABECERA */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em', color: '#1a1d23' }}>
@@ -79,14 +96,15 @@ const SuppliersPage = () => {
                         backgroundColor: "#198754", 
                         border: "none",
                         transition: "all 0.3s ease",
-                        fontWeight: "600"
+                        fontWeight: "600",
+                        borderRadius: '10px'
                     }}
                 >
                     <i className="bi bi-person-plus-fill me-2"></i> Nuevo Proveedor
                 </button>
             </div>
 
-            {/* MÉTRICAS DINÁMICAS */}
+            {/* MÉTRICAS */}
             <div className="row g-4 mb-4">
                 <div className="col-md-6">
                     <div className="card border-0 shadow-sm p-3" style={{ borderRadius: '15px' }}>
@@ -117,7 +135,7 @@ const SuppliersPage = () => {
                 </div>
             </div>
 
-            {/* TABLA LIMPIA */}
+            {/* TABLA */}
             <div className="card shadow-sm border-0 overflow-hidden" style={{ borderRadius: '12px' }}>
                 <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0 text-nowrap">
@@ -133,10 +151,10 @@ const SuppliersPage = () => {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan="5" className="text-center py-4">Cargando...</td></tr>
-                            ) : suppliers.length === 0 ? (
+                            ) : totalProveedores === 0 ? (
                                 <tr><td colSpan="5" className="text-center py-5 text-muted">No hay proveedores registrados.</td></tr>
                             ) : (
-                                suppliers.map((s) => (
+                                currentItems.map((s) => (
                                     <tr key={s.id}>
                                         <td className="px-4 text-muted small fw-bold">{s.ruc || `#${s.id}`}</td>
                                         <td><span className="fw-bold text-dark">{s.nombre}</span></td>
@@ -151,13 +169,13 @@ const SuppliersPage = () => {
                                                 className="btn btn-sm btn-outline-primary me-2 border-0 shadow-none" 
                                                 onClick={() => handleOpenModal(s)}
                                             >
-                                                <i className="bi bi-pencil"></i>
+                                                <i className="bi bi-pencil-square fs-6"></i>
                                             </button>
                                             <button 
                                                 className="btn btn-sm btn-outline-danger border-0 shadow-none" 
                                                 onClick={() => handleDelete(s.id)}
                                             >
-                                                <i className="bi bi-trash"></i>
+                                                <i className="bi bi-trash3 fs-6"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -166,9 +184,47 @@ const SuppliersPage = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* PAGINACIÓN FOOTER */}
+                {!loading && totalPages > 1 && (
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
+                        <div className="text-muted small">
+                            Mostrando <span className="fw-semibold text-dark">{indexOfFirstItem + 1}</span> a <span className="fw-semibold text-dark">{Math.min(indexOfLastItem, totalProveedores)}</span> de <span className="fw-semibold text-dark">{totalProveedores}</span> proveedores
+                        </div>
+                        <nav>
+                            <ul className="pagination pagination-sm mb-0">
+                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage - 1)}>
+                                        <i className="bi bi-chevron-left text-dark"></i>
+                                    </button>
+                                </li>
+                                
+                                {[...Array(totalPages)].map((_, index) => (
+                                    <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                                        <button 
+                                            className="page-link border-0 shadow-none mx-1 rounded-3" 
+                                            style={currentPage === index + 1 ? 
+                                                { backgroundColor: '#198754', color: 'white' } : 
+                                                { backgroundColor: '#f8f9fa', color: '#1a1d23' }}
+                                            onClick={() => setCurrentPage(index + 1)}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    </li>
+                                ))}
+
+                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage + 1)}>
+                                        <i className="bi bi-chevron-right text-dark"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                )}
             </div>
 
-            {/* MODAL PERSONALIZADO */}
+            {/* MODAL */}
             {showModal && (
                 <div className="modal show d-block animate__animated animate__fadeIn" style={{ backgroundColor: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }}>
                     <div className="modal-dialog modal-dialog-centered">
@@ -191,7 +247,6 @@ const SuppliersPage = () => {
                 </div>
             )}
 
-            {/* ESTILOS ADICIONALES PARA EFECTOS */}
             <style>{`
                 .btn-nuevo-proveedor:hover {
                     background-color: #157347 !important;
@@ -203,6 +258,9 @@ const SuppliersPage = () => {
                 }
                 .table-hover tbody tr:hover {
                     background-color: rgba(0,0,0,.01);
+                }
+                .pagination .page-link:hover:not(.active) {
+                    background-color: #e9ecef !important;
                 }
             `}</style>
         </div>
