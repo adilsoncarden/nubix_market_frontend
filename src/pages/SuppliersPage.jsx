@@ -15,6 +15,10 @@ const SuppliersPage = () => {
     
     const [selectedSupplier, setSelectedSupplier] = useState(null);
 
+    // --- ESTADOS PARA PAGINACIÓN ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     const modalRef = useRef();
     const bsModal = useRef();
 
@@ -24,6 +28,14 @@ const SuppliersPage = () => {
             bsModal.current = new Modal(modalRef.current);
         }
     }, []);
+
+    // --- LÓGICA DE PAGINACIÓN ---
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentSuppliers = suppliers.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(suppliers.length / itemsPerPage);
+
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
     const handleOpenModal = (supplier = null) => {
         setSelectedSupplier(supplier);
@@ -89,7 +101,7 @@ const SuppliersPage = () => {
                 </button>
             </div>
 
-            {/* MÉTRICAS */}
+            {/* MÉTRICAS (Recuperadas) */}
             <div className="row g-4 mb-4">
                 <div className="col-md-6">
                     <div className="card border-0 shadow-sm p-3" style={{ borderRadius: '15px' }}>
@@ -134,7 +146,7 @@ const SuppliersPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {!loading && suppliers.map((s) => (
+                            {!loading && currentSuppliers.map((s) => (
                                 <tr key={s.id} className="row-hover">
                                     <td className="px-4 text-muted small fw-bold">{s.ruc || `#${s.id}`}</td>
                                     <td><span className="fw-bold text-dark">{s.nombre}</span></td>
@@ -157,6 +169,55 @@ const SuppliersPage = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* PAGINACIÓN ESTILO image_09dd60.png */}
+                {!loading && totalPages > 1 && (
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
+                        <div className="text-muted small">
+                            Mostrando <span className="fw-bold text-dark">{indexOfFirstItem + 1}</span> a <span className="fw-bold text-dark">{Math.min(indexOfLastItem, suppliers.length)}</span> de <span className="fw-bold text-dark">{suppliers.length}</span> proveedores
+                        </div>
+                        <nav>
+                            <ul className="pagination pagination-sm mb-0 align-items-center">
+                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link border-0 bg-transparent text-success shadow-none p-2" 
+                                        onClick={() => paginate(currentPage - 1)}
+                                    >
+                                        <i className="bi bi-chevron-left"></i>
+                                    </button>
+                                </li>
+                                
+                                {[...Array(totalPages).keys()].map(num => (
+                                    <li key={num + 1} className={`page-item ${currentPage === num + 1 ? 'active' : ''}`}>
+                                        <button 
+                                            className="page-link border-0 mx-1 d-flex align-items-center justify-content-center shadow-none" 
+                                            onClick={() => paginate(num + 1)}
+                                            style={{
+                                                width: '32px',
+                                                height: '32px',
+                                                borderRadius: '8px',
+                                                fontWeight: '600',
+                                                backgroundColor: currentPage === num + 1 ? '#198754' : '#f8f9fa',
+                                                color: currentPage === num + 1 ? '#fff' : '#1a1d23'
+                                            }}
+                                        >
+                                            {num + 1}
+                                        </button>
+                                    </li>
+                                ))}
+
+                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                    <button 
+                                        className="page-link border-0 bg-transparent text-success shadow-none p-2" 
+                                        onClick={() => paginate(currentPage + 1)}
+                                    >
+                                        <i className="bi bi-chevron-right"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                )}
             </div>
 
             {/* MODAL */}
@@ -216,16 +277,12 @@ const SuppliersPage = () => {
                     transform: translateY(-1px);
                 }
 
-                /* --- ESTILOS DEL MODAL (Fuerza Bruta para el Círculo) --- */
-                
-                /* 1. Reset de Inputs */
                 .modal-proveedor-custom input:focus, 
                 .modal-proveedor-custom select:focus {
                     border-color: #198754 !important;
                     box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25) !important;
                 }
 
-                /* 2. Botón Guardar con Icono Forzado */
                 .modal-proveedor-custom button[type="submit"] {
                     background-color: #198754 !important;
                     border: none !important;
@@ -233,39 +290,6 @@ const SuppliersPage = () => {
                     padding: 10px 24px !important;
                     border-radius: 12px !important;
                     font-weight: 700 !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: center !important;
-                    gap: 8px !important;
-                    transition: all 0.3s ease !important;
-                }
-
-                /* Aquí inyectamos el círculo de la imagen mediante un SVG de fondo si el icono falla */
-                .modal-proveedor-custom button[type="submit"]::before {
-                    content: "";
-                    display: inline-block;
-                    width: 20px;
-                    height: 20px;
-                    /* Icono de círculo con check (bi-check2-circle) en formato SVG */
-                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='white' class='bi bi-check2-circle' viewBox='0 0 16 16'%3E%3Cpath d='M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z'/%3E%3Cpath d='M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z'/%3E%3C/svg%3E");
-                    background-repeat: no-repeat;
-                    background-size: contain;
-                }
-
-                .modal-proveedor-custom button[type="submit"]:hover {
-                    background-color: #157347 !important;
-                    transform: translateY(-1px);
-                    box-shadow: 0 4px 10px rgba(25, 135, 84, 0.3) !important;
-                }
-
-                /* 3. Botón Cancelar */
-                .modal-proveedor-custom button:not([type="submit"]):not(.btn-close) {
-                    background-color: #f4f6f9 !important;
-                    color: #5d6778 !important;
-                    border: none !important;
-                    font-weight: 700 !important;
-                    padding: 10px 24px !important;
-                    border-radius: 12px !important;
                 }
             `}</style>
         </div>

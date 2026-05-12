@@ -81,13 +81,13 @@ const ClientsPage = () => {
                         Gestión de Clientes
                     </h2>
                     <p className="text-muted small mb-0">
-                        Visualiza y edita los usuarios registrados en <span className="fw-semibold text-primary">Nubix Market</span>
+                        Visualiza y edita los usuarios registrados en <span className="fw-semibold text-success">Nubix Market</span>
                     </p>
                 </div>
                 <div className="d-flex align-items-center bg-white shadow-sm px-3 py-2" style={{ borderRadius: '10px', border: '1px solid #eee' }}>
                     <div className="bg-success rounded-circle me-2" style={{ width: '8px', height: '8px' }}></div>
                     <span className="text-secondary small fw-bold text-uppercase me-2" style={{ fontSize: '11px' }}>Total Clientes:</span>
-                    <span className="fw-bold text-dark">{totalClientes} un..</span>
+                    <span className="fw-bold text-dark">{totalClientes} un.</span>
                 </div>
             </div>
 
@@ -121,11 +121,10 @@ const ClientsPage = () => {
                                             </span>
                                         </td>
                                         <td className="text-end px-4">
-                                            {/* BOTÓN EDITAR CON LÁPIZ VERDE Y ANIMACIÓN */}
                                             <button 
                                                 className="btn btn-sm border-0 shadow-none p-1 btn-animate-edit" 
                                                 onClick={() => handleEditClick(client)}
-                                                style={{ color: '#0d9488' }}
+                                                style={{ color: '#198754' }}
                                             >
                                                 <i className="bi bi-pencil fs-5"></i>
                                             </button>
@@ -137,7 +136,7 @@ const ClientsPage = () => {
                     </table>
                 </div>
 
-                {/* PAGINACIÓN FOOTER */}
+                {/* PAGINACIÓN FOOTER (ACTUALIZADA A VERDE) */}
                 {!loading && totalPages > 1 && (
                     <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
                         <div className="text-muted small">
@@ -147,7 +146,7 @@ const ClientsPage = () => {
                             <ul className="pagination pagination-sm mb-0">
                                 <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                                     <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage - 1)}>
-                                        <i className="bi bi-chevron-left text-dark"></i>
+                                        <i className="bi bi-chevron-left text-success"></i>
                                     </button>
                                 </li>
                                 
@@ -156,7 +155,7 @@ const ClientsPage = () => {
                                         <button 
                                             className="page-link border-0 shadow-none mx-1 rounded-3" 
                                             style={currentPage === index + 1 ? 
-                                                { backgroundColor: '#0d6efd', color: 'white' } : 
+                                                { backgroundColor: '#198754', color: 'white' } : 
                                                 { backgroundColor: '#f8f9fa', color: '#1a1d23' }}
                                             onClick={() => setCurrentPage(index + 1)}
                                         >
@@ -167,7 +166,7 @@ const ClientsPage = () => {
 
                                 <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
                                     <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage + 1)}>
-                                        <i className="bi bi-chevron-right text-dark"></i>
+                                        <i className="bi bi-chevron-right text-success"></i>
                                     </button>
                                 </li>
                             </ul>
@@ -176,13 +175,13 @@ const ClientsPage = () => {
                 )}
             </div>
 
-            {/* MODAL */}
+            {/* MODAL (ACTUALIZADO A VERDE) */}
             <div className="modal fade" ref={modalRef} tabIndex="-1" aria-hidden="true">
                 <div className="modal-dialog modal-dialog-centered">
                     <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
                         <div className="modal-header border-0 pt-4 px-4 pb-0">
                             <h5 className="modal-title fw-bold">Editar Cliente</h5>
-                            <button type="button" className="btn-close" onClick={() => bsModal.current.hide()}></button>
+                            <button type="button" className="btn-close shadow-none" onClick={() => bsModal.current.hide()}></button>
                         </div>
                         <form onSubmit={handleUpdate}>
                             <div className="modal-body p-4">
@@ -190,7 +189,7 @@ const ClientsPage = () => {
                                     <label className="form-label small fw-bold text-muted text-uppercase">Nombre de Usuario</label>
                                     <input
                                         type="text"
-                                        className="form-control bg-light border-0 py-2"
+                                        className="form-control bg-light border-0 py-2 custom-input"
                                         value={selectedClient.username}
                                         onChange={(e) => setSelectedClient({...selectedClient, username: e.target.value})}
                                         required
@@ -200,7 +199,7 @@ const ClientsPage = () => {
                                     <label className="form-label small fw-bold text-muted text-uppercase">Correo Electrónico</label>
                                     <input
                                         type="email"
-                                        className="form-control bg-light border-0 py-2"
+                                        className="form-control bg-light border-0 py-2 custom-input"
                                         value={selectedClient.email}
                                         onChange={(e) => setSelectedClient({...selectedClient, email: e.target.value})}
                                         required
@@ -209,7 +208,7 @@ const ClientsPage = () => {
                             </div>
                             <div className="modal-footer border-0 p-4 pt-0">
                                 <button type="button" className="btn btn-light px-4 fw-semibold text-muted" onClick={() => bsModal.current.hide()}>Cancelar</button>
-                                <button type="submit" className="btn btn-primary px-4 fw-bold shadow-sm" style={{ borderRadius: '8px' }}>Guardar Cambios</button>
+                                <button type="submit" className="btn btn-success px-4 fw-bold shadow-sm" style={{ borderRadius: '8px', backgroundColor: '#198754' }}>Guardar Cambios</button>
                             </div>
                         </form>
                     </div>
@@ -217,32 +216,38 @@ const ClientsPage = () => {
             </div>
 
             <style>{`
-                .row-hover:hover { background-color: #f8f9fa !important; }
+                .row-hover:hover { background-color: #fcfcfc !important; }
 
                 .role-text {
                     font-size: 11px;
                     font-weight: 600;
                     text-transform: uppercase;
                     letter-spacing: 0.5px;
-                    color: #5a6a85;
-                    background-color: #f0f2f5;
+                    color: #198754;
+                    background-color: #e8f5e9;
                     padding: 3px 8px;
                     border-radius: 4px;
                 }
 
-                /* ANIMACIÓN LÁPIZ VERDE */
                 .btn-animate-edit {
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
                 .btn-animate-edit:hover {
                     transform: scale(1.25);
-                    filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.5));
-                    color: #0f766e !important;
+                    filter: drop-shadow(0 0 8px rgba(25, 135, 84, 0.4));
+                    color: #157347 !important;
                 }
 
                 .pagination .page-link:hover:not(.active) {
-                    background-color: #e9ecef !important;
+                    background-color: #e8f5e9 !important;
+                    color: #198754 !important;
+                }
+
+                .custom-input:focus {
+                    background-color: #fff !important;
+                    border: 1px solid #198754 !important;
+                    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15) !important;
                 }
             `}</style>
         </div>

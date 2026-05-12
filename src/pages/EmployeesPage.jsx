@@ -6,6 +6,8 @@ import { Modal } from "bootstrap";
 const EmployeesPage = () => {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
+    
+    // --- LÓGICA DE PAGINACIÓN ---
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -38,9 +40,12 @@ const EmployeesPage = () => {
         }
     }, []);
 
+    // --- CÁLCULOS DE PAGINACIÓN ---
     const totalPersonal = employees.length;
-    const totalAdmins = employees.filter(e => e.rolNombre === "ADMIN").length;
-    const currentItems = employees.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = employees.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(totalPersonal / itemsPerPage);
 
     const openModal = (employee = null) => {
         if (employee) {
@@ -97,7 +102,7 @@ const EmployeesPage = () => {
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h2 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em', color: '#1a1d23' }}>Gestión de Empleados</h2>
-                    <p className="text-muted small mb-0">Administra el personal de <span className="fw-semibold text-primary">Nubix Market</span></p>
+                    <p className="text-muted small mb-0">Administra el personal de <span className="fw-semibold text-success">Nubix Market</span></p>
                 </div>
                 <button className="btn btn-success shadow-sm px-4 fw-bold" onClick={() => openModal()} style={{ borderRadius: '10px', backgroundColor: "#198754", border: "none" }}>
                     <i className="bi bi-person-plus-fill me-2"></i> Nuevo Empleado
@@ -117,32 +122,76 @@ const EmployeesPage = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {!loading && currentItems.map((emp) => (
-                                <tr key={emp.id} className="row-hover">
-                                    <td className="px-4 text-muted small">#{emp.id}</td>
-                                    <td><span className="fw-bold text-dark">{emp.username}</span></td>
-                                    <td>{emp.email}</td>
-                                    <td>
-                                        <span className={`role-badge ${emp.rolNombre === "ADMIN" ? "role-admin" : "role-emp"}`}>
-                                            {emp.rolNombre}
-                                        </span>
-                                    </td>
-                                    <td className="text-end px-4">
-                                        <button className="btn-icon-highlight edit me-3" onClick={() => openModal(emp)}>
-                                            <i className="bi bi-pencil"></i>
-                                        </button>
-                                        <button className="btn-icon-highlight delete" onClick={() => handleDelete(emp.id)}>
-                                            <i className="bi bi-trash3"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
+                            {loading ? (
+                                <tr><td colSpan="5" className="text-center py-5 text-muted">Cargando empleados...</td></tr>
+                            ) : currentItems.length === 0 ? (
+                                <tr><td colSpan="5" className="text-center py-5 text-muted">No hay empleados registrados.</td></tr>
+                            ) : (
+                                currentItems.map((emp) => (
+                                    <tr key={emp.id} className="row-hover">
+                                        <td className="px-4 text-muted small">#{emp.id}</td>
+                                        <td><span className="fw-bold text-dark">{emp.username}</span></td>
+                                        <td>{emp.email}</td>
+                                        <td>
+                                            <span className={`role-badge ${emp.rolNombre === "ADMIN" ? "role-admin" : "role-emp"}`}>
+                                                {emp.rolNombre}
+                                            </span>
+                                        </td>
+                                        <td className="text-end px-4">
+                                            <button className="btn-icon-highlight edit me-3" onClick={() => openModal(emp)}>
+                                                <i className="bi bi-pencil"></i>
+                                            </button>
+                                            <button className="btn-icon-highlight delete" onClick={() => handleDelete(emp.id)}>
+                                                <i className="bi bi-trash3"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
+
+                {/* PAGINACIÓN FOOTER */}
+                {!loading && totalPages > 1 && (
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
+                        <div className="text-muted small">
+                            Mostrando <span className="fw-semibold text-dark">{indexOfFirstItem + 1}</span> a <span className="fw-semibold text-dark">{Math.min(indexOfLastItem, totalPersonal)}</span> de <span className="fw-semibold text-dark">{totalPersonal}</span> empleados
+                        </div>
+                        <nav>
+                            <ul className="pagination pagination-sm mb-0">
+                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage - 1)}>
+                                        <i className="bi bi-chevron-left text-success"></i>
+                                    </button>
+                                </li>
+                                
+                                {[...Array(totalPages)].map((_, index) => (
+                                    <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+                                        <button 
+                                            className="page-link border-0 shadow-none mx-1 rounded-3" 
+                                            style={currentPage === index + 1 ? 
+                                                { backgroundColor: '#198754', color: 'white' } : 
+                                                { backgroundColor: '#f8f9fa', color: '#1a1d23' }}
+                                            onClick={() => setCurrentPage(index + 1)}
+                                        >
+                                            {index + 1}
+                                        </button>
+                                    </li>
+                                ))}
+
+                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage + 1)}>
+                                        <i className="bi bi-chevron-right text-success"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                )}
             </div>
 
-            {/* MODAL (Sin cambios funcionales) */}
+            {/* MODAL */}
             <div className="modal fade" ref={modalRef} tabIndex="-1" aria-hidden="true" data-bs-backdrop="static">
                 <div className="modal-dialog modal-dialog-centered">
                     <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
@@ -153,21 +202,21 @@ const EmployeesPage = () => {
                         <form onSubmit={handleSubmit}>
                             <div className="modal-body p-4">
                                 <div className="mb-3">
-                                    <label className="form-label fw-bold small">Nombre de Usuario</label>
+                                    <label className="form-label fw-bold small text-muted">Nombre de Usuario</label>
                                     <input type="text" className="form-control shadow-none border custom-input" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} required style={{ borderRadius: '8px' }} />
                                 </div>
                                 <div className="mb-3">
-                                    <label className="form-label fw-bold small">Correo Institucional</label>
+                                    <label className="form-label fw-bold small text-muted">Correo Institucional</label>
                                     <input type="email" className="form-control shadow-none border custom-input" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required style={{ borderRadius: '8px' }} />
                                 </div>
                                 {!formData.id && (
                                     <div className="mb-3">
-                                        <label className="form-label fw-bold small">Contraseña Temporal</label>
+                                        <label className="form-label fw-bold small text-muted">Contraseña Temporal</label>
                                         <input type="password" className="form-control shadow-none border custom-input" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required style={{ borderRadius: '8px' }} />
                                     </div>
                                 )}
                                 <div className="mb-3">
-                                    <label className="form-label fw-bold small">Rol Asignado</label>
+                                    <label className="form-label fw-bold small text-muted">Rol Asignado</label>
                                     <select className="form-select shadow-none border custom-input" value={formData.rolNombre} onChange={(e) => setFormData({ ...formData, rolNombre: e.target.value })} style={{ borderRadius: '8px' }}>
                                         <option value="EMPLEADO">EMPLEADO</option>
                                         <option value="ADMIN">ADMINISTRADOR</option>
@@ -186,7 +235,7 @@ const EmployeesPage = () => {
             <style>{`
                 .role-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; }
                 .role-admin { background-color: #ffe5e5; color: #d63031; }
-                .role-emp { background-color: #e1f5fe; color: #0288d1; }
+                .role-emp { background-color: #e8f5e9; color: #198754; }
                 .row-hover:hover { background-color: #fcfcfc !important; }
                 
                 .custom-input:focus {
@@ -194,7 +243,6 @@ const EmployeesPage = () => {
                     box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.1) !important;
                 }
 
-                /* ESTILO DE ICONOS RESALTADOS */
                 .btn-icon-highlight {
                     background: none;
                     border: none;
@@ -207,27 +255,25 @@ const EmployeesPage = () => {
                     transition: all 0.25s ease;
                 }
 
-                /* Lápiz Verde - Resaltado suave */
-                .btn-icon-highlight.edit {
-                    color: #00b8a9; /* El verde de la foto */
-                }
+                .btn-icon-highlight.edit { color: #198754; }
                 .btn-icon-highlight.edit:hover {
                     transform: scale(1.25);
-                    color: #008f83;
-                    filter: drop-shadow(0 0 5px rgba(0, 184, 169, 0.4));
+                    color: #157347;
+                    filter: drop-shadow(0 0 5px rgba(25, 135, 84, 0.4));
                 }
 
-                /* Basura Roja - Resaltado suave */
-                .btn-icon-highlight.delete {
-                    color: #ff6b6b;
-                }
+                .btn-icon-highlight.delete { color: #ff6b6b; }
                 .btn-icon-highlight.delete:hover {
                     transform: scale(1.25);
                     color: #e63946;
                     filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.4));
                 }
 
-                /* Definición lineal para los iconos */
+                .pagination .page-link:hover:not(.active) {
+                    background-color: #e8f5e9 !important;
+                    color: #198754 !important;
+                }
+
                 .bi-pencil, .bi-trash3 {
                     -webkit-text-stroke: 0.7px;
                 }

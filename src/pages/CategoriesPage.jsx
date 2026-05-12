@@ -15,17 +15,28 @@ const CategoriesPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [saving, setSaving] = useState(false);
 
+    // --- LÓGICA DE PAGINACIÓN MODIFICADA ---
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-
-    const modalRef = useRef();
-    const bsModal = useRef();
-
+    const itemsPerPage = 10; // Cambiado a 8 para consistencia
     const totalCategorias = categories.length;
+    const totalPages = Math.ceil(totalCategorias / itemsPerPage);
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = categories.slice(indexOfFirstItem, indexOfLastItem);
+
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // Reajuste automático de página al eliminar
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [categories.length, totalPages, currentPage]);
+    // ----------------------------
+
+    const modalRef = useRef();
+    const bsModal = useRef();
 
     useEffect(() => {
         if (modalRef.current) {
@@ -127,7 +138,6 @@ const CategoriesPage = () => {
                                     <td><span className="fw-bold text-dark">{cat.nombre}</span></td>
                                     <td><span className="text-muted text-truncate d-inline-block" style={{ maxWidth: '300px' }}>{cat.descripcion || "—"}</span></td>
                                     <td className="text-end px-4">
-                                        {/* BOTÓN EDITAR CON ANIMACIÓN */}
                                         <button 
                                             className="btn btn-sm me-2 border-0 shadow-none p-1 btn-animate-edit" 
                                             onClick={() => openModal(cat)}
@@ -147,6 +157,46 @@ const CategoriesPage = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* CONTROLES DE PAGINACIÓN (Modificados para consistencia visual) */}
+                {totalPages > 1 && (
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
+                        <div className="text-muted small">
+                            Mostrando <span className="fw-bold text-dark">{indexOfFirstItem + 1}</span> a <span className="fw-bold text-dark">{Math.min(indexOfLastItem, totalCategorias)}</span> de <span className="fw-bold text-dark">{totalCategorias}</span> categorías
+                        </div>
+                        <nav>
+                            <ul className="pagination pagination-sm mb-0 align-items-center">
+                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                                    <button className="page-link border-0 bg-transparent text-success shadow-none p-2" onClick={() => paginate(currentPage - 1)}>
+                                        <i className="bi bi-chevron-left"></i>
+                                    </button>
+                                </li>
+                                
+                                {[...Array(totalPages).keys()].map(num => (
+                                    <li key={num + 1} className={`page-item ${currentPage === num + 1 ? 'active' : ''}`}>
+                                        <button 
+                                            className="page-link border-0 mx-1 d-flex align-items-center justify-content-center shadow-none" 
+                                            onClick={() => paginate(num + 1)}
+                                            style={{
+                                                width: '32px', height: '32px', borderRadius: '8px', fontWeight: '600',
+                                                backgroundColor: currentPage === num + 1 ? '#198754' : '#f8f9fa',
+                                                color: currentPage === num + 1 ? '#fff' : '#1a1d23'
+                                            }}
+                                        >
+                                            {num + 1}
+                                        </button>
+                                    </li>
+                                ))}
+
+                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+                                    <button className="page-link border-0 bg-transparent text-success shadow-none p-2" onClick={() => paginate(currentPage + 1)}>
+                                        <i className="bi bi-chevron-right"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                )}
             </div>
 
             {/* MODAL */}
@@ -177,31 +227,15 @@ const CategoriesPage = () => {
             </div>
 
             <style>{`
-                .modal-body input:focus, 
-                .modal-body textarea:focus,
-                .modal-body select:focus {
-                    border-color: #157347 !important;
-                    box-shadow: 0 0 0 0.25rem rgba(21, 115, 71, 0.4) !important;
-                    outline: 0 none;
-                }
-                
                 .modal.show { backdrop-filter: blur(4px); background-color: rgba(0,0,0,0.4); }
-
-                /* ANIMACIONES AL PASAR EL CURSOR */
-                .btn-animate-edit, .btn-animate-delete {
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                }
-
-                .btn-animate-edit:hover {
-                    transform: scale(1.25);
-                    filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.5));
-                    color: #0f766e !important;
-                }
-
-                .btn-animate-delete:hover {
-                    transform: scale(1.25);
-                    filter: drop-shadow(0 0 8px rgba(220, 53, 69, 0.5));
-                    color: #a51d2a !important;
+                .btn-animate-edit, .btn-animate-delete { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+                .btn-animate-edit:hover { transform: scale(1.25); filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.5)); color: #0f766e !important; }
+                .btn-animate-delete:hover { transform: scale(1.25); filter: drop-shadow(0 0 8px rgba(220, 53, 69, 0.5)); color: #a51d2a !important; }
+                
+                /* Estilos de paginación mejorados */
+                .page-link:hover:not(.active) {
+                    background-color: #e9ecef !important;
+                    color: #198754 !important;
                 }
             `}</style>
         </div>
