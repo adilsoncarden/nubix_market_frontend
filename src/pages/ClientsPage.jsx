@@ -87,7 +87,7 @@ const ClientsPage = () => {
                 <div className="d-flex align-items-center bg-white shadow-sm px-3 py-2" style={{ borderRadius: '10px', border: '1px solid #eee' }}>
                     <div className="bg-success rounded-circle me-2" style={{ width: '8px', height: '8px' }}></div>
                     <span className="text-secondary small fw-bold text-uppercase me-2" style={{ fontSize: '11px' }}>Total Clientes:</span>
-                    <span className="fw-bold text-dark">{totalClientes} un.</span>
+                    <span className="fw-bold text-dark">{totalClientes} un..</span>
                 </div>
             </div>
 
@@ -121,8 +121,13 @@ const ClientsPage = () => {
                                             </span>
                                         </td>
                                         <td className="text-end px-4">
-                                            <button className="btn-action-mini" onClick={() => handleEditClick(client)}>
-                                                <i className="bi bi-pencil-square"></i>
+                                            {/* BOTÓN EDITAR CON LÁPIZ VERDE Y ANIMACIÓN */}
+                                            <button 
+                                                className="btn btn-sm border-0 shadow-none p-1 btn-animate-edit" 
+                                                onClick={() => handleEditClick(client)}
+                                                style={{ color: '#0d9488' }}
+                                            >
+                                                <i className="bi bi-pencil fs-5"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -225,20 +230,15 @@ const ClientsPage = () => {
                     border-radius: 4px;
                 }
 
-                .btn-action-mini {
-                    background: #e1f5fe;
-                    color: #03a9f4;
-                    border: none;
-                    font-size: 0.9rem;
-                    transition: all 0.2s;
-                    padding: 4px 8px;
-                    border-radius: 6px;
+                /* ANIMACIÓN LÁPIZ VERDE */
+                .btn-animate-edit {
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 }
 
-                .btn-action-mini:hover {
-                    background-color: #b3e5fc;
-                    color: #0288d1;
-                    transform: scale(1.05);
+                .btn-animate-edit:hover {
+                    transform: scale(1.25);
+                    filter: drop-shadow(0 0 8px rgba(13, 148, 136, 0.5));
+                    color: #0f766e !important;
                 }
 
                 .pagination .page-link:hover:not(.active) {
