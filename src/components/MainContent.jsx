@@ -11,24 +11,12 @@ import slide5 from "../assets/imagen5.png";
 import slide6 from "../assets/imagen6.png";
 
 const PROMOCIONES_TOP = [
-  { 
-    titulo: "¡OFERTAS DE INFARTO!", 
-    sub: "Llevate 3 y paga 2 en abarrotes", 
-    img: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80",
-    color: "#28a745"
-  },
-  { 
-    titulo: "DELIVERY GRATIS", 
-    sub: "Por compras mayores a S/ 100", 
-    img: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=1600&q=80", 
-    color: "#ff8800"
-  },
-  { 
-    titulo: "NUBIX MARKET", 
-    sub: "Calidad y frescura garantizada", 
-    img: "https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=1600&q=80",
-    color: "#007bff"
-  }
+  { titulo: "¡OFERTAS DE INFARTO!", sub: "Llevate 3 y paga 2 en abarrotes", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80" },
+  { titulo: "DELIVERY GRATIS", sub: "Por compras mayores a S/ 100", img: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=1600&q=80" },
+  { titulo: "NUBIX MARKET", sub: "Calidad y frescura garantizada", img: "https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=1600&q=80" },
+  { titulo: "CUIDADO PERSONAL", sub: "20% DSCTO en desodorantes", img: "https://images.unsplash.com/photo-1556229167-73191139ac06?w=1600&q=80" },
+  { titulo: "ZONA LIMPIEZA", sub: "Todo para tu hogar aquí", img: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1600&q=80" },
+  { titulo: "MUNDO MASCOTAS", sub: "Croquetas con 15% de descuento", img: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=1600&q=80" }
 ];
 
 export const CATEGORIAS_DATA = [
@@ -96,41 +84,62 @@ const CategoryCard = ({ item }) => (
 
 const MainContent = () => {
   useEffect(() => {
-    const topEl = document.querySelector('#topBannerCarousel');
     const mainEl = document.querySelector('#heroCarousel');
-
-    if (topEl && mainEl) {
-      const topCarousel = new Carousel(topEl, { interval: 6000, pause: false, ride: 'carousel' });
-      // Aumentado a 8 segundos para que pase más lento
+    if (mainEl) {
       const mainCarousel = new Carousel(mainEl, { interval: 8000, pause: false, ride: 'carousel' });
-      topCarousel.to(0);
       mainCarousel.to(0);
     }
   }, []);
 
+  const VERDE_NUBIX = "#28a745"; // Color verde único
+
   return (
     <div>
-      {/* BANNER SUPERIOR */}
+      <style>{`
+        .track-container {
+          overflow: hidden;
+          width: 100%;
+          height: 50px;
+          background: ${VERDE_NUBIX};
+          position: relative;
+        }
+        .track-content {
+          display: flex;
+          width: max-content;
+          animation: scrollRight 40s linear infinite;
+        }
+        .track-item {
+          flex: 0 0 auto;
+          width: 100vw;
+        }
+        @keyframes scrollRight {
+          0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
+        }
+      `}</style>
+
+      {/* BANNER SUPERIOR - CORREDERA INFINITA VERDE */}
       <div className="container-fluid px-0">
-        <div id="topBannerCarousel" className="carousel slide carousel-fade">
-          <div className="carousel-inner">
-            {PROMOCIONES_TOP.map((promo, index) => (
-              <div key={index} className={`carousel-item ${index === 0 ? "active" : ""}`}>
-                <div className="d-flex align-items-center position-relative overflow-hidden" style={{ height: "90px", backgroundColor: promo.color }}>
+        <div className="track-container">
+          <div className="track-content">
+            {[...PROMOCIONES_TOP, ...PROMOCIONES_TOP].map((promo, index) => (
+              <div key={index} className="track-item">
+                <div className="d-flex align-items-center position-relative overflow-hidden" style={{ height: "50px", backgroundColor: VERDE_NUBIX }}>
                   <div style={{
-                    position: 'absolute', right: 0, top: 0, bottom: 0, width: '65%',
+                    position: 'absolute', right: 0, top: 0, bottom: 0, width: '60%',
                     backgroundImage: `url(${promo.img})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                    clipPath: 'polygon(12% 0, 100% 0, 100% 100%, 0% 100%)', zIndex: 1
+                    clipPath: 'polygon(15% 0, 100% 0, 100% 100%, 0% 100%)', zIndex: 1
                   }}>
-                    <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${promo.color} 5%, rgba(0,0,0,0.1) 100%)` }}></div>
+                    <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${VERDE_NUBIX} 10%, rgba(0,0,0,0) 100%)` }}></div>
                   </div>
                   <div className="container position-relative" style={{ zIndex: 2 }}>
-                    <div className="row align-items-center">
-                      <div className="col-7 col-md-5">
-                        <h2 className="mb-0 fw-black text-white italic lh-1" style={{ fontSize: '1.8rem', textShadow: '2px 2px 0px rgba(0,0,0,0.2)' }}>{promo.titulo}</h2>
+                    <div className="row align-items-center flex-nowrap g-0">
+                      <div className="col-auto">
+                        <h2 className="mb-0 fw-black text-white italic" style={{ fontSize: '1rem', textShadow: '1px 1px 2px rgba(0,0,0,0.3)', whiteSpace: 'nowrap' }}>{promo.titulo}</h2>
                       </div>
-                      <div className="col-5 col-md-7 border-start border-white border-3 ps-4">
-                        <p className="mb-0 fw-bold text-white text-uppercase" style={{ fontSize: '1rem', letterSpacing: '1px' }}>{promo.sub}</p>
+                      <div className="col-auto mx-3" style={{ height: '20px', width: '2px', backgroundColor: 'rgba(255,255,255,0.5)' }}></div>
+                      <div className="col-auto">
+                        <p className="mb-0 fw-bold text-white text-uppercase" style={{ fontSize: '0.8rem', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>{promo.sub}</p>
                       </div>
                     </div>
                   </div>
@@ -141,7 +150,7 @@ const MainContent = () => {
         </div>
       </div>
 
-      {/* CARRUSEL PRINCIPAL CON FLECHAS Y MÁS DURACIÓN */}
+      {/* CARRUSEL PRINCIPAL */}
       <section id="heroCarousel" className="carousel slide carousel-fade">
         <div className="carousel-indicators">
           {SLIDES_FIXED.map((_, i) => (
@@ -155,7 +164,6 @@ const MainContent = () => {
             </div>
           ))}
         </div>
-        {/* FLECHAS DE NAVEGACIÓN RECUPERADAS */}
         <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
           <span className="carousel-control-prev-icon" aria-hidden="true"></span>
           <span className="visually-hidden">Anterior</span>
