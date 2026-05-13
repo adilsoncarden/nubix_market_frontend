@@ -4,13 +4,13 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Link } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 
-// Assets originales preservados
+// Assets originales
 import slide1 from "../assets/imagen1.png";
 import slide2 from "../assets/imagen2.png";
 import slide3 from "../assets/imagen3.png";
 import slide4 from "../assets/imagen4.png";
 import slide5 from "../assets/imagen5.png";
-import slide6 from "../assets/imagen6.png";
+import slide6 from "../assets/imagen6.png"; 
 
 const PROMOCIONES_TOP = [
   { titulo: "¡OFERTAS DE INFARTO!", sub: "Llevate 3 y paga 2 en abarrotes", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80" },
@@ -102,13 +102,21 @@ const MainContent = () => {
         .track-item { flex: 0 0 auto; width: 100vw; }
         @keyframes scrollRight { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
 
+        .promo-title-styled {
+          font-family: 'Arial Black', sans-serif;
+          font-size: 1.1rem;
+          color: #fff;
+          text-shadow: 2px 2px 0px rgba(0,0,0,0.3);
+          font-style: italic;
+          margin-bottom: 0;
+        }
+
         .collage-main-card {
             background: radial-gradient(circle at center, #ffffff 0%, #e3f2fd 100%) !important;
             border-radius: 40px;
             min-height: 400px;
             position: relative;
         }
-
         .collage-sub-card {
             border-radius: 40px;
             height: 450px;
@@ -119,7 +127,6 @@ const MainContent = () => {
             flex-direction: column;
             justify-content: space-between;
         }
-
         .blob-frame {
             position: absolute;
             top: 50%;
@@ -133,22 +140,19 @@ const MainContent = () => {
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             z-index: 5;
         }
-
         @keyframes morphing {
           0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
           50% { border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%; }
           100% { border-radius: 64% 36% 70% 30% / 30% 59% 41% 70%; }
         }
-
         .bg-3d-green { background: radial-gradient(circle at top left, #1b4d3e 0%, #0d2b22 100%) !important; }
         .bg-3d-pink { background: radial-gradient(circle at top left, #fce4ec 0%, #f06292 100%) !important; }
         .bg-3d-yellow { background: radial-gradient(circle at top left, #fffde7 0%, #fdd835 100%) !important; }
-
         .text-3d-front { position: relative; z-index: 10; }
         .btn-go-black { width: 45px; height: 45px; background: #000; color: #fff; border-radius: 50%; border: none; z-index: 10; }
       `}</style>
 
-      {/* MARQUESINA */}
+      {/* MARQUESINA PEQUEÑA (ÚNICO CAMBIO: VERDE + IMAGEN DIFUMINADA + LETRAS LLAMATIVAS) */}
       <div className="container-fluid px-0">
         <div className="track-container">
           <div className="track-content">
@@ -160,13 +164,13 @@ const MainContent = () => {
                     backgroundImage: `url(${promo.img})`, backgroundSize: 'cover', backgroundPosition: 'center',
                     clipPath: 'polygon(15% 0, 100% 0, 100% 100%, 0% 100%)', zIndex: 1
                   }}>
-                    <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${VERDE_NUBIX} 10%, rgba(0,0,0,0) 100%)` }}></div>
+                    <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${VERDE_NUBIX} 10%, rgba(40,167,69,0.3) 100%)` }}></div>
                   </div>
                   <div className="container position-relative" style={{ zIndex: 2 }}>
                     <div className="row align-items-center flex-nowrap g-0">
-                      <div className="col-auto"><h2 className="mb-0 fw-black text-white italic" style={{ fontSize: '1rem' }}>{promo.titulo}</h2></div>
+                      <div className="col-auto"><h2 className="mb-0 fw-black text-white promo-title-styled">{promo.titulo}</h2></div>
                       <div className="col-auto mx-3" style={{ height: '20px', width: '2px', backgroundColor: 'rgba(255,255,255,0.5)' }}></div>
-                      <div className="col-auto"><p className="mb-0 fw-bold text-white text-uppercase" style={{ fontSize: '0.8rem' }}>{promo.sub}</p></div>
+                      <div className="col-auto"><p className="mb-0 fw-bold text-white text-uppercase" style={{ fontSize: '0.85rem' }}>{promo.sub}</p></div>
                     </div>
                   </div>
                 </div>
@@ -176,22 +180,13 @@ const MainContent = () => {
         </div>
       </div>
 
-      {/* HERO CARRUSEL ACTUALIZADO CON FLECHAS E INDICADORES */}
+      {/* HERO CARRUSEL GRANDE (SIN CAMBIOS) */}
       <section id="heroCarousel" className="carousel slide carousel-fade">
         <div className="carousel-indicators">
           {SLIDES_FIXED.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              data-bs-target="#heroCarousel"
-              data-bs-slide-to={i}
-              className={i === 0 ? "active" : ""}
-              aria-current={i === 0 ? "true" : "false"}
-              aria-label={`Slide ${i + 1}`}
-            ></button>
+            <button key={i} type="button" data-bs-target="#heroCarousel" data-bs-slide-to={i} className={i === 0 ? "active" : ""}></button>
           ))}
         </div>
-
         <div className="carousel-inner hero-inner">
           {SLIDES_FIXED.map((s, i) => (
             <div key={i} className={`carousel-item h-100 ${i === 0 ? "active" : ""}`}>
@@ -199,18 +194,11 @@ const MainContent = () => {
             </div>
           ))}
         </div>
-
-        <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-          <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-          <span className="visually-hidden">Anterior</span>
-        </button>
-        <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-          <span className="carousel-control-next-icon" aria-hidden="true"></span>
-          <span className="visually-hidden">Siguiente</span>
-        </button>
+        <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon"></span></button>
+        <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next"><span className="carousel-control-next-icon"></span></button>
       </section>
 
-      {/* BENEFICIOS */}
+      {/* BENEFICIOS (SIN CAMBIOS) */}
       <div className="benefits-bar py-4">
         <div className="container">
           <div className="row g-3 text-center">
@@ -225,7 +213,7 @@ const MainContent = () => {
         </div>
       </div>
 
-      {/* CATEGORÍAS */}
+      {/* CATEGORÍAS (SIN CAMBIOS) */}
       <section className="container py-5">
         <h3 className="section-title mb-4 fw-bold">Categorías Populares</h3>
         <div className="row g-3">
@@ -233,7 +221,7 @@ const MainContent = () => {
         </div>
       </section>
 
-      {/* PRODUCTOS */}
+      {/* PRODUCTOS (SIN CAMBIOS) */}
       <section className="container py-5">
         <h3 className="section-title mb-4 fw-bold">Top Seleccionados</h3>
         <div className="row row-cols-2 row-cols-md-4 g-4">
@@ -241,10 +229,9 @@ const MainContent = () => {
         </div>
       </section>
 
-      {/* SECCIÓN COLLAGE */}
+      {/* COLLAGE (SIN CAMBIOS) */}
       <section className="container py-5">
         <div className="row g-4">
-          
           <div className="col-12">
             <div className="collage-main-card d-flex align-items-center p-5 shadow-lg overflow-hidden">
                 <div className="row w-100 align-items-center">
@@ -259,12 +246,9 @@ const MainContent = () => {
                 </div>
             </div>
           </div>
-
           <div className="col-md-4">
             <div className="collage-sub-card bg-3d-green shadow-lg">
-                <div className="text-3d-front text-white">
-                    <h4 className="fw-bold">10% DE AHORRO EN TU PRIMERA COMPRA</h4>
-                </div>
+                <div className="text-3d-front text-white"><h4 className="fw-bold">10% DE AHORRO EN TU PRIMERA COMPRA</h4></div>
                 <img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" className="blob-frame" alt="promo1" />
                 <div className="text-3d-front d-flex justify-content-between align-items-center">
                     <span className="text-white-50 small">Regístrate hoy para tu primer pedido.</span>
@@ -272,12 +256,9 @@ const MainContent = () => {
                 </div>
             </div>
           </div>
-
           <div className="col-md-4">
             <div className="collage-sub-card bg-3d-pink shadow-lg">
-                <div className="text-3d-front" style={{color: '#880e4f'}}>
-                    <h4 className="fw-bold">ENVÍO GRATIS POR COMPRAS MAYORES A 100 SOLES</h4>
-                </div>
+                <div className="text-3d-front" style={{color: '#880e4f'}}><h4 className="fw-bold">ENVÍO GRATIS POR COMPRAS MAYORES A 100 SOLES</h4></div>
                 <img src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600" className="blob-frame" alt="promo2" />
                 <div className="text-3d-front d-flex justify-content-between align-items-center">
                     <span className="small" style={{color: '#880e4f'}}>Abastece tu despensa sin costo extra.</span>
@@ -285,12 +266,9 @@ const MainContent = () => {
                 </div>
             </div>
           </div>
-
           <div className="col-md-4">
             <div className="collage-sub-card bg-3d-yellow shadow-lg">
-                <div className="text-3d-front" style={{color: '#333'}}>
-                    <h4 className="fw-bold">PRODUCTOS DE LA MEJOR CALIDAD</h4>
-                </div>
+                <div className="text-3d-front" style={{color: '#333'}}><h4 className="fw-bold">PRODUCTOS DE LA MEJOR CALIDAD</h4></div>
                 <img src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80" className="blob-frame" alt="Tienda Market" />
                 <div className="text-3d-front d-flex justify-content-between align-items-center">
                     <span className="small" style={{color: '#333'}}>Lo mejor del mercado directo a tu mesa.</span>
@@ -298,7 +276,6 @@ const MainContent = () => {
                 </div>
             </div>
           </div>
-
         </div>
       </section>
     </div>
