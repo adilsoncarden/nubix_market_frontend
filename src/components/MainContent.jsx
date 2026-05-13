@@ -9,8 +9,17 @@ import slide4 from "../assets/imagen4.png";
 import slide5 from "../assets/imagen5.png";
 import slide6 from "../assets/imagen6.png";
 
-// ─── Datos con Descripciones Agregadas ────────────────────────────────────────
-const SLIDES = [
+// --- Configuración Centralizada Actualizada con Imágenes ---
+export const CATEGORIAS_DATA = [
+  { nombre: "Gaseosas",  img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200&q=80", color: "#e3f2fd", text: "#1565c0" },
+  { nombre: "Frutas",    img: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=200&q=80", color: "#f1f8e9", text: "#2e7d32" },
+  { nombre: "Lácteos",   img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&q=80", color: "#fff3e0", text: "#e65100" },
+  { nombre: "Snacks",    img: "https://images.unsplash.com/photo-1599490659223-930b44c027f9?w=200&q=80", color: "#fce4ec", text: "#c62828" },
+  { nombre: "Abarrotes", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80", color: "#f3e5f5", text: "#6a1b9a" },
+  { nombre: "Bebidas",   img: "https://images.unsplash.com/photo-1544145945-f904253d0c7b?w=200&q=80", color: "#e0f2f1", text: "#00695c" },
+];
+
+const SLIDES_FIXED = [
   { img: slide1, to: "/shop" },
   { img: slide2, to: "/shop?category=Frutas" },
   { img: slide3, to: "/shop?category=Abarrotes" },
@@ -46,15 +55,6 @@ const PRODUCTOS = [
   },
 ];
 
-const CATEGORIAS = [
-  { nombre: "Gaseosas",  icono: "bi-cup-straw",   color: "#e3f2fd", text: "#1565c0" },
-  { nombre: "Frutas",    icono: "bi-apple",        color: "#f1f8e9", text: "#2e7d32" },
-  { nombre: "Lácteos",   icono: "bi-egg-fried",    color: "#fff3e0", text: "#e65100" },
-  { nombre: "Snacks",    icono: "bi-cookie",       color: "#fce4ec", text: "#c62828" },
-  { nombre: "Abarrotes", icono: "bi-box-seam",     color: "#f3e5f5", text: "#6a1b9a" },
-  { nombre: "Bebidas",   icono: "bi-droplet-half", color: "#e0f2f1", text: "#00695c" },
-];
-
 const BENEFICIOS = [
   { icono: "bi-truck",         titulo: "Envio Rapido",      sub: "Directo a tu casa" },
   { icono: "bi-shield-check", titulo: "Pago Seguro",       sub: "Transacciones protegidas" },
@@ -62,17 +62,8 @@ const BENEFICIOS = [
   { icono: "bi-chat-dots",    titulo: "Soporte Inmediato", sub: "Atencion personalizada" },
 ];
 
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
 const ProductCard = ({ p }) => {
   const { addToCart } = useCart();
-
-  const product = {
-    id:       p.id,
-    name:     p.nombre,
-    category: p.cat,
-    price:    p.precio,
-    img:      p.img,
-  };
 
   return (
     <div className="col">
@@ -87,7 +78,6 @@ const ProductCard = ({ p }) => {
           <p className="product-cat mb-1">{p.cat}</p>
           <h6 className="product-name mb-2">{p.nombre}</h6>
 
-          {/* ESTO ES LO NUEVO: Descripción y Detalles visibles */}
           <div className="mb-3">
             <p className="mb-1 text-secondary" style={{ fontSize: '0.8rem', lineHeight: '1.2' }}>
               {p.descripcion}
@@ -102,7 +92,7 @@ const ProductCard = ({ p }) => {
             <button
               className="btn-add-cart"
               aria-label="Agregar al carrito"
-              onClick={() => addToCart(product)}
+              onClick={() => addToCart({ id: p.id, name: p.nombre, category: p.cat, price: p.precio, img: p.img })}
             >
               <i className="bi bi-cart-plus"></i>
             </button>
@@ -113,45 +103,35 @@ const ProductCard = ({ p }) => {
   );
 };
 
+// --- Modificado para usar imágenes en lugar de iconos ---
 const CategoryCard = ({ item }) => (
   <div className="col-4 col-md-2">
     <Link
       to={`/shop?category=${item.nombre}`}
       className="category-card text-decoration-none d-block text-center p-3 rounded-4 bg-white shadow-sm"
     >
-      <div className="cat-icon-wrap mx-auto mb-2" style={{ background: item.color, color: item.text }}>
-        <i className={`bi ${item.icono} fs-3`}></i>
+      <div className="cat-icon-wrap mx-auto mb-2" style={{ background: item.color, overflow: 'hidden' }}>
+        <img 
+          src={item.img} 
+          alt={item.nombre} 
+          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} 
+        />
       </div>
-      <span className="cat-label">{item.nombre}</span>
+      <span className="cat-label" style={{ color: item.text, fontWeight: '600' }}>{item.nombre}</span>
     </Link>
   </div>
 );
 
-// ─── MainContent ──────────────────────────────────────────────────────────────
 const MainContent = () => (
   <div>
-
-    {/* HERO CAROUSEL */}
-    <section 
-        id="heroCarousel" 
-        className="carousel slide carousel-fade" 
-        data-bs-ride="carousel" 
-        data-bs-interval="5000"
-    >
+    <section id="heroCarousel" className="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
       <div className="carousel-indicators">
-        {SLIDES.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            data-bs-target="#heroCarousel"
-            data-bs-slide-to={i}
-            className={i === 0 ? "active" : ""}
-          />
+        {SLIDES_FIXED.map((_, i) => (
+          <button key={i} type="button" data-bs-target="#heroCarousel" data-bs-slide-to={i} className={i === 0 ? "active" : ""} />
         ))}
       </div>
-
       <div className="carousel-inner hero-inner">
-        {SLIDES.map((s, i) => (
+        {SLIDES_FIXED.map((s, i) => (
           <div key={i} className={`carousel-item h-100${i === 0 ? " active" : ""}`} data-bs-interval="5000">
             <Link to={s.to}>
               <img src={s.img} className="hero-img d-block w-100 h-100" alt={`Slide ${i + 1}`} />
@@ -159,7 +139,6 @@ const MainContent = () => (
           </div>
         ))}
       </div>
-
       <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
         <span className="carousel-control-prev-icon" />
       </button>
@@ -168,7 +147,6 @@ const MainContent = () => (
       </button>
     </section>
 
-    {/* BENEFICIOS */}
     <div className="benefits-bar">
       <div className="container">
         <div className="row g-3 text-center">
@@ -183,15 +161,13 @@ const MainContent = () => (
       </div>
     </div>
 
-    {/* CATEGORIAS */}
     <section className="container section-gap">
       <h3 className="section-title">Categorias Populares</h3>
       <div className="row g-3">
-        {CATEGORIAS.map((item) => <CategoryCard key={item.nombre} item={item} />)}
+        {CATEGORIAS_DATA.map((item) => <CategoryCard key={item.nombre} item={item} />)}
       </div>
     </section>
 
-    {/* PRODUCTOS */}
     <section className="container section-gap pb-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="section-title mb-0">Top Seleccionados</h3>
@@ -203,7 +179,6 @@ const MainContent = () => (
         {PRODUCTOS.map((p) => <ProductCard key={p.id} p={p} />)}
       </div>
     </section>
-
   </div>
 );
 
