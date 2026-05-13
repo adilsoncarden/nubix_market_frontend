@@ -1,4 +1,10 @@
 import React from "react";
+// Importaciones basadas en la estructura de carpetas de image_7fd31a.png
+import bannerFrutas from "../assets/Banners/bannerFrutas.jpg";
+import bannerLacteos from "../assets/Banners/bannerLacteos.jpg";
+import bannerLimpieza from "../assets/Banners/bannerLimpieza.jpg";
+import bannerPromos from "../assets/Banners/bannerPromos.jpg";
+import bannerSnacks from "../assets/Banners/bannerSnacks.jpg";
 
 const MainContent = () => {
     const productos = [
@@ -8,83 +14,83 @@ const MainContent = () => {
         { id: 4, nombre: "Aceite Primor 900ml", cat: "Abarrotes", precio: "9.00", tag: "Oferta", img: "https://plazavea.vteximg.com.br/arquivos/ids/30632030-450-450/20281566.jpg?v=638758944609130000" },
     ];
 
+    const banners = [
+        { img: bannerPromos, alt: "Promociones Nubix" },
+        { img: bannerLacteos, alt: "Lácteos" },
+        { img: bannerSnacks, alt: "Snacks" },
+        { img: bannerLimpieza, alt: "Limpieza" },
+        { img: bannerFrutas, alt: "Frutas" }
+    ];
+
     return (
-        <main className="flex-grow-1 bg-light" style={{ marginTop: "-1px" }}>
+        <main className="flex-grow-1 bg-light">
             
-            {/* 1. TU CARRUSEL RECUPERADO Y PERFECTO */}
-            <section id="heroCarousel" className="carousel slide carousel-fade shadow-sm" data-bs-ride="carousel" style={{ backgroundColor: "#000" }}>
-                <div className="carousel-inner" style={{ height: "550px" }}>
-                    
-                    {/* Slide 1 */}
-                    <div className="carousel-item active h-100" data-bs-interval="5000">
-                        <img
-                            src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1920&auto=format&fit=crop"
-                            className="d-block w-100 h-100 object-fit-cover"
-                            style={{ filter: "brightness(0.5)" }}
-                            alt="Nubix Market"
-                        />
-                        <div className="carousel-caption d-flex flex-column justify-content-center h-100" style={{ top: "0", bottom: "0" }}>
-                            <h1 className="display-3 fw-bold mb-3">Bienvenido a Nubix Market</h1>
-                            <p className="fs-4 mb-4 opacity-90">Tu market de confianza, a un click de distancia</p>
-                            <div><a href="/shop" className="btn btn-success btn-lg rounded-pill px-5 py-3 fw-bold shadow-lg">Comprar ahora</a></div>
-                        </div>
-                    </div>
-
-                    {/* Slide 2 */}
-                    <div className="carousel-item h-100" data-bs-interval="5000">
-                        <img
-                            src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?q=80&w=1920&auto=format&fit=crop"
-                            className="d-block w-100 h-100 object-fit-cover"
-                            style={{ filter: "brightness(0.5)" }}
-                            alt="Frutas Frescas"
-                        />
-                        <div className="carousel-caption d-flex flex-column justify-content-center h-100" style={{ top: "0", bottom: "0" }}>
-                            <h1 className="display-3 fw-bold mb-3">Frescura Natural</h1>
-                            <p className="fs-4 mb-4 opacity-90">Las mejores frutas seleccionadas para tu mesa</p>
-                            <div><a href="/shop" className="btn btn-success btn-lg rounded-pill px-5 py-3 fw-bold shadow-lg">Ver Frutas</a></div>
-                        </div>
-                    </div>
-
-                    {/* Slide 3 */}
-                    <div className="carousel-item h-100" data-bs-interval="5000">
-                        <img
-                            src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=1920&auto=format&fit=crop"
-                            className="d-block w-100 h-100 object-fit-cover"
-                            style={{ filter: "brightness(0.5)" }}
-                            alt="Abarrotes"
-                        />
-                        <div className="carousel-caption d-flex flex-column justify-content-center h-100" style={{ top: "0", bottom: "0" }}>
-                            <h1 className="display-3 fw-bold mb-3">Todo para tu Hogar</h1>
-                            <p className="fs-4 mb-4 opacity-90">Abarrotes de calidad con los mejores precios</p>
-                            <div><a href="/shop" className="btn btn-success btn-lg rounded-pill px-5 py-3 fw-bold shadow-lg">Ver Abarrotes</a></div>
-                        </div>
-                    </div>
-
-                    {/* Slide 4 */}
-                    <div className="carousel-item h-100" data-bs-interval="5000">
-                        <img
-                            src="https://images.unsplash.com/photo-1622483767028-3f66f32aef97?q=80&w=1920&auto=format&fit=crop"
-                            className="d-block w-100 h-100 object-fit-cover"
-                            style={{ filter: "brightness(0.5)" }}
-                            alt="Bebidas"
-                        />
-                        <div className="carousel-caption d-flex flex-column justify-content-center h-100" style={{ top: "0", bottom: "0" }}>
-                            <h1 className="display-3 fw-bold mb-3">Refréscate con Nubix</h1>
-                            <p className="fs-4 mb-4 opacity-90">Tus bebidas favoritas siempre heladas</p>
-                            <div><a href="/shop" className="btn btn-success btn-lg rounded-pill px-5 py-3 fw-bold shadow-lg">Ver Bebidas</a></div>
-                        </div>
+            {/* --- TOP INFO BARS --- */}
+            <div className="container-fluid p-0">
+                <div className="d-flex align-items-center justify-content-center py-2 px-3" style={{ backgroundColor: "#d9e96a", color: "#1b4d3e" }}>
+                    <div className="d-flex align-items-center flex-wrap justify-content-center">
+                        <i className="bi bi-truck mt-1 me-2 fs-5"></i>
+                        <span className="fw-bold text-uppercase me-2">Envío Gratis</span>
+                        <span className="me-2">por compras mayores a</span>
+                        <span className="badge rounded-pill bg-white text-dark fw-bold px-3 py-1 shadow-sm" style={{ fontSize: "0.9rem" }}>S/ 180</span>
+                        <span className="ms-2 d-none d-md-inline">en supermercado *Ver T&C</span>
                     </div>
                 </div>
 
-                <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
-                    <span className="carousel-control-prev-icon" aria-hidden="true"></span>
-                </button>
-                <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
-                    <span className="carousel-control-next-icon" aria-hidden="true"></span>
-                </button>
+                <div className="d-flex align-items-center justify-content-center py-2 px-3 bg-success text-white">
+                    <div className="d-flex align-items-center flex-wrap justify-content-center text-center">
+                        <span className="me-2">Compra <strong>HOY</strong> y paga después con tu</span>
+                        <span className="bg-white text-success fw-bold px-2 py-0 rounded mx-2">TARJETA NUBIX</span>
+                        <span className="fw-bold border border-white px-2 rounded me-2">SIN INTERESES</span>
+                        <span className="small opacity-75 d-none d-lg-inline">En todo electro, hogar y vestuario</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* 1. CARRUSEL */}
+            <section className="container-fluid p-0 overflow-hidden shadow-sm" style={{ borderBottomLeftRadius: '50px', borderBottomRightRadius: '50px', backgroundColor: '#fff' }}>
+                <div id="heroCarousel" className="carousel slide carousel-fade" data-bs-ride="carousel">
+                    <div className="carousel-indicators">
+                        {banners.map((_, index) => (
+                            <button 
+                                key={index}
+                                type="button" 
+                                data-bs-target="#heroCarousel" 
+                                data-bs-slide-to={index} 
+                                className={index === 0 ? "active" : ""}
+                                style={{ backgroundColor: "#198754", width: '12px', height: '12px', borderRadius: '50%' }}
+                            ></button>
+                        ))}
+                    </div>
+
+                    <div className="carousel-inner">
+                        {banners.map((banner, index) => (
+                            <div key={index} className={`carousel-item ${index === 0 ? "active" : ""}`} data-bs-interval="4000">
+                                <img
+                                    src={banner.img}
+                                    className="d-block w-100"
+                                    style={{ 
+                                        height: "auto",
+                                        maxHeight: "600px", 
+                                        objectFit: "contain",
+                                        backgroundColor: "#f8f9fa"
+                                    }}
+                                    alt={banner.alt}
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                    <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                        <span className="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true" style={{ backgroundSize: '50%' }}></span>
+                    </button>
+                    <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                        <span className="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true" style={{ backgroundSize: '50%' }}></span>
+                    </button>
+                </div>
             </section>
 
-            {/* 2. BARRA DE BENEFICIOS (INNOVACIÓN) */}
+            {/* 2. BARRA DE BENEFICIOS */}
             <div className="bg-white py-4 shadow-sm border-bottom">
                 <div className="container">
                     <div className="row text-center g-4">
@@ -136,7 +142,7 @@ const MainContent = () => {
                 </div>
             </section>
 
-            {/* 4. PRODUCTOS RECOMENDADOS (SÓLO 4) */}
+            {/* 4. PRODUCTOS RECOMENDADOS */}
             <section className="container pb-5">
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h4 className="fw-bold m-0 text-dark">Top Seleccionados</h4>
@@ -168,19 +174,58 @@ const MainContent = () => {
                 </div>
             </section>
 
-            {/* 5. BANNER DE DESCUENTOS AL FINAL */}
-            <section className="container pb-5">
+            {/* --- SECCIÓN WOW: STATS & TESTIMONIOS --- */}
+            <section className="py-5" style={{ backgroundColor: "#1b4d3e" }}>
+                <div className="container text-white">
+                    <div className="row text-center mb-5">
+                        <div className="col-md-4">
+                            <h2 className="fw-bold display-4">+10k</h2>
+                            <p className="opacity-75">Pedidos Entregados</p>
+                        </div>
+                        <div className="col-md-4 border-start border-end border-white border-opacity-25">
+                            <h2 className="fw-bold display-4">4.9/5</h2>
+                            <p className="opacity-75">Satisfacción Real</p>
+                        </div>
+                        <div className="col-md-4">
+                            <h2 className="fw-bold display-4">30 min</h2>
+                            <p className="opacity-75">Tiempo Promedio</p>
+                        </div>
+                    </div>
+
+                    <div className="row g-4">
+                        {[
+                            { nombre: "María R.", texto: "Nubix Market me salva las cenas. Todo llega fresquísimo.", avatar: "MR" },
+                            { nombre: "Juan C.", texto: "La facilidad de pago sin intereses es lo mejor que han sacado.", avatar: "JC" }
+                        ].map((t, i) => (
+                            <div key={i} className="col-md-6">
+                                <div className="bg-white text-dark p-4 rounded-4 shadow-sm h-100 d-flex align-items-start gap-3">
+                                    <div className="bg-success rounded-circle p-3 text-white fw-bold">{t.avatar}</div>
+                                    <div>
+                                        <div className="text-warning mb-2">
+                                            <i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i><i className="bi bi-star-fill"></i>
+                                        </div>
+                                        <p className="fst-italic mb-1">"{t.texto}"</p>
+                                        <small className="fw-bold text-muted">- {t.nombre}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* 5. BANNER FINAL */}
+            <section className="container py-5">
                 <div className="position-relative overflow-hidden rounded-5 shadow-lg bg-dark text-white p-5">
                     <div className="position-absolute top-0 end-0 opacity-25" style={{ transform: "translate(20%, -20%)" }}>
                         <i className="bi bi-lightning-charge display-1" style={{ fontSize: "15rem" }}></i>
                     </div>
-                    
                     <div className="position-relative z-1">
-                        <span className="badge bg-warning text-dark fw-bold mb-3 px-3 py-2">OFERTA IMPERDIBLE</span>
-                        <h2 className="display-5 fw-bold mb-3">¡Descuentos cada semana! 🚀</h2>
-                        <p className="fs-5 mb-4 opacity-75">Suscríbete o visítanos cada lunes para descubrir precios de locura en abarrotes.</p>
+                        <span className="badge bg-warning text-dark fw-bold mb-3 px-3 py-2 text-uppercase">Exclusivo en Web</span>
+                        <h2 className="display-5 fw-bold mb-3">¡Nuevos ingresos cada lunes! 🚀</h2>
+                        <p className="fs-5 mb-4 opacity-75">Sé el primero en comprar lo más fresco de la temporada directo de nuestros productores locales.</p>
                         <button className="btn btn-success btn-lg rounded-pill px-5 fw-bold border-0 shadow">
-                            Ver Ofertas de Hoy
+                            Explorar Novedades
                         </button>
                     </div>
                 </div>
