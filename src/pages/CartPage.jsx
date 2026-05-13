@@ -2,115 +2,148 @@ import { useState } from "react";
 import { useCart } from "../store/CartContext";
 import { useNavigate } from "react-router-dom";
 
-// ─── Utilidad PDF ─────────────────────────────────────────────────────────────
-// Genera e imprime la boleta/factura usando jsPDF (instalado via npm)
+// ─── Utilidad PDF (DISEÑO RENOVADO SEGÚN TU IMAGEN) ───────────────────────────
 const generarPDF = async (orden) => {
   const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF();
 
   const { tipo, numero, fecha, cliente, items, subtotal, delivery, total } = orden;
 
-  const VERDE = [34, 139, 87];
-  const GRIS  = [100, 100, 100];
+  // COLORES DEL DISEÑO
+  const VERDE_NUBIX = [34, 153, 84]; 
+  const NEGRO_TEXTO = [40, 40, 40];
+  const GRIS_FONDO = [245, 245, 245];
+  const AMARILLO_TOTAL = [255, 235, 59];
 
-  // Encabezado
-  doc.setFillColor(...VERDE);
-  doc.rect(0, 0, 210, 32, "F");
+  // --- CABECERA (Bloque Verde Superior) ---
+  doc.setFillColor(...VERDE_NUBIX);
+  doc.rect(0, 0, 210, 55, "F");
+
+  // Logo y Nombre
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(20);
+  doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  doc.text("NUBIX MARKET", 14, 14);
+  doc.text("NUBIX", 15, 22);
+  doc.text("MARKET", 15, 32);
+
+  // Tipo de Comprobante (Derecha)
+  doc.setFontSize(18);
+  doc.text(tipo === "boleta" ? "BOLETA ELECTRÓNICA" : "FACTURA ELECTRÓNICA", 195, 35, { align: "right" });
+
+  // Contacto cabecera
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text("(55) 1234-5678", 15, 45);
+  doc.text("Calle San Pedro, Comas", 15, 50);
+
+  // --- DATOS DEL CLIENTE Y PEDIDO ---
+  doc.setTextColor(...NEGRO_TEXTO);
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text("Tu mercado online de confianza", 14, 22);
-  doc.text(`RUC: 20123456789`, 140, 14);
-  doc.text(`${tipo.toUpperCase()} ELECTRONICA`, 140, 20);
-  doc.text(`N° ${numero}`, 140, 26);
+  
+  doc.text("FECHA:", 15, 75);
+  doc.text(fecha, 195, 75, { align: "right" });
 
-  // Fecha y cliente
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Fecha de emision: ${fecha}`, 14, 42);
-
+  doc.text("CLIENTE:", 15, 83);
+  const nombreCliente = tipo === "boleta" ? cliente.nombre : cliente.razonSocial;
   doc.setFont("helvetica", "bold");
-  doc.text("DATOS DEL CLIENTE", 14, 52);
+  doc.text(nombreCliente.toUpperCase(), 195, 83, { align: "right" });
+
   doc.setFont("helvetica", "normal");
+  doc.text(tipo === "boleta" ? "DNI:" : "RUC:", 15, 91);
+  doc.text(tipo === "boleta" ? cliente.dni : cliente.ruc, 195, 91, { align: "right" });
 
-  if (tipo === "boleta") {
-    doc.text(`Nombre: ${cliente.nombre}`, 14, 60);
-    doc.text(`DNI: ${cliente.dni}`, 14, 67);
-  } else {
-    doc.text(`Razon Social: ${cliente.razonSocial}`, 14, 60);
-    doc.text(`RUC: ${cliente.ruc}`, 14, 67);
-    doc.text(`Direccion: ${cliente.direccion}`, 14, 74);
-  }
-
-  // Tabla de productos
-  const tableY = tipo === "factura" ? 84 : 77;
-  doc.setFillColor(...VERDE);
-  doc.rect(14, tableY, 182, 8, "F");
-  doc.setTextColor(255, 255, 255);
+  doc.text("CÓDIGO PEDIDO:", 15, 99);
+  doc.setTextColor(...VERDE_NUBIX);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text("PRODUCTO",          16, tableY + 5.5);
-  doc.text("CANT.",            110, tableY + 5.5);
-  doc.text("P. UNIT.",         135, tableY + 5.5);
-  doc.text("SUBTOTAL",         163, tableY + 5.5, { align: "right" });
+  doc.text(numero, 195, 99, { align: "right" });
 
-  doc.setTextColor(0, 0, 0);
+  // --- TABLA DE ARTÍCULOS ---
+  const tableY = 115;
+  doc.setDrawColor(0);
+  doc.setLineWidth(0.5);
+  doc.line(15, tableY, 195, tableY); // Línea superior
+
+  doc.setTextColor(...NEGRO_TEXTO);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text("Articulo", 17, tableY + 7);
+  doc.text("Cantidad", 110, tableY + 7);
+  doc.text("Precio", 145, tableY + 7);
+  doc.text("SubTotal", 193, tableY + 7, { align: "right" });
+  
+  doc.line(15, tableY + 11, 195, tableY + 11); // Línea divisoria
+
+  let currentY = tableY + 19;
   doc.setFont("helvetica", "normal");
-  let y = tableY + 14;
-  items.forEach((item, i) => {
-    if (i % 2 === 0) {
-      doc.setFillColor(245, 250, 247);
-      doc.rect(14, y - 5, 182, 8, "F");
+  
+  items.forEach((item, index) => {
+    if (index % 2 === 0) {
+      doc.setFillColor(...GRIS_FONDO);
+      doc.rect(15, currentY - 6, 180, 8, "F");
     }
-    doc.text(item.name.substring(0, 38),      16, y);
-    doc.text(String(item.qty),               114, y);
-    doc.text(`S/ ${item.price.toFixed(2)}`,   140, y);
-    doc.text(`S/ ${(item.price * item.qty).toFixed(2)}`, 194, y, { align: "right" });
-    y += 9;
+    doc.text(item.name.substring(0, 45), 17, currentY);
+    doc.text(String(item.qty), 118, currentY, { align: "center" });
+    doc.text(`S/ ${item.price.toFixed(2)}`, 145, currentY);
+    doc.text(`S/ ${(item.price * item.qty).toFixed(2)}`, 193, currentY, { align: "right" });
+    currentY += 8;
   });
 
-  // Totales
-  y += 4;
-  doc.setDrawColor(...GRIS);
-  doc.line(120, y, 196, y);
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  doc.text("Subtotal:",                      140, y);
-  doc.text(`S/ ${subtotal.toFixed(2)}`,      194, y, { align: "right" });
-  y += 7;
-  doc.text("Envio:",                         140, y);
-  doc.text(delivery === 0 ? "Gratis" : `S/ ${delivery.toFixed(2)}`, 194, y, { align: "right" });
-  y += 7;
+  // --- TOTALES ---
+  currentY += 10;
+  doc.setFontSize(10);
+  doc.text("Subtotal:", 155, currentY, { align: "right" });
+  doc.text(`S/ ${subtotal.toFixed(2)}`, 193, currentY, { align: "right" });
+  
+  currentY += 7;
+  doc.text("Envío:", 155, currentY, { align: "right" });
+  doc.text(delivery === 0 ? "Gratis" : `S/ ${delivery.toFixed(2)}`, 193, currentY, { align: "right" });
+
+  // Bloque de Total Amarillo (Estilo imagen)
+  currentY += 5;
+  doc.setFillColor(...AMARILLO_TOTAL);
+  doc.rect(130, currentY, 65, 10, "F");
+  doc.setDrawColor(0);
+  doc.rect(130, currentY, 65, 10, "D"); 
+  
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("TOTAL:",                         140, y);
-  doc.text(`S/ ${total.toFixed(2)}`,         194, y, { align: "right" });
+  doc.text("Total:", 155, currentY + 7, { align: "right" });
+  doc.text(`S/ ${total.toFixed(2)}`, 190, currentY + 7, { align: "right" });
 
-  // IGV (solo factura)
-  if (tipo === "factura") {
-    y += 7;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...GRIS);
-    doc.text(`IGV (18%) incluido: S/ ${(total * 0.18 / 1.18).toFixed(2)}`, 140, y);
-  }
+  // --- MENSAJE FINAL ---
+  currentY += 30;
+  doc.setFontSize(16);
+  doc.setTextColor(...NEGRO_TEXTO);
+  doc.text("¡Gracias por su compra!", 15, currentY);
+  doc.setLineWidth(1);
+  doc.line(15, currentY + 2, 35, currentY + 2);
 
-  // Pie
-  doc.setTextColor(...GRIS);
-  doc.setFontSize(8);
+  // --- PIE DE PÁGINA VERDE ---
+  const footerY = 245;
+  doc.setFillColor(...VERDE_NUBIX);
+  doc.rect(0, footerY, 210, 52, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  
+  doc.setFont("helvetica", "bold");
+  doc.text("Información de pago", 15, footerY + 15);
   doc.setFont("helvetica", "normal");
-  doc.text("Gracias por tu compra en Nubix Market", 105, 285, { align: "center" });
-  doc.text("www.nubixmarket.com | soporte@nubixmarket.com", 105, 290, { align: "center" });
+  doc.text("Nubix Market SAC", 15, footerY + 23);
+  doc.text("BCP - Cuenta Corriente", 15, footerY + 28);
+  doc.text("191-01234567-0-89", 15, footerY + 33);
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Contacto", 130, footerY + 15);
+  doc.setFont("helvetica", "normal");
+  doc.text("(55) 1234-5678", 130, footerY + 23);
+  doc.text("soporte@nubixmarket.com", 130, footerY + 28);
+  doc.text("www.nubixmarket.com", 130, footerY + 33);
 
   doc.save(`${tipo}-${numero}.pdf`);
 };
 
 // ─── Envío de email al backend ────────────────────────────────────────────────
-// Ajusta la URL a tu endpoint real de Spring Boot
 const API_EMAIL = "http://localhost:8080/api/email/confirmacion";
 
 const enviarEmailConfirmacion = async (orden) => {
@@ -397,7 +430,7 @@ function ModalPago({ total, delivery, subtotal, items, onClose, onSuccess }) {
   );
 }
 
-// ─── CartPage ─────────────────────────────────────────────────────────────────
+// ─── CartPage (ORIGINAL INTACTO) ─────────────────────────────────────────────
 export default function CartPage() {
   const { items, removeFromCart, setQty, clearCart, totalItems, totalPrice } = useCart();
   const navigate = useNavigate();
