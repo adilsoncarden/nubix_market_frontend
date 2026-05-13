@@ -65,15 +65,15 @@ const Sidebar = () => {
                 .avatar-border { border: 2px solid #10b981; padding: 2px; }
             `}</style>
 
-            {/* Logo / Brand */}
-            <div className="p-4 mb-2">
+            {/* Logo / Brand Centrar el logo */}
+            <div className="p-4 mb-2 border-bottom d-flex justify-content-center height">
                 <Link
                     to="/admin/dashboard"
                     className="d-flex align-items-center text-decoration-none"
                 >
                     <div
                         className="me-2 d-flex align-items-center justify-content-center"
-                        style={{ width: "40px", height: "40px" }}
+                        style={{ width: "100px", height: "100px" }}
                     >
                         <img
                             src={logo}
@@ -82,9 +82,9 @@ const Sidebar = () => {
                             style={{ maxHeight: "100%", objectFit: "contain" }}
                         />
                     </div>
-                    <span className="fs-4 fw-bold tracking-tight text-dark">
+                    {/* <span className="fs-4 fw-bold tracking-tight text-dark">
                         Nubix<span className="text-muted fw-light">Market</span>
-                    </span>
+                    </span> */}
                 </Link>
             </div>
 
