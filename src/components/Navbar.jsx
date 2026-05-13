@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 import logoImage from "../assets/logo.png";
-import { CATEGORIAS_DATA } from "./MainContent"; // Importamos la fuente de verdad
+import { CATEGORIAS_DATA } from "./MainContent"; 
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -16,23 +16,8 @@ export default function Navbar() {
   const [catOpen, setCatOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
-  // Sincronizar input de búsqueda con la URL
   useEffect(() => {
-    const query = searchParams.get("search") || "";
-    if (location.pathname === "/shop") setSearchValue(query);
-    else setSearchValue("");
-  }, [location.pathname, searchParams]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setCatOpen(false);
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -44,102 +29,149 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("username");
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
     setUsername("");
     navigate("/");
+    window.location.reload();
   };
 
-  // Construcción de links unificada
-  const mainLinks = [
-    { label: "Inicio", to: "/", icon: "bi-house" },
-    { label: "Tienda", to: "/shop", icon: "bi-shop" },
-    { label: "Ofertas", to: "/shop?tag=Oferta", icon: "bi-lightning-charge", highlight: true },
-  ];
+  // Función para asignar iconos lógicos según el nombre si cat.icono falla
+  const getMejorIcono = (nombre, iconoOriginal) => {
+    if (iconoOriginal && iconoOriginal.startsWith('bi-')) return iconoOriginal;
+    
+    const n = nombre.toLowerCase();
+    if (n.includes("gaseosa") || n.includes("bebida")) return "bi-cup-straw";
+    if (n.includes("fruta") || n.includes("verdura")) return "bi-apple";
+    if (n.includes("lácteo") || n.includes("leche")) return "bi-droplet";
+    if (n.includes("snack") || n.includes("piqueo")) return "bi-egg-fried";
+    if (n.includes("abarrote")) return "bi-box-seam";
+    if (n.includes("limpieza")) return "bi-stars";
+    if (n.includes("cuidado")) return "bi-heart-pulse";
+    return "bi-tag"; // Icono neutral de etiqueta si no encuentra coincidencia
+  };
+
+  const navItemStyle = {
+    fontSize: '0.75rem',
+    fontWeight: '700',
+    letterSpacing: '0.5px',
+    color: '#1a1a1a',
+    textDecoration: 'none'
+  };
 
   return (
-    <nav className={`nubix-navbar ${scrolled ? "scrolled" : ""}`}>
-      <div className="container-fluid py-2 border-bottom bg-white">
-        <div className="container d-flex align-items-center justify-content-between">
-          
-          <div className="d-flex align-items-center gap-3">
-            <Link to="/" className="d-flex align-items-center text-decoration-none">
-              <div className="brand-logo-wrap">
-                <img src={logoImage} alt="Logo" style={{ maxHeight: '50px' }} />
-              </div>
-            </Link>
-
-            <div className="cat-dropdown-wrap" ref={dropdownRef}>
-              <button 
-                className="cat-dropdown-btn" 
-                onClick={() => setCatOpen(!catOpen)}
-                style={{ background: 'orange', color: 'white', borderRadius: '10px', height: '44px', border: 'none', padding: '0 15px' }}
-              >
-                <i className="bi bi-list fs-5"></i>
-                <span className="ms-1 d-none d-md-inline">Categorías</span>
-                <i className={`bi bi-chevron-${catOpen ? 'up' : 'down'} ms-1`} style={{ fontSize: '.7rem' }}></i>
-              </button>
-
-              {catOpen && (
-                <ul className="cat-dropdown-menu show shadow-lg" style={{ listStyle: 'none', padding: '10px', minWidth: '200px' }}>
-                  {/* Links Principales */}
-                  {mainLinks.map((link, idx) => (
-                    <li key={`main-${idx}`}>
-                      <Link to={link.to} className={`cat-dropdown-item ${link.highlight ? 'text-danger fw-bold' : ''}`} onClick={() => setCatOpen(false)} style={{ display: 'block', padding: '8px', textDecoration: 'none', color: '#333', borderBottom: '1px solid #eee' }}>
-                        <i className={`bi ${link.icon} me-2 text-success`}></i>{link.label}
-                      </Link>
-                    </li>
-                  ))}
-                  {/* Categorías Dinámicas */}
-                  {CATEGORIAS_DATA.map((cat, idx) => (
-                    <li key={`cat-${idx}`}>
-                      <Link to={`/shop?category=${cat.nombre}`} className="cat-dropdown-item" onClick={() => setCatOpen(false)} style={{ display: 'block', padding: '8px', textDecoration: 'none', color: '#333' }}>
-                        <i className={`bi ${cat.icono} me-2 text-muted`}></i>{cat.nombre}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-
-          <form className="search-bar flex-grow-1 mx-3 mx-lg-5" onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Busca productos..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="form-control"
-            />
-          </form>
-
-          <div className="navbar-actions d-flex align-items-center gap-3">
-            {username ? (
-              <div className="dropdown">
-                <button className="nav-action-btn border-0 dropdown-toggle" data-bs-toggle="dropdown" style={{ background: 'none' }}>
-                  <i className="bi bi-person-circle fs-4"></i>
-                  <span className="nav-action-label ms-1">{username}</span>
-                </button>
-                <ul className="dropdown-menu dropdown-menu-end shadow border-0">
-                  <li><button className="dropdown-item text-danger" onClick={handleLogout}>Cerrar Sesión</button></li>
-                </ul>
-              </div>
-            ) : (
-              <Link to="/login" className="nav-action-btn text-decoration-none color-dark">
-                <i className="bi bi-person fs-4"></i>
-                <span className="nav-action-label d-none d-md-inline">Ingresar</span>
+    <>
+      <nav className={`fixed-top w-100 bg-white ${scrolled ? "shadow-sm" : "border-bottom"}`} style={{ transition: '0.3s ease', zIndex: 1100 }}>
+        <div className="container"> 
+          <div className="d-flex align-items-center justify-content-between py-3">
+            
+            {/* 1. LOGO */}
+            <div className="me-4">
+              <Link to="/">
+                <img src={logoImage} alt="Logo" style={{ height: '38px', width: 'auto' }} />
               </Link>
-            )}
+            </div>
 
-            <Link to="/cart" className="nav-action-btn cart-btn text-decoration-none position-relative">
-              <i className="bi bi-cart3 fs-4"></i>
-              {totalItems > 0 && (
-                <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style={{ fontSize: '0.6rem' }}>
-                  {totalItems}
+            {/* 2. NAVEGACIÓN (CATEGORÍAS CON MEJORES ICONOS) */}
+            <div className="d-none d-lg-flex align-items-center gap-4" ref={dropdownRef}>
+              <div className="position-relative">
+                <span 
+                  className="d-flex align-items-center gap-1 cursor-pointer" 
+                  style={{ ...navItemStyle, cursor: 'pointer' }}
+                  onClick={() => setCatOpen(!catOpen)}
+                >
+                  CATEGORÍAS <i className={`bi bi-chevron-${catOpen ? 'up' : 'down'}`} style={{ fontSize: '0.6rem' }}></i>
                 </span>
+                
+                {catOpen && (
+                  <div className="position-absolute top-100 start-0 bg-white shadow-lg rounded-3 py-2 mt-3 border-0" 
+                       style={{ zIndex: 1200, minWidth: '220px' }}>
+                    {CATEGORIAS_DATA.map((cat, idx) => (
+                      <Link 
+                        key={idx} 
+                        to={`/shop?category=${cat.nombre}`} 
+                        className="dropdown-item py-2 px-3 d-flex align-items-center rounded-2 mx-2"
+                        style={{ width: 'auto', fontSize: '0.85rem' }}
+                        onClick={() => setCatOpen(false)}
+                      >
+                        <i 
+                          className={`bi ${getMejorIcono(cat.nombre, cat.icono)} me-3`} 
+                          style={{ 
+                            fontSize: '1.2rem', 
+                            color: '#198754', // Verde estándar de éxito
+                            minWidth: '25px'
+                          }}
+                        ></i> 
+                        <span style={{ fontWeight: '500' }}>{cat.nombre}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 3. BUSCADOR */}
+            <div className="flex-grow-1 mx-4 d-none d-md-block" style={{ maxWidth: '380px' }}>
+              <form className="position-relative" onSubmit={handleSearch}>
+                <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" style={{ fontSize: '0.8rem' }}></i>
+                <input
+                  type="text"
+                  className="form-control border-0 rounded-pill ps-5"
+                  placeholder="¿Qué estás buscando hoy?"
+                  style={{ backgroundColor: '#f1f3f5', fontSize: '0.85rem', height: '40px' }}
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                />
+              </form>
+            </div>
+
+            {/* 4. ACCIONES */}
+            <div className="d-flex align-items-center gap-4">
+              {username ? (
+                <div className="dropdown">
+                  <button className="btn btn-link text-dark text-decoration-none p-0 d-flex align-items-center gap-2 border-0" data-bs-toggle="dropdown">
+                    <i className="bi bi-person fs-4"></i>
+                    <div className="text-start d-none d-xl-block" style={{ lineHeight: '1.1' }}>
+                      <div className="text-muted" style={{ fontSize: '0.65rem' }}>HOLA,</div>
+                      <div className="fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
+                        {username.toUpperCase()} <i className="bi bi-chevron-down" style={{ fontSize: '0.6rem' }}></i>
+                      </div>
+                    </div>
+                  </button>
+                  <ul className="dropdown-menu dropdown-menu-end shadow border-0 mt-3 p-2 rounded-3">
+                    {localStorage.getItem("role") === "ADMIN" && (
+                      <li><Link className="dropdown-item rounded-2 py-2 fw-bold text-primary" to="/admin/dashboard">Panel Admin</Link></li>
+                    )}
+                    <li><button className="dropdown-item rounded-2 py-2 text-danger" onClick={handleLogout}>Cerrar Sesión</button></li>
+                  </ul>
+                </div>
+              ) : (
+                <Link to="/login" className="text-dark text-decoration-none d-flex align-items-center gap-2">
+                  <i className="bi bi-person fs-4"></i>
+                  <div className="text-start d-none d-xl-block" style={{ lineHeight: '1.1' }}>
+                    <div className="text-muted" style={{ fontSize: '0.65rem' }}>HOLA,</div>
+                    <div className="fw-bold" style={{ fontSize: '0.75rem' }}>INICIAR SESIÓN</div>
+                  </div>
+                </Link>
               )}
-            </Link>
+
+              <Link to="/cart" className="text-dark text-decoration-none d-flex align-items-center gap-2 position-relative">
+                <i className="bi bi-cart3 fs-4"></i>
+                {totalItems > 0 && (
+                  <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-success" 
+                        style={{ fontSize: '0.6rem', padding: '0.35em 0.5em', marginTop: '2px' }}>
+                    {totalItems}
+                  </span>
+                )}
+                <span className="d-none d-xl-inline fw-bold" style={{ fontSize: '0.75rem' }}>CARRITO</span>
+              </Link>
+            </div>
+
           </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      <div style={{ marginTop: scrolled ? '75px' : '82px' }}></div>
+    </>
   );
 }
