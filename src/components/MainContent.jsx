@@ -1,3 +1,5 @@
+import React from "react"; 
+import "bootstrap/dist/js/bootstrap.bundle.min.js"; 
 import { Link } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 import slide1 from "../assets/imagen1.png";
@@ -7,7 +9,7 @@ import slide4 from "../assets/imagen4.png";
 import slide5 from "../assets/imagen5.png";
 import slide6 from "../assets/imagen6.png";
 
-// ─── Datos ────────────────────────────────────────────────────────────────────
+// ─── Datos con Descripciones Agregadas ────────────────────────────────────────
 const SLIDES = [
   { img: slide1, to: "/shop" },
   { img: slide2, to: "/shop?category=Frutas" },
@@ -21,18 +23,26 @@ const PRODUCTOS = [
   {
     id: 1, nombre: "Manzanas 1kg", cat: "Frutas", precio: 5.90, tag: "Fresco", tagColor: "tag-green",
     img: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&q=80",
+    descripcion: "Manzanas rojas crujientes y dulces, seleccionadas a mano.",
+    detalles: "Origen: Huaral. Calidad: Exportación."
   },
   {
     id: 2, nombre: "Coca Cola 3L", cat: "Gaseosas", precio: 11.50, tag: "Popular", tagColor: "tag-blue",
     img: "https://images.unsplash.com/photo-1554866624-95def341-bab2?w=400&q=80",
+    descripcion: "Bebida gaseosa refrescante sabor original para compartir.",
+    detalles: "Contenido: 3 Litros. Envase: PET."
   },
   {
     id: 3, nombre: "Leche Gloria 1L", cat: "Lácteos", precio: 5.20, tag: "Básico", tagColor: "tag-yellow",
     img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80",
+    descripcion: "Leche evaporada enriquecida con vitaminas A y D.",
+    detalles: "Marca: Gloria. Presentación: Caja 1L."
   },
   {
     id: 4, nombre: "Aceite Primor 900ml", cat: "Abarrotes", precio: 9.00, tag: "Oferta", tagColor: "tag-red",
     img: "https://images.unsplash.com/photo-1474979220686-9a1d73e2fe6f?w=400&q=80",
+    descripcion: "Aceite vegetal premium ideal para todo tipo de comidas.",
+    detalles: "Marca: Primor. Contenido: 900ml."
   },
 ];
 
@@ -46,9 +56,9 @@ const CATEGORIAS = [
 ];
 
 const BENEFICIOS = [
-  { icono: "bi-truck",        titulo: "Envio Rapido",      sub: "Directo a tu casa" },
+  { icono: "bi-truck",         titulo: "Envio Rapido",      sub: "Directo a tu casa" },
   { icono: "bi-shield-check", titulo: "Pago Seguro",       sub: "Transacciones protegidas" },
-  { icono: "bi-star",         titulo: "Calidad Nubix",     sub: "Productos seleccionados" },
+  { icono: "bi-star",          titulo: "Calidad Nubix",     sub: "Productos seleccionados" },
   { icono: "bi-chat-dots",    titulo: "Soporte Inmediato", sub: "Atencion personalizada" },
 ];
 
@@ -66,14 +76,27 @@ const ProductCard = ({ p }) => {
 
   return (
     <div className="col">
-      <div className="product-card card border-0 h-100 rounded-4 overflow-hidden position-relative">
+      <div className="product-card card border-0 h-100 rounded-4 overflow-hidden position-relative shadow-sm">
         {p.tag && <span className={`product-tag ${p.tagColor}`}>{p.tag}</span>}
+        
         <div className="product-img-wrap">
           <img src={p.img} alt={p.nombre} />
         </div>
+
         <div className="card-body p-3 d-flex flex-column">
           <p className="product-cat mb-1">{p.cat}</p>
           <h6 className="product-name mb-2">{p.nombre}</h6>
+
+          {/* ESTO ES LO NUEVO: Descripción y Detalles visibles */}
+          <div className="mb-3">
+            <p className="mb-1 text-secondary" style={{ fontSize: '0.8rem', lineHeight: '1.2' }}>
+              {p.descripcion}
+            </p>
+            <p className="mb-0 text-muted italic" style={{ fontSize: '0.7rem', fontStyle: 'italic' }}>
+              {p.detalles}
+            </p>
+          </div>
+
           <div className="mt-auto d-flex justify-content-between align-items-center">
             <span className="product-price">S/ {p.precio.toFixed(2)}</span>
             <button
@@ -109,7 +132,12 @@ const MainContent = () => (
   <div>
 
     {/* HERO CAROUSEL */}
-    <section id="heroCarousel" className="carousel slide carousel-fade" data-bs-ride="carousel">
+    <section 
+        id="heroCarousel" 
+        className="carousel slide carousel-fade" 
+        data-bs-ride="carousel" 
+        data-bs-interval="5000"
+    >
       <div className="carousel-indicators">
         {SLIDES.map((_, i) => (
           <button
