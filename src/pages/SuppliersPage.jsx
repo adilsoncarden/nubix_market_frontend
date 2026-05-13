@@ -16,6 +16,7 @@ const SuppliersPage = () => {
     const [selectedSupplier, setSelectedSupplier] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+    const [formkey, setFormKey] = useState(Date.now()); 
     const itemsPerPage = 10;
 
     const Toast = Swal.mixin({
@@ -67,6 +68,10 @@ const SuppliersPage = () => {
 
     const handleOpenModal = (supplier = null) => {
         setSelectedSupplier(supplier ? { ...supplier } : null);
+
+        // REINICIAR FORMULARIO
+        setFormKey(Date.now());
+
         bsModal.current.show();
     };
 
@@ -396,11 +401,7 @@ const SuppliersPage = () => {
                         </div>
                         <div className="modal-body p-4">
                             <SupplierForm
-                                key={
-                                    selectedSupplier
-                                        ? selectedSupplier.id
-                                        : "new"
-                                }
+                                key={formkey}
                                 supplier={selectedSupplier}
                                 onSave={handleSave}
                             />

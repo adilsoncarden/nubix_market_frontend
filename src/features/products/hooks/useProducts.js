@@ -16,22 +16,15 @@ export const useProducts = () => {
     };
 
     const handleDelete = async (id) => {
-        const result = await Swal.fire({
-            title: "¿Eliminar producto?",
-            text: "Esta acción no se puede deshacer.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-            confirmButtonColor: "#d33",
-        });
-
-        if (result.isConfirmed) {
+      
             const original = [...products];
+
+            // ELIMINACIÓN OPTIMISTA:
             setProducts(products.filter((p) => p.id !== id)); // Optimista
 
             try {
                 await productService.delete(id);
+
                 Swal.fire({
                     icon: "success",
                     title: "Eliminado",
@@ -40,9 +33,13 @@ export const useProducts = () => {
                 });
             } catch (err) {
                 setProducts(original);
-                Swal.fire("Error", "No se pudo eliminar el producto.", "error");
+
+                Swal.fire(
+                    "Error", 
+                    "No se pudo eliminar el producto.",
+                    "error",
+                );
             }
-        }
     };
 
     useEffect(() => {

@@ -13,6 +13,8 @@ const ProductsPage = () => {
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
 
+    const [formkey, setFormKey] = useState(Date.now()); // Para resetear el formulario al abrir el modal
+
     // --- CONFIGURACIÓN DE SWEETALERT (TOAST) ---
     const Toast = Swal.mixin({
         toast: true,
@@ -77,6 +79,10 @@ const ProductsPage = () => {
 
     const openModal = (product = null) => {
         setSelectedProduct(null);
+
+        //reiniciar el formulario
+        setFormKey(Date.now());
+
         setTimeout(() => {
             setSelectedProduct(product ? { ...product } : null);
             bsModal.current.show();
@@ -455,11 +461,7 @@ const ProductsPage = () => {
                         </div>
                         <div className="modal-body p-4">
                             <ProductForm
-                                key={
-                                    selectedProduct
-                                        ? `prod-${selectedProduct.id}`
-                                        : "prod-new"
-                                }
+                                key={formkey}
                                 product={selectedProduct}
                                 categories={categories}
                                 onSave={handleSave}
