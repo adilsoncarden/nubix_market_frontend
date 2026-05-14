@@ -25,9 +25,9 @@ export const CATEGORIAS_DATA = [
   { nombre: "Gaseosas",   img: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=200&q=80", color: "#e3f2fd", text: "#1565c0" },
   { nombre: "Frutas",    img: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=200&q=80", color: "#f1f8e9", text: "#2e7d32" },
   { nombre: "Lácteos",   img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&q=80", color: "#fff3e0", text: "#e65100" },
-  { nombre: "Snacks",    img: "https://images.unsplash.com/photo-1599490659223-930b44c027f9?w=200&q=80", color: "#fce4ec", text: "#c62828" },
+  { nombre: "Snacks",    img: "https://tse2.mm.bing.net/th/id/OIP.mkWFpeW-AOHmEu6kqN1IpAHaJz?pid=Api&P=0&h=180", color: "#fce4ec", text: "#c62828" },
   { nombre: "Abarrotes", img: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80", color: "#f3e5f5", text: "#6a1b9a" },
-  { nombre: "Bebidas",   img: "https://images.unsplash.com/photo-1544145945-f904253d0c7b?w=200&q=80", color: "#e0f2f1", text: "#00695c" },
+  { nombre: "Bebidas",   img: "https://tse1.mm.bing.net/th/id/OIP.hF6gCMuONIZoD4N0TpqxuwHaHa?pid=Api&P=0&h=180", color: "#e0f2f1", text: "#00695c" },
 ];
 
 const SLIDES_FIXED = [
@@ -40,10 +40,14 @@ const SLIDES_FIXED = [
 ];
 
 const PRODUCTOS = [
-  { id: 1, nombre: "Manzanas 1kg", cat: "Frutas", precio: 5.9, tag: "Fresco", tagColor: "tag-green", img: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400&q=80" },
-  { id: 2, nombre: "Coca Cola 3L", cat: "Gaseosas", precio: 11.5, tag: "Popular", tagColor: "tag-blue", img: "https://images.unsplash.com/photo-1554866624-95def341-bab2?w=400&q=80" },
-  { id: 3, nombre: "Leche Gloria 1L", cat: "Lácteos", precio: 5.2, tag: "Básico", tagColor: "tag-yellow", img: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&q=80" },
-  { id: 4, nombre: "Aceite Primor 900ml", cat: "Abarrotes", precio: 9.0, tag: "Oferta", tagColor: "tag-red", img: "https://images.unsplash.com/photo-1474979220686-9a1d73e2fe6f?w=400&q=80" },
+  { id: 1, nombre: "Manzanas 1kg", cat: "Frutas", precio: 5.9, tag: "Fresco", tagColor: "tag-green", img: "https://media.tottus.com.pe/tottusPE/10161826_1/width=480,height=480,quality=70,format=webp,fit=pad" },
+  { id: 2, nombre: "Coca Cola 3L", cat: "Gaseosas", precio: 11.5, tag: "Popular", tagColor: "tag-blue", img: "https://media.tottus.com.pe/tottusPE/10164192_1/width=480,height=480,quality=70,format=webp,fit=pad" },
+  { id: 3, nombre: "Leche Gloria 1L", cat: "Lácteos", precio: 5.2, tag: "Básico", tagColor: "tag-yellow", img: "https://tse3.mm.bing.net/th/id/OIP.678KDktTo1zSZ8U1nvhGdAHaHa?pid=Api&P=0&h=180" },
+  { id: 4, nombre: "Aceite Primor 900ml", cat: "Abarrotes", precio: 9.0, tag: "Oferta", tagColor: "tag-red", img: "https://media.tottus.com.pe/tottusPE/42757360_2/width=480,height=480,quality=70,format=webp,fit=pad" },
+  { id: 5, nombre: "Papas Nativas 1kg", cat: "Frutas", precio: 4.5, tag: "Orgánico", tagColor: "tag-green", img: "https://media.tottus.com.pe/tottusPE/20014196_1/width=480,height=480,quality=70,format=webp,fit=pad" },
+  { id: 6, nombre: "Detergente Ariel 2kg", cat: "Abarrotes", precio: 18.9, tag: "Limpieza", tagColor: "tag-blue", img: "https://tse1.mm.bing.net/th/id/OIP.wbp2VG1zCwldW2Fe2XY98wHaHa?pid=Api&P=0&h=180" },
+  { id: 7, nombre: "Yogurt Griego 1kg", cat: "Lácteos", precio: 12.5, tag: "Saludable", tagColor: "tag-yellow", img: "https://media.falabella.com/tottusPE/42736718_1/w=1200,h=1200,fit=pad" },
+  { id: 8, nombre: "Papas Lays Clásicas", cat: "Snacks", precio: 6.8, tag: "Crunchy", tagColor: "tag-red", img: "https://media.tottus.com.pe/tottusPE/43526445_2/width=480,height=480,quality=70,format=webp,fit=pad" },
 ];
 
 const BENEFICIOS = [
@@ -111,6 +115,23 @@ const MainContent = () => {
           margin-bottom: 0;
         }
 
+        /* AJUSTES PARA LAS IMÁGENES DE PRODUCTOS */
+        .product-img-wrap {
+          height: 180px;            /* Altura fija para que todas las cards sean iguales */
+          display: flex;
+          align-items: center;      /* Centrado vertical */
+          justify-content: center;  /* Centrado horizontal */
+          overflow: hidden;
+          background-color: #fff;
+          padding: 15px;            /* Espacio interno para que el producto no choque los bordes */
+        }
+
+        .product-img-wrap img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;      /* Mantiene la proporción sin recortar (soluciona Coca-Cola y Leche) */
+        }
+
         .collage-main-card {
             background: radial-gradient(circle at center, #ffffff 0%, #e3f2fd 100%) !important;
             border-radius: 40px;
@@ -152,7 +173,7 @@ const MainContent = () => {
         .btn-go-black { width: 45px; height: 45px; background: #000; color: #fff; border-radius: 50%; border: none; z-index: 10; }
       `}</style>
 
-      {/* MARQUESINA PEQUEÑA (ÚNICO CAMBIO: VERDE + IMAGEN DIFUMINADA + LETRAS LLAMATIVAS) */}
+      {/* MARQUESINA PEQUEÑA */}
       <div className="container-fluid px-0">
         <div className="track-container">
           <div className="track-content">
@@ -180,7 +201,7 @@ const MainContent = () => {
         </div>
       </div>
 
-      {/* HERO CARRUSEL GRANDE (SIN CAMBIOS) */}
+      {/* HERO CARRUSEL GRANDE */}
       <section id="heroCarousel" className="carousel slide carousel-fade">
         <div className="carousel-indicators">
           {SLIDES_FIXED.map((_, i) => (
@@ -198,7 +219,7 @@ const MainContent = () => {
         <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next"><span className="carousel-control-next-icon"></span></button>
       </section>
 
-      {/* BENEFICIOS (SIN CAMBIOS) */}
+      {/* BENEFICIOS */}
       <div className="benefits-bar py-4">
         <div className="container">
           <div className="row g-3 text-center">
@@ -213,7 +234,7 @@ const MainContent = () => {
         </div>
       </div>
 
-      {/* CATEGORÍAS (SIN CAMBIOS) */}
+      {/* CATEGORÍAS */}
       <section className="container py-5">
         <h3 className="section-title mb-4 fw-bold">Categorías Populares</h3>
         <div className="row g-3">
@@ -221,15 +242,7 @@ const MainContent = () => {
         </div>
       </section>
 
-      {/* PRODUCTOS (SIN CAMBIOS) */}
-      <section className="container py-5">
-        <h3 className="section-title mb-4 fw-bold">Top Seleccionados</h3>
-        <div className="row row-cols-2 row-cols-md-4 g-4">
-          {PRODUCTOS.map((p) => <ProductCard key={p.id} p={p} />)}
-        </div>
-      </section>
-
-      {/* COLLAGE (SIN CAMBIOS) */}
+      {/* COLLAGE */}
       <section className="container py-5">
         <div className="row g-4">
           <div className="col-12">
@@ -278,6 +291,15 @@ const MainContent = () => {
           </div>
         </div>
       </section>
+
+      {/* TOP SELECCIONADOS */}
+      <section className="container py-5">
+        <h3 className="section-title mb-4 fw-bold">Top Seleccionados</h3>
+        <div className="row row-cols-2 row-cols-md-4 g-4">
+          {PRODUCTOS.map((p) => <ProductCard key={p.id} p={p} />)}
+        </div>
+      </section>
+      
     </div>
   );
 };

@@ -6,20 +6,34 @@ import { CATEGORIAS_DATA } from "./MainContent";
 
 export default function Navbar() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
   const { totalItems } = useCart();
   const dropdownRef = useRef(null);
+  const userMenuRef = useRef(null); // Ref para el menú de usuario
 
   const [username, setUsername] = useState(() => localStorage.getItem("username") || "");
   const [scrolled, setScrolled] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false); // Estado para el menú de Pedro
   const [searchValue, setSearchValue] = useState("");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
+    // Cerrar menús si se hace clic fuera
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setUserMenuOpen(false);
+      }
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setCatOpen(false);
+      }
+    };
+
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   const handleSearch = (e) => {
@@ -32,14 +46,13 @@ export default function Navbar() {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     setUsername("");
+    setUserMenuOpen(false);
     navigate("/");
     window.location.reload();
   };
 
-  // Función para asignar iconos lógicos según el nombre si cat.icono falla
   const getMejorIcono = (nombre, iconoOriginal) => {
     if (iconoOriginal && iconoOriginal.startsWith('bi-')) return iconoOriginal;
-    
     const n = nombre.toLowerCase();
     if (n.includes("gaseosa") || n.includes("bebida")) return "bi-cup-straw";
     if (n.includes("fruta") || n.includes("verdura")) return "bi-apple";
@@ -48,7 +61,7 @@ export default function Navbar() {
     if (n.includes("abarrote")) return "bi-box-seam";
     if (n.includes("limpieza")) return "bi-stars";
     if (n.includes("cuidado")) return "bi-heart-pulse";
-    return "bi-tag"; // Icono neutral de etiqueta si no encuentra coincidencia
+    return "bi-tag";
   };
 
   const navItemStyle = {
@@ -72,7 +85,7 @@ export default function Navbar() {
               </Link>
             </div>
 
-            {/* 2. NAVEGACIÓN (CATEGORÍAS CON MEJORES ICONOS) */}
+            {/* 2. CATEGORÍAS */}
             <div className="d-none d-lg-flex align-items-center gap-4" ref={dropdownRef}>
               <div className="position-relative">
                 <span 
@@ -94,14 +107,7 @@ export default function Navbar() {
                         style={{ width: 'auto', fontSize: '0.85rem' }}
                         onClick={() => setCatOpen(false)}
                       >
-                        <i 
-                          className={`bi ${getMejorIcono(cat.nombre, cat.icono)} me-3`} 
-                          style={{ 
-                            fontSize: '1.2rem', 
-                            color: '#198754', // Verde estándar de éxito
-                            minWidth: '25px'
-                          }}
-                        ></i> 
+                        <i className={`bi ${getMejorIcono(cat.nombre, cat.icono)} me-3`} style={{ fontSize: '1.2rem', color: '#198754', minWidth: '25px' }}></i> 
                         <span style={{ fontWeight: '500' }}>{cat.nombre}</span>
                       </Link>
                     ))}
@@ -125,25 +131,44 @@ export default function Navbar() {
               </form>
             </div>
 
-            {/* 4. ACCIONES */}
+            {/* 4. ACCIONES (ARREGLADO AQUÍ) */}
             <div className="d-flex align-items-center gap-4">
               {username ? (
-                <div className="dropdown">
-                  <button className="btn btn-link text-dark text-decoration-none p-0 d-flex align-items-center gap-2 border-0" data-bs-toggle="dropdown">
+                <div className="position-relative" ref={userMenuRef}>
+                  <button 
+                    className="btn btn-link text-dark text-decoration-none p-0 d-flex align-items-center gap-2 border-0" 
+                    onClick={() => setUserMenuOpen(!userMenuOpen)} // Control manual del clic
+                  >
                     <i className="bi bi-person fs-4"></i>
                     <div className="text-start d-none d-xl-block" style={{ lineHeight: '1.1' }}>
                       <div className="text-muted" style={{ fontSize: '0.65rem' }}>HOLA,</div>
                       <div className="fw-bold d-flex align-items-center gap-1" style={{ fontSize: '0.75rem' }}>
-                        {username.toUpperCase()} <i className="bi bi-chevron-down" style={{ fontSize: '0.6rem' }}></i>
+                        {username.toUpperCase()} <i className={`bi bi-chevron-${userMenuOpen ? 'up' : 'down'}`} style={{ fontSize: '0.6rem' }}></i>
                       </div>
                     </div>
                   </button>
-                  <ul className="dropdown-menu dropdown-menu-end shadow border-0 mt-3 p-2 rounded-3">
-                    {localStorage.getItem("role") === "ADMIN" && (
-                      <li><Link className="dropdown-item rounded-2 py-2 fw-bold text-primary" to="/admin/dashboard">Panel Admin</Link></li>
-                    )}
-                    <li><button className="dropdown-item rounded-2 py-2 text-danger" onClick={handleLogout}>Cerrar Sesión</button></li>
-                  </ul>
+
+                  {/* Menú desplegable manual */}
+                  {userMenuOpen && (
+                    <div className="position-absolute end-0 bg-white shadow-lg border-0 mt-3 p-2 rounded-3" 
+                         style={{ zIndex: 1200, minWidth: '180px', top: '100%' }}>
+                      {localStorage.getItem("role") === "ADMIN" && (
+                        <Link 
+                          className="dropdown-item rounded-2 py-2 fw-bold text-primary" 
+                          to="/admin/dashboard"
+                          onClick={() => setUserMenuOpen(false)}
+                        >
+                          Panel Admin
+                        </Link>
+                      )}
+                      <button 
+                        className="dropdown-item rounded-2 py-2 text-danger" 
+                        onClick={handleLogout}
+                      >
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <Link to="/login" className="text-dark text-decoration-none d-flex align-items-center gap-2">
