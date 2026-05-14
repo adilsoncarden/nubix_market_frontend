@@ -43,12 +43,22 @@ export default function Navbar() {
             }
         };
 
+        // Escuchar cambios de login/logout
+        const handleStorageChange = () => {
+            setUsername(localStorage.getItem("username") || "");
+        };
+        window.addEventListener("localStorageChanged", handleStorageChange);
+
         window.addEventListener("scroll", handleScroll);
         document.addEventListener("mousedown", handleClickOutside);
 
         return () => {
             window.removeEventListener("scroll", handleScroll);
             document.removeEventListener("mousedown", handleClickOutside);
+            window.removeEventListener(
+                "localStorageChanged",
+                handleStorageChange,
+            );
         };
     }, []);
 
@@ -83,8 +93,7 @@ export default function Navbar() {
             return "bi-cup-straw";
         if (n.includes("fruta") || n.includes("verdura")) return "bi-apple";
         if (n.includes("lácteo") || n.includes("leche")) return "bi-droplet";
-        if (n.includes("snack") || n.includes("piqueo"))
-            return "bi-egg-fried";
+        if (n.includes("snack") || n.includes("piqueo")) return "bi-egg-fried";
         if (n.includes("abarrote")) return "bi-box-seam";
         if (n.includes("limpieza")) return "bi-stars";
         if (n.includes("cuidado")) return "bi-heart-pulse";
@@ -325,7 +334,7 @@ export default function Navbar() {
                                             className="text-muted"
                                             style={{ fontSize: "0.65rem" }}
                                         >
-                                            HOLA,
+                                            {/* HOLA, */}
                                         </div>
 
                                         <div
