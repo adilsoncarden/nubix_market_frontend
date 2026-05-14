@@ -188,7 +188,7 @@ const Sidebar = () => {
                             className="mb-0 text-muted text-uppercase fw-semibold"
                             style={{ fontSize: "0.65rem" }}
                         >
-                            Administrator
+                            Administrador
                         </p>
                     </div>
                 </div>

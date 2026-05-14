@@ -346,7 +346,10 @@ const ProductsPage = () => {
                                         <td className="text-end px-4">
                                             <button
                                                 className="btn-action btn-edit me-2"
-                                                onClick={() => openModal(prod)}
+                                                onClick={() => {
+                                                    console.log(prod);
+                                                    openModal(prod)
+                                                }}
                                                 title="Editar"
                                             >
                                                 <i className="bi bi-pencil-square"></i>
