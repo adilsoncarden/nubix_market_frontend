@@ -185,13 +185,13 @@ const Login = () => {
                                             Recuérdame
                                         </label>
                                     </div>
-                                    <a
-                                        href="#"
+                                    <Link
+                                        to="/forgot-password"
                                         className="small text-decoration-none fw-bold"
                                         style={{ color: "#1a733c" }}
                                     >
                                         ¿Olvidaste tu clave?
-                                    </a>
+                                    </Link>
                                 </div>
 
                                 {/* Botón Ingresar */}
