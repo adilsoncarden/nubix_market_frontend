@@ -1,33 +1,32 @@
 import React, { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../features/auth/services/authService";
 
-const ResetPassword = () => {
-    const { token } = useParams(); // Si vienes de un link, el token se captura aquí
-
-    // 1. Agregamos el estado para el código
-    const [code, setCode] = useState(token || "");
+const ResetPasswordManual = () => {
+    const [email, setEmail] = useState("");
+    const [code, setCode] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage("");
         setError("");
-
         if (password !== confirmPassword) {
             setError("Las contraseñas no coinciden.");
             return;
         }
-
         setLoading(true);
         try {
-            // Agrega el campo de email si tu backend lo requiere (parece que sí según el Controller)
             await authService.resetPassword(email, code, password);
-            setMessage("Contraseña actualizada exitosamente");
+            setMessage(
+                "Contraseña restablecida correctamente. Ahora puedes iniciar sesión.",
+            );
+            setTimeout(() => navigate("/login"), 2500);
         } catch (err) {
             setError(
                 err?.response?.data?.message ||
@@ -47,7 +46,18 @@ const ResetPassword = () => {
                             Restablecer contraseña
                         </h4>
                         <form onSubmit={handleSubmit}>
-                            {/* --- AQUÍ AGREGAS EL BLOQUE DEL CÓDIGO --- */}
+                            <div className="mb-3">
+                                <label className="form-label">
+                                    Correo electrónico
+                                </label>
+                                <input
+                                    type="email"
+                                    className="form-control"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
+                                />
+                            </div>
                             <div className="mb-3">
                                 <label className="form-label">
                                     Código de recuperación
@@ -57,12 +67,9 @@ const ResetPassword = () => {
                                     className="form-control"
                                     value={code}
                                     onChange={(e) => setCode(e.target.value)}
-                                    placeholder="Introduce el código de 6 dígitos"
                                     required
                                 />
                             </div>
-                            {/* ---------------------------------------- */}
-
                             <div className="mb-3">
                                 <label className="form-label">
                                     Nueva contraseña
@@ -91,7 +98,6 @@ const ResetPassword = () => {
                                     required
                                 />
                             </div>
-
                             {message && (
                                 <div className="alert alert-success">
                                     {message}
@@ -102,7 +108,6 @@ const ResetPassword = () => {
                                     {error}
                                 </div>
                             )}
-
                             <button
                                 type="submit"
                                 className="btn btn-success w-100"
@@ -123,4 +128,4 @@ const ResetPassword = () => {
     );
 };
 
-export default ResetPassword;
+export default ResetPasswordManual;

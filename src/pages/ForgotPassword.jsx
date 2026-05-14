@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { authService } from "../features/auth/services/authService";
+import { useNavigate } from "react-router-dom";
 
 const ForgotPassword = () => {
+    const navigate = useNavigate(); // inicializar
+
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -13,11 +16,14 @@ const ForgotPassword = () => {
         setMessage("");
         setError("");
         setLoading(true);
+
         try {
             await authService.forgotPassword(email);
             setMessage(
                 "Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.",
             );
+
+            // No redirigir automáticamente, solo mostrar mensaje
         } catch (err) {
             setError(
                 err?.response?.data?.message ||
@@ -71,6 +77,13 @@ const ForgotPassword = () => {
                         </form>
                         <div className="mt-3 text-center">
                             <Link to="/login">Volver al inicio de sesión</Link>
+                            <br />
+                            <Link
+                                to="/reset-password/manual"
+                                className="text-decoration-underline"
+                            >
+                                Ya tengo mi código, restablecer contraseña
+                            </Link>
                         </div>
                     </div>
                 </div>

@@ -19,6 +19,9 @@ import CartPage from "./pages/CartPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
+// Import manual reset page
+import ResetPasswordManual from "./pages/ResetPasswordManual";
+
 // ─── Layout público: Navbar + contenido + Footer ──────────────────────────────
 const PublicLayout = () => (
     <div className="d-flex flex-column min-vh-100">
@@ -47,6 +50,10 @@ export default function App() {
                             <Route
                                 path="/forgot-password"
                                 element={<ForgotPassword />}
+                            />
+                            <Route
+                                path="/reset-password/manual"
+                                element={<ResetPasswordManual />}
                             />
                             <Route
                                 path="/reset-password/:token"
