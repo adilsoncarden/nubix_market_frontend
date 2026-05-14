@@ -7,6 +7,10 @@ const ResetPasswordManual = () => {
     const [code, setCode] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -16,16 +20,21 @@ const ResetPasswordManual = () => {
         e.preventDefault();
         setMessage("");
         setError("");
+
         if (password !== confirmPassword) {
             setError("Las contraseñas no coinciden.");
             return;
         }
+
         setLoading(true);
+
         try {
             await authService.resetPassword(email, code, password);
+
             setMessage(
                 "Contraseña restablecida correctamente. Ahora puedes iniciar sesión.",
             );
+
             setTimeout(() => navigate("/login"), 2500);
         } catch (err) {
             setError(
@@ -45,11 +54,13 @@ const ResetPasswordManual = () => {
                         <h4 className="mb-4 fw-bold text-center">
                             Restablecer contraseña
                         </h4>
+
                         <form onSubmit={handleSubmit}>
                             <div className="mb-3">
                                 <label className="form-label">
                                     Correo electrónico
                                 </label>
+
                                 <input
                                     type="email"
                                     className="form-control"
@@ -58,10 +69,12 @@ const ResetPasswordManual = () => {
                                     required
                                 />
                             </div>
+
                             <div className="mb-3">
                                 <label className="form-label">
                                     Código de recuperación
                                 </label>
+
                                 <input
                                     type="text"
                                     className="form-control"
@@ -70,44 +83,99 @@ const ResetPasswordManual = () => {
                                     required
                                 />
                             </div>
+
                             <div className="mb-3">
                                 <label className="form-label">
                                     Nueva contraseña
                                 </label>
-                                <input
-                                    type="password"
-                                    className="form-control"
-                                    value={password}
-                                    onChange={(e) =>
-                                        setPassword(e.target.value)
-                                    }
-                                    required
-                                />
+
+                                <div className="input-group">
+                                    <input
+                                        type={
+                                            showPassword ? "text" : "password"
+                                        }
+                                        className="form-control"
+                                        value={password}
+                                        onChange={(e) =>
+                                            setPassword(e.target.value)
+                                        }
+                                        required
+                                    />
+
+                                    <span
+                                        className="input-group-text bg-light"
+                                        onClick={() =>
+                                            setShowPassword(!showPassword)
+                                        }
+                                        style={{
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        <i
+                                            className={`bi ${
+                                                showPassword
+                                                    ? "bi-eye-slash"
+                                                    : "bi-eye"
+                                            } text-muted`}
+                                        ></i>
+                                    </span>
+                                </div>
                             </div>
+
                             <div className="mb-3">
                                 <label className="form-label">
                                     Confirmar contraseña
                                 </label>
-                                <input
-                                    type="password"
-                                    className="form-control"
-                                    value={confirmPassword}
-                                    onChange={(e) =>
-                                        setConfirmPassword(e.target.value)
-                                    }
-                                    required
-                                />
+
+                                <div className="input-group">
+                                    <input
+                                        type={
+                                            showConfirmPassword
+                                                ? "text"
+                                                : "password"
+                                        }
+                                        className="form-control"
+                                        value={confirmPassword}
+                                        onChange={(e) =>
+                                            setConfirmPassword(e.target.value)
+                                        }
+                                        required
+                                    />
+
+                                    <span
+                                        className="input-group-text bg-light"
+                                        onClick={() =>
+                                            setShowConfirmPassword(
+                                                !showConfirmPassword,
+                                            )
+                                        }
+                                        style={{
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        <i
+                                            className={`bi ${
+                                                showConfirmPassword
+                                                    ? "bi-eye-slash"
+                                                    : "bi-eye"
+                                            } text-muted`}
+                                        ></i>
+                                    </span>
+                                </div>
                             </div>
+
                             {message && (
                                 <div className="alert alert-success">
                                     {message}
                                 </div>
                             )}
+
                             {error && (
                                 <div className="alert alert-danger">
                                     {error}
                                 </div>
                             )}
+
                             <button
                                 type="submit"
                                 className="btn btn-success w-100"
@@ -118,6 +186,7 @@ const ResetPasswordManual = () => {
                                     : "Restablecer contraseña"}
                             </button>
                         </form>
+
                         <div className="mt-3 text-center">
                             <Link to="/login">Volver al inicio de sesión</Link>
                         </div>

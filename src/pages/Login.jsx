@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
     const [isHovered, setIsHovered] = useState(false);
@@ -151,12 +152,16 @@ const Login = () => {
                                         >
                                             <i className="bi bi-lock text-muted"></i>
                                         </span>
+
                                         <input
-                                            type="password"
-                                            className="form-control bg-light border-start-0 py-2"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            className="form-control bg-light border-start-0 border-end-0 py-2"
                                             placeholder="••••••••"
                                             style={{
-                                                borderRadius: "0 10px 10px 0",
                                                 fontSize: "0.95rem",
                                             }}
                                             value={password}
@@ -165,6 +170,25 @@ const Login = () => {
                                             }
                                             required
                                         />
+
+                                        <span
+                                            className="input-group-text bg-light border-start-0"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                            style={{
+                                                borderRadius: "0 10px 10px 0",
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <i
+                                                className={`bi ${
+                                                    showPassword
+                                                        ? "bi-eye-slash"
+                                                        : "bi-eye"
+                                                } text-muted`}
+                                            ></i>
+                                        </span>
                                     </div>
                                 </div>
 

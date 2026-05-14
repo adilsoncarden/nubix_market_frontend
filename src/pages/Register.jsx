@@ -8,6 +8,8 @@ const Register = () => {
         email: "",
         password: "",
     });
+
+    const [showPassword, setShowPassword] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
     const [isHovered, setIsHovered] = useState(false);
@@ -105,7 +107,11 @@ const Register = () => {
                                         style={{ borderRadius: "10px" }}
                                     >
                                         <i
-                                            className={`bi ${alertType === "success" ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill"} me-2`}
+                                            className={`bi ${
+                                                alertType === "success"
+                                                    ? "bi-check-circle-fill"
+                                                    : "bi-exclamation-triangle-fill"
+                                            } me-2`}
                                         ></i>
                                         {alertMessage}
                                     </div>
@@ -175,6 +181,7 @@ const Register = () => {
                                     <label className="form-label small fw-bold text-muted ms-1">
                                         Contraseña
                                     </label>
+
                                     <div className="input-group">
                                         <span
                                             className="input-group-text bg-light border-end-0"
@@ -184,19 +191,42 @@ const Register = () => {
                                         >
                                             <i className="bi bi-lock text-muted"></i>
                                         </span>
+
                                         <input
-                                            type="password"
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
                                             name="password"
-                                            className="form-control bg-light border-start-0 py-2"
+                                            className="form-control bg-light border-start-0 border-end-0 py-2"
                                             placeholder="Crea una clave segura"
                                             style={{
-                                                borderRadius: "0 10px 10px 0",
                                                 fontSize: "0.95rem",
                                             }}
                                             value={formData.password}
                                             onChange={handleChange}
                                             required
                                         />
+
+                                        <span
+                                            className="input-group-text bg-light border-start-0"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                            style={{
+                                                borderRadius: "0 10px 10px 0",
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <i
+                                                className={`bi ${
+                                                    showPassword
+                                                        ? "bi-eye-slash"
+                                                        : "bi-eye"
+                                                } text-muted`}
+                                            ></i>
+                                        </span>
                                     </div>
                                 </div>
 
