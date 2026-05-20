@@ -34,6 +34,7 @@ import ProductsPage from "./pages/ProductsPage";
 import ClientsPage from "./pages/ClientsPage";
 import EmployeesPage from "./pages/EmployeesPage";
 import SuppliersPage from "./pages/SuppliersPage";
+import SalesPage from "./pages/SalesPage";
 
 // ───────────────── LAYOUT PÚBLICO ─────────────────
 const PublicLayout = () => (
@@ -136,6 +137,11 @@ export default function App() {
                                 <Route
                                     path="/admin/proveedores"
                                     element={<SuppliersPage />}
+                                />
+
+                                <Route
+                                    path="/admin/ventas"
+                                    element={<SalesPage />}
                                 />
                             </Route>
                         </Route>

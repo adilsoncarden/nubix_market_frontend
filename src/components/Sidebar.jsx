@@ -48,6 +48,11 @@ const Sidebar = () => {
             icon: "bi-truck-flatbed",
             label: "Proveedores",
         },
+        {
+            path: "/admin/ventas",
+            icon: "bi-cart-check-fill",
+            label: "Ventas",
+        },
     ];
 
     return (
@@ -157,7 +162,7 @@ const Sidebar = () => {
                 </ul>
             </div>
 
-            {/* User Profile Section (Restaurado) */}
+            {/* User Profile Section */}
             <div className="p-3 mt-auto border-top bg-light/50">
                 <div className="d-flex align-items-center p-2 rounded-4 bg-white shadow-sm border mb-3">
                     <div className="flex-shrink-0">
