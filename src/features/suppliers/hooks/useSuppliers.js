@@ -61,35 +61,35 @@ export const useSuppliers = () => {
     };
 
     const removeSupplier = async (id) => {
-        const result = await Swal.fire({
-            title: "¿Estás seguro?",
-            text: "¡No podrás revertir esto!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#1a733c", // Tu verde Nubix
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-        });
 
-        if (result.isConfirmed) {
-            try {
-                await deleteSupplier(id);
-                setSuppliers((prev) => prev.filter((s) => s.id !== id));
-                Swal.fire(
-                    "¡Eliminado!",
-                    "El proveedor ha sido borrado.",
-                    "success",
-                );
+        const original =  [...suppliers];
+
+        // ELIMINACIÓN OPTIMISTA:   
+        setSuppliers((prev) => prev.filter((s) => s.id !== id));
+
+        try {
+            await deleteSupplier(id);
+
+            Swal.fire({
+                icon: "success",
+                title: "Proveedor eliminado",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
             } catch (error) {
+
+                // RESTAURAR SI FALLA
+                setSuppliers(original);
+
                 Swal.fire(
                     "Error",
-                    "No se pudo eliminar el proveedor.",
+                    "No se puedo eliminar el Proveedor.",
                     "error",
                 );
             }
         }
-    };
+    
 
     return {
         suppliers,

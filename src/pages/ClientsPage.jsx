@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { clientService } from "../features/users/services/clientService";
 import Swal from "sweetalert2";
 import { Modal } from "bootstrap";
@@ -6,8 +6,7 @@ import { Modal } from "bootstrap";
 const ClientsPage = () => {
     const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // --- LÓGICA DE PAGINACIÓN ---
+    const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
@@ -15,11 +14,21 @@ const ClientsPage = () => {
         username: "",
         email: "",
     });
-    
+
     const modalRef = useRef();
     const bsModal = useRef();
 
+    // --- NOTIFICACIONES (TOAST) ---
+    const Toast = Swal.mixin({
+        toast: true,
+        position: "bottom-end",
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+    });
+
     const fetchClients = async () => {
+        setLoading(true);
         try {
             const data = await clientService.getAll();
             setClients(data);
@@ -34,18 +43,31 @@ const ClientsPage = () => {
         fetchClients();
         if (modalRef.current) {
             bsModal.current = new Modal(modalRef.current);
+            modalRef.current.addEventListener("hidden.bs.modal", () => {
+                setSelectedClient({ username: "", email: "" });
+            });
         }
     }, []);
 
-    // --- CÁLCULOS DE SEGMENTACIÓN ---
-    const totalClientes = clients.length;
+    // --- FILTRADO Y PAGINACIÓN ---
+    const filteredClients = useMemo(() => {
+        return clients.filter(
+            (c) =>
+                c.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                c.email?.toLowerCase().includes(searchTerm.toLowerCase()),
+        );
+    }, [clients, searchTerm]);
+
+    const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = clients.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(totalClientes / itemsPerPage);
+    const currentItems = filteredClients.slice(
+        indexOfFirstItem,
+        indexOfLastItem,
+    );
 
     const handleEditClick = (client) => {
-        setSelectedClient(client);
+        setSelectedClient({ ...client });
         bsModal.current.show();
     };
 
@@ -56,77 +78,162 @@ const ClientsPage = () => {
                 username: selectedClient.username,
                 email: selectedClient.email,
             });
-
-            Swal.fire({
-                icon: "success",
-                title: "¡Actualizado!",
-                timer: 1500,
-                showConfirmButton: false
-            });
-            
+            Toast.fire({ icon: "success", title: "Cliente actualizado" });
             bsModal.current.hide();
             fetchClients();
         } catch (err) {
-            Swal.fire("Error", "No se pudo actualizar.", "error");
+            Toast.fire({ icon: "error", title: "Error al actualizar" });
         }
     };
 
     return (
-        <div className="container-fluid animate__animated animate__fadeIn p-4">
-            
+        <div
+            className="container-fluid p-4"
+            style={{
+                backgroundColor: "#f9fafb",
+                minHeight: "100vh",
+                fontSize: "0.9rem",
+            }}
+        >
             {/* CABECERA */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <div>
-                    <h2 className="fw-bold mb-1" style={{ letterSpacing: '-0.02em', color: '#1a1d23' }}>
-                        Gestión de Clientes
+                    <h2
+                        className="fw-bold mb-1"
+                        style={{ letterSpacing: "-0.03em", color: "#111827" }}
+                    >
+                        Nubix Market <span style={{ color: "#10b981" }}>/</span>{" "}
+                        Clientes
                     </h2>
                     <p className="text-muted small mb-0">
-                        Visualiza y edita los usuarios registrados en <span className="fw-semibold text-success">Nubix Market</span>
+                        Gestión de usuarios y accesos a la plataforma
                     </p>
                 </div>
-                <div className="d-flex align-items-center bg-white shadow-sm px-3 py-2" style={{ borderRadius: '10px', border: '1px solid #eee' }}>
-                    <div className="bg-success rounded-circle me-2" style={{ width: '8px', height: '8px' }}></div>
-                    <span className="text-secondary small fw-bold text-uppercase me-2" style={{ fontSize: '11px' }}>Total Clientes:</span>
-                    <span className="fw-bold text-dark">{totalClientes} un.</span>
+                <div
+                    className="card border-0 shadow-sm px-3 py-2"
+                    style={{ borderRadius: "10px" }}
+                >
+                    <div className="d-flex align-items-center">
+                        <div
+                            className="bg-emerald-100 text-emerald-600 rounded-circle me-2 d-flex align-items-center justify-content-center"
+                            style={{ width: "10px", height: "10px" }}
+                        ></div>
+                        <span
+                            className="text-secondary fw-bold text-uppercase"
+                            style={{ fontSize: "10px" }}
+                        >
+                            Registrados:
+                        </span>
+                        <span className="ms-2 fw-bold text-dark">
+                            {clients.length}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            {/* TABLA */}
-            <div className="card shadow-sm border-0 overflow-hidden" style={{ borderRadius: '12px' }}>
+            {/* BUSCADOR */}
+            <div
+                className="card border-0 shadow-sm mb-4"
+                style={{ borderRadius: "12px" }}
+            >
+                <div className="card-body py-2 px-3 d-flex align-items-center">
+                    <i className="bi bi-search text-muted me-3"></i>
+                    <input
+                        type="text"
+                        className="form-control border-0 shadow-none bg-transparent"
+                        placeholder="Buscar por nombre de usuario o correo..."
+                        value={searchTerm}
+                        onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                        style={{ fontSize: "0.85rem" }}
+                    />
+                </div>
+            </div>
+
+            {/* TABLA COMPACTA */}
+            <div
+                className="card shadow-sm border-0 overflow-hidden"
+                style={{ borderRadius: "12px" }}
+            >
                 <div className="table-responsive">
-                    <table className="table table-hover align-middle mb-0 text-nowrap">
+                    <table className="table table-hover align-middle mb-0">
                         <thead className="bg-light">
-                            <tr>
-                                <th className="px-4 py-3 text-secondary small fw-bold">ID</th>
-                                <th className="py-3 text-secondary small fw-bold">USUARIO</th>
-                                <th className="py-3 text-secondary small fw-bold">CORREO ELECTRÓNICO</th>
-                                <th className="py-3 text-secondary small fw-bold">ROL</th>
-                                <th className="text-end px-4 py-3 text-secondary small fw-bold" style={{ width: '80px' }}>ACCIONES</th>
+                            <tr style={{ fontSize: "0.75rem" }}>
+                                <th
+                                    className="px-4 py-3 text-secondary fw-bold"
+                                    style={{ width: "80px" }}
+                                >
+                                    ID
+                                </th>
+                                <th className="py-3 text-secondary fw-bold">
+                                    USUARIO
+                                </th>
+                                <th className="py-3 text-secondary fw-bold">
+                                    CORREO ELECTRÓNICO
+                                </th>
+                                <th
+                                    className="py-3 text-secondary fw-bold text-center"
+                                    style={{ width: "150px" }}
+                                >
+                                    ROL
+                                </th>
+                                <th
+                                    className="text-end px-4 py-3 text-secondary fw-bold"
+                                    style={{ width: "100px" }}
+                                >
+                                    ACCIONES
+                                </th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody style={{ fontSize: "0.85rem" }}>
                             {loading ? (
-                                <tr><td colSpan="5" className="text-center py-5 text-muted">Cargando...</td></tr>
-                            ) : totalClientes === 0 ? (
-                                <tr><td colSpan="5" className="text-center py-5 text-muted">No hay clientes registrados.</td></tr>
+                                <tr>
+                                    <td
+                                        colSpan="5"
+                                        className="text-center py-5"
+                                    >
+                                        <div className="spinner-border spinner-border-sm text-emerald-600"></div>
+                                    </td>
+                                </tr>
+                            ) : currentItems.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan="5"
+                                        className="text-center py-5 text-muted"
+                                    >
+                                        No se encontraron clientes.
+                                    </td>
+                                </tr>
                             ) : (
                                 currentItems.map((client) => (
-                                    <tr key={client.id} className="row-hover">
-                                        <td className="px-4 text-muted small">#{client.id}</td>
-                                        <td><span className="fw-bold text-dark">{client.username}</span></td>
-                                        <td className="text-dark">{client.email}</td>
+                                    <tr key={client.id}>
+                                        <td className="px-4 text-muted small">
+                                            #{client.id}
+                                        </td>
                                         <td>
-                                            <span className="role-text">
+                                            <span className="fw-bold text-dark">
+                                                {client.username}
+                                            </span>
+                                        </td>
+                                        <td className="text-muted">
+                                            {client.email}
+                                        </td>
+                                        <td className="text-center">
+                                            <span className="badge-role">
                                                 {client.rolNombre || "Cliente"}
                                             </span>
                                         </td>
                                         <td className="text-end px-4">
-                                            <button 
-                                                className="btn btn-sm border-0 shadow-none p-1 btn-animate-edit" 
-                                                onClick={() => handleEditClick(client)}
-                                                style={{ color: '#198754' }}
+                                            <button
+                                                className="btn-table-action edit"
+                                                onClick={() =>
+                                                    handleEditClick(client)
+                                                }
+                                                title="Editar cliente"
                                             >
-                                                <i className="bi bi-pencil fs-5"></i>
+                                                <i className="bi bi-pencil-square"></i>
                                             </button>
                                         </td>
                                     </tr>
@@ -136,37 +243,65 @@ const ClientsPage = () => {
                     </table>
                 </div>
 
-                {/* PAGINACIÓN FOOTER (ACTUALIZADA A VERDE) */}
+                {/* PAGINACIÓN */}
                 {!loading && totalPages > 1 && (
                     <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
                         <div className="text-muted small">
-                            Mostrando <span className="fw-semibold text-dark">{indexOfFirstItem + 1}</span> a <span className="fw-semibold text-dark">{Math.min(indexOfLastItem, totalClientes)}</span> de <span className="fw-semibold text-dark">{totalClientes}</span> clientes
+                            Mostrando <b>{indexOfFirstItem + 1}</b> a{" "}
+                            <b>
+                                {Math.min(
+                                    indexOfLastItem,
+                                    filteredClients.length,
+                                )}
+                            </b>{" "}
+                            de {filteredClients.length}
                         </div>
                         <nav>
-                            <ul className="pagination pagination-sm mb-0">
-                                <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage - 1)}>
-                                        <i className="bi bi-chevron-left text-success"></i>
+                            <ul className="pagination pagination-sm mb-0 gap-1">
+                                <li
+                                    className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                                >
+                                    <button
+                                        className="page-link border-0 rounded-2"
+                                        onClick={() =>
+                                            setCurrentPage(currentPage - 1)
+                                        }
+                                    >
+                                        <i className="bi bi-chevron-left"></i>
                                     </button>
                                 </li>
-                                
-                                {[...Array(totalPages)].map((_, index) => (
-                                    <li key={index} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
-                                        <button 
-                                            className="page-link border-0 shadow-none mx-1 rounded-3" 
-                                            style={currentPage === index + 1 ? 
-                                                { backgroundColor: '#198754', color: 'white' } : 
-                                                { backgroundColor: '#f8f9fa', color: '#1a1d23' }}
-                                            onClick={() => setCurrentPage(index + 1)}
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <li
+                                        key={i}
+                                        className={`page-item ${currentPage === i + 1 ? "active" : ""}`}
+                                    >
+                                        <button
+                                            className={`page-link border-0 rounded-2 fw-bold ${currentPage === i + 1 ? "active-page" : "text-dark bg-light"}`}
+                                            onClick={() =>
+                                                setCurrentPage(i + 1)
+                                            }
+                                            style={{
+                                                width: "30px",
+                                                height: "30px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                            }}
                                         >
-                                            {index + 1}
+                                            {i + 1}
                                         </button>
                                     </li>
                                 ))}
-
-                                <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                                    <button className="page-link border-0 shadow-none bg-transparent" onClick={() => setCurrentPage(currentPage + 1)}>
-                                        <i className="bi bi-chevron-right text-success"></i>
+                                <li
+                                    className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                                >
+                                    <button
+                                        className="page-link border-0 rounded-2"
+                                        onClick={() =>
+                                            setCurrentPage(currentPage + 1)
+                                        }
+                                    >
+                                        <i className="bi bi-chevron-right"></i>
                                     </button>
                                 </li>
                             </ul>
@@ -175,40 +310,95 @@ const ClientsPage = () => {
                 )}
             </div>
 
-            {/* MODAL (ACTUALIZADO A VERDE) */}
-            <div className="modal fade" ref={modalRef} tabIndex="-1" aria-hidden="true">
+            {/* MODAL EDITAR */}
+            <div
+                className="modal fade"
+                ref={modalRef}
+                tabIndex="-1"
+                data-bs-backdrop="static"
+            >
                 <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content border-0 shadow-lg" style={{ borderRadius: '15px' }}>
+                    <div
+                        className="modal-content border-0 shadow-lg modal-client-custom"
+                        style={{ borderRadius: "15px" }}
+                    >
                         <div className="modal-header border-0 pt-4 px-4 pb-0">
-                            <h5 className="modal-title fw-bold">Editar Cliente</h5>
-                            <button type="button" className="btn-close shadow-none" onClick={() => bsModal.current.hide()}></button>
+                            <h5 className="modal-title fw-bold text-dark">
+                                Editar Información del Cliente
+                            </h5>
+                            <button
+                                type="button"
+                                className="btn-close shadow-none"
+                                onClick={() => bsModal.current.hide()}
+                            ></button>
                         </div>
                         <form onSubmit={handleUpdate}>
                             <div className="modal-body p-4">
                                 <div className="mb-3">
-                                    <label className="form-label small fw-bold text-muted text-uppercase">Nombre de Usuario</label>
-                                    <input
-                                        type="text"
-                                        className="form-control bg-light border-0 py-2 custom-input"
-                                        value={selectedClient.username}
-                                        onChange={(e) => setSelectedClient({...selectedClient, username: e.target.value})}
-                                        required
-                                    />
+                                    <label className="form-label extra-small fw-bold text-muted text-uppercase">
+                                        Nombre de Usuario
+                                    </label>
+                                    <div className="input-group">
+                                        <span className="input-group-text bg-light border-0">
+                                            <i className="bi bi-person text-emerald-600"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            className="form-control bg-light border-0 py-2"
+                                            value={selectedClient.username}
+                                            onChange={(e) =>
+                                                setSelectedClient({
+                                                    ...selectedClient,
+                                                    username: e.target.value,
+                                                })
+                                            }
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                <div className="mb-3">
-                                    <label className="form-label small fw-bold text-muted text-uppercase">Correo Electrónico</label>
-                                    <input
-                                        type="email"
-                                        className="form-control bg-light border-0 py-2 custom-input"
-                                        value={selectedClient.email}
-                                        onChange={(e) => setSelectedClient({...selectedClient, email: e.target.value})}
-                                        required
-                                    />
+                                <div className="mb-0">
+                                    <label className="form-label extra-small fw-bold text-muted text-uppercase">
+                                        Correo Electrónico
+                                    </label>
+                                    <div className="input-group">
+                                        <span className="input-group-text bg-light border-0">
+                                            <i className="bi bi-envelope text-emerald-600"></i>
+                                        </span>
+                                        <input
+                                            type="email"
+                                            className="form-control bg-light border-0 py-2"
+                                            value={selectedClient.email}
+                                            onChange={(e) =>
+                                                setSelectedClient({
+                                                    ...selectedClient,
+                                                    email: e.target.value,
+                                                })
+                                            }
+                                            required
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                            <div className="modal-footer border-0 p-4 pt-0">
-                                <button type="button" className="btn btn-light px-4 fw-semibold text-muted" onClick={() => bsModal.current.hide()}>Cancelar</button>
-                                <button type="submit" className="btn btn-success px-4 fw-bold shadow-sm" style={{ borderRadius: '8px', backgroundColor: '#198754' }}>Guardar Cambios</button>
+                            <div className="modal-footer border-0 p-4 pt-0 gap-2">
+                                <button
+                                    type="button"
+                                    className="btn btn-light px-4 fw-bold text-secondary border"
+                                    style={{ borderRadius: "10px" }}
+                                    onClick={() => bsModal.current.hide()}
+                                >
+                                    Cerrar
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn btn-success px-4 fw-bold shadow-sm"
+                                    style={{
+                                        borderRadius: "10px",
+                                        backgroundColor: "#10b981",
+                                        border: "none",
+                                    }}
+                                >
+                                    Guardar Cambios
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -216,39 +406,36 @@ const ClientsPage = () => {
             </div>
 
             <style>{`
-                .row-hover:hover { background-color: #fcfcfc !important; }
+                .text-emerald-600 { color: #10b981 !important; }
+                .bg-emerald-100 { background-color: #d1fae5 !important; }
+                .extra-small { font-size: 0.7rem; letter-spacing: 0.05em; }
 
-                .role-text {
-                    font-size: 11px;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    letter-spacing: 0.5px;
-                    color: #198754;
-                    background-color: #e8f5e9;
-                    padding: 3px 8px;
-                    border-radius: 4px;
+                /* Badge del Rol */
+                .badge-role {
+                    font-size: 10px; font-weight: 700; text-transform: uppercase;
+                    color: #059669; background-color: #ecfdf5;
+                    padding: 4px 10px; border-radius: 6px; border: 1px solid #d1fae5;
                 }
 
-                .btn-animate-edit {
-                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                /* Acciones Tabla */
+                .btn-table-action {
+                    border: none; background: none; padding: 6px;
+                    border-radius: 8px; transition: 0.2s; font-size: 1.15rem;
                 }
+                .btn-table-action.edit { color: #10b981; }
+                .btn-table-action.edit:hover { background-color: #ecfdf5; transform: scale(1.1); }
 
-                .btn-animate-edit:hover {
-                    transform: scale(1.25);
-                    filter: drop-shadow(0 0 8px rgba(25, 135, 84, 0.4));
-                    color: #157347 !important;
-                }
+                /* Paginación */
+                .active-page { background-color: #10b981 !important; color: white !important; }
+                .page-link:hover:not(.active-page) { background-color: #ecfdf5 !important; color: #10b981 !important; }
 
-                .pagination .page-link:hover:not(.active) {
-                    background-color: #e8f5e9 !important;
-                    color: #198754 !important;
-                }
-
-                .custom-input:focus {
+                /* Inputs Modal */
+                .modal-client-custom input:focus {
                     background-color: #fff !important;
-                    border: 1px solid #198754 !important;
-                    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15) !important;
+                    border: 1px solid #10b981 !important;
+                    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15) !important;
                 }
+                .modal.show { background-color: rgba(17, 24, 39, 0.5) !important; }
             `}</style>
         </div>
     );
