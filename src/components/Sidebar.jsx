@@ -1,138 +1,207 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { useState } from "react";
+import logo from "../assets/logo.png";
+
+const SidebarItem = ({ to, icon, label, active, isSubItem = false }) => (
+    <li className="nav-item">
+        <Link
+            to={to}
+            className={`nav-link d-flex align-items-center px-3 py-2 mb-1 rounded-3 transition-all ${
+                active
+                    ? "active-link shadow-sm text-white"
+                    : "text-secondary hover-bg"
+            }`}
+            style={{ fontSize: isSubItem ? "0.85rem" : "0.95rem" }}
+        >
+            <i className={`bi ${icon} ${isSubItem ? "fs-7" : "fs-5"} me-3`}></i>
+            <span className="fw-medium">{label}</span>
+        </Link>
+    </li>
+);
 
 const Sidebar = () => {
     const location = useLocation();
     const { logout, user } = useAuth();
-
     const [isUsersOpen, setIsUsersOpen] = useState(
         location.pathname.includes("/admin/usuarios"),
     );
 
     const menuItems = [
-        { path: "/admin/dashboard", icon: "bi-speedometer2", label: "Dashboard" },
-        { path: "/admin/categorias", icon: "bi-tags", label: "Categorías" },
-        { path: "/admin/productos", icon: "bi-box-seam", label: "Productos" },
-        { path: "/admin/proveedores", icon: "bi-truck", label: "Proveedores" },
+        {
+            path: "/admin/dashboard",
+            icon: "bi-grid-1x2-fill",
+            label: "Dashboard",
+        },
+        {
+            path: "/admin/categorias",
+            icon: "bi-tags-fill",
+            label: "Categorías",
+        },
+        {
+            path: "/admin/productos",
+            icon: "bi-box-seam-fill",
+            label: "Productos",
+        },
+        {
+            path: "/admin/proveedores",
+            icon: "bi-truck-flatbed",
+            label: "Proveedores",
+        },
     ];
 
     return (
-        <div
-            className="d-flex flex-column flex-shrink-0 p-3 bg-white vh-100 shadow-sm border-end"
+        <aside
+            className="d-flex flex-column bg-white vh-100 border-end shadow-sm"
             style={{ width: "280px" }}
         >
-            <style>
-                {`
-                    .nav-pills .nav-link {
-                        color: #495057;
-                        transition: all 0.3s ease;
-                        font-weight: 500;
-                    }
-                    .nav-pills .nav-link:hover {
-                        background-color: #f8f9fa;
-                        color: #198754;
-                    }
-                    .nav-pills .nav-link.active {
-                        background-color: #198754 !important;
-                        color: white !important;
-                        box-shadow: 0 4px 10px rgba(25, 135, 84, 0.2);
-                    }
-                `}
-            </style>
+            <style>{`
+                .active-link { background-color: #10b981 !important; }
+                .text-emerald-600 { color: #10b981 !important; }
+                .hover-bg:hover { background-color: #f0fdf4; color: #10b981 !important; }
+                .transition-all { transition: all 0.2s ease-in-out; }
+                .fs-7 { font-size: 0.8rem; }
+                .dropdown-btn:hover { background-color: #f8f9fa; }
+                .avatar-border { border: 2px solid #10b981; padding: 2px; }
+            `}</style>
 
-            {/* Logo */}
-            <Link
-                to="/admin/dashboard"
-                className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-decoration-none"
-            >
-                <i className="bi bi-shop text-success fs-3 me-2"></i>
-                <span className="fs-4 fw-bold">
-                    <span style={{ color: "#198754" }}>Nubix</span> <span className="text-dark">Market</span>
-                </span>
-            </Link>
-            <hr className="text-muted" />
-
-            <ul className="nav nav-pills flex-column mb-auto">
-                {menuItems.map((item) => (
-                    <li key={item.path} className="nav-item mb-1">
-                        <Link
-                            to={item.path}
-                            className={`nav-link ${location.pathname === item.path ? "active" : ""}`}
-                        >
-                            <i className={`bi ${item.icon} me-2`}></i>
-                            {item.label}
-                        </Link>
-                    </li>
-                ))}
-
-                <li className="nav-item mb-1">
-                    <button
-                        onClick={() => setIsUsersOpen(!isUsersOpen)}
-                        className={`nav-link w-100 text-start d-flex justify-content-between align-items-center ${
-                            location.pathname.includes("/admin/usuarios") ? "text-success fw-bold" : ""
-                        }`}
-                        style={{ border: "none", background: "none" }}
-                    >
-                        <span>
-                            <i className="bi bi-people me-2"></i>
-                            Usuarios
-                        </span>
-                        <i className={`bi bi-chevron-${isUsersOpen ? "down" : "right"} small`}></i>
-                    </button>
-
-                    <div className={`collapse ${isUsersOpen ? "show" : ""} ms-3`}>
-                        <ul className="btn-toggle-nav list-unstyled fw-normal pb-1 small">
-                            <li>
-                                <Link
-                                    to="/admin/usuarios/clientes"
-                                    className={`nav-link mb-1 ${location.pathname === "/admin/usuarios/clientes" ? "active" : ""}`}
-                                >
-                                    <i className="bi bi-person-badge me-2"></i> Clientes
-                                </Link>
-                            </li>
-                            <li>
-                                <Link
-                                    to="/admin/usuarios/empleados"
-                                    className={`nav-link mb-1 ${location.pathname === "/admin/usuarios/empleados" ? "active" : ""}`}
-                                >
-                                    <i className="bi bi-person-workspace me-2"></i> Empleados
-                                </Link>
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
-
-            <hr className="text-muted" />
-
-            {/* Perfil con orden invertido */}
-            <div className="d-flex flex-column align-items-center mb-3 py-2">
-                <div 
-                    className="bg-light rounded-circle d-flex align-items-center justify-content-center mb-2 shadow-sm"
-                    style={{ width: "60px", height: "60px", border: "2px solid #198754" }}
+            {/* Logo / Brand Centrar el logo */}
+            <div className="p-4 mb-2 border-bottom d-flex justify-content-center height">
+                <Link
+                    to="/admin/dashboard"
+                    className="d-flex align-items-center text-decoration-none"
                 >
-                    <i className="bi bi-person-fill text-success fs-1"></i>
-                </div>
-                <div className="text-center">
-                    {/* Primero el nombre del usuario logueado */}
-                    <h6 className="m-0 fw-bold text-dark">
-                        {user ? user.username : "Usuario"}
-                    </h6>
-                    {/* Abajo Admin Nubix fijo */}
-                    <span className="text-muted fw-bold text-uppercase" style={{ fontSize: "0.75rem" }}>
-                        Admin 
-                    </span>
-                </div>
+                    <div
+                        className="me-2 d-flex align-items-center justify-content-center"
+                        style={{ width: "100px", height: "100px" }}
+                    >
+                        <img
+                            src={logo}
+                            alt="Logo"
+                            className="img-fluid"
+                            style={{ maxHeight: "100%", objectFit: "contain" }}
+                        />
+                    </div>
+                    {/* <span className="fs-4 fw-bold tracking-tight text-dark">
+                        Nubix<span className="text-muted fw-light">Market</span>
+                    </span> */}
+                </Link>
             </div>
 
-            <button
-                onClick={logout}
-                className="btn btn-outline-danger btn-sm w-100"
-            >
-                <i className="bi bi-door-open me-2"></i> Cerrar Sesión
-            </button>
-        </div>
+            {/* Navigation */}
+            <div className="px-3 flex-grow-1 overflow-auto">
+                <p
+                    className="text-uppercase text-muted fw-bold mb-2 ps-3"
+                    style={{ fontSize: "0.65rem", letterSpacing: "1px" }}
+                >
+                    Menú Principal
+                </p>
+                <ul className="nav flex-column mb-4">
+                    {menuItems.map((item) => (
+                        <SidebarItem
+                            key={item.path}
+                            to={item.path}
+                            icon={item.icon}
+                            label={item.label}
+                            active={location.pathname === item.path}
+                        />
+                    ))}
+
+                    <li className="nav-item">
+                        <button
+                            onClick={() => setIsUsersOpen(!isUsersOpen)}
+                            className={`nav-link w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-3 border-0 bg-transparent transition-all dropdown-btn ${
+                                location.pathname.includes("/admin/usuarios")
+                                    ? "text-emerald-600 fw-bold"
+                                    : "text-secondary"
+                            }`}
+                        >
+                            <span className="d-flex align-items-center">
+                                <i
+                                    className={`bi bi-people-fill fs-5 me-3 ${location.pathname.includes("/admin/usuarios") ? "text-emerald-600" : ""}`}
+                                ></i>
+                                <span className="fw-medium">Usuarios</span>
+                            </span>
+                            <i
+                                className={`bi bi-chevron-${isUsersOpen ? "down" : "right"} small opacity-50`}
+                            ></i>
+                        </button>
+
+                        <div
+                            className={`collapse ${isUsersOpen ? "show" : ""} mt-1`}
+                        >
+                            <ul className="nav flex-column ms-4 border-start ps-2">
+                                <SidebarItem
+                                    to="/admin/usuarios/clientes"
+                                    icon="bi-dot"
+                                    label="Clientes"
+                                    active={
+                                        location.pathname ===
+                                        "/admin/usuarios/clientes"
+                                    }
+                                    isSubItem
+                                />
+                                <SidebarItem
+                                    to="/admin/usuarios/empleados"
+                                    icon="bi-dot"
+                                    label="Empleados"
+                                    active={
+                                        location.pathname ===
+                                        "/admin/usuarios/empleados"
+                                    }
+                                    isSubItem
+                                />
+                            </ul>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            {/* User Profile Section (Restaurado) */}
+            <div className="p-3 mt-auto border-top bg-light/50">
+                <div className="d-flex align-items-center p-2 rounded-4 bg-white shadow-sm border mb-3">
+                    <div className="flex-shrink-0">
+                        <div className="avatar-border rounded-circle">
+                            <div
+                                className="bg-emerald-100 rounded-circle d-flex align-items-center justify-content-center"
+                                style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    backgroundColor: "#ecfdf5",
+                                }}
+                            >
+                                <span className="text-emerald-700 fw-bold">
+                                    {user?.username?.charAt(0).toUpperCase() ||
+                                        "A"}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex-grow-1 ms-3 min-w-0">
+                        <p
+                            className="mb-0 text-dark fw-bold text-truncate"
+                            style={{ fontSize: "0.9rem" }}
+                        >
+                            {user ? user.username : "Adilson"}
+                        </p>
+                        <p
+                            className="mb-0 text-muted text-uppercase fw-semibold"
+                            style={{ fontSize: "0.65rem" }}
+                        >
+                            Administrador
+                        </p>
+                    </div>
+                </div>
+
+                <button
+                    onClick={logout}
+                    className="btn btn-outline-danger w-100 border-0 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3 hover-danger transition-all font-bold"
+                >
+                    <i className="bi bi-box-arrow-right"></i>
+                    <span className="fw-bold small">Cerrar Sesión</span>
+                </button>
+            </div>
+        </aside>
     );
 };
 

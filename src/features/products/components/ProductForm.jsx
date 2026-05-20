@@ -13,15 +13,24 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
 
     useEffect(() => {
         if (product) {
+
+
+            //  BUSCAR LA CATEGORIA POR NOMBRE
+            const categoriaEncontrada = categories.find(
+                (cat) => cat.nombre === product.categoriaNombre,
+            );
+
             setFormData({
-                codigo: product.codigo,
-                nombre: product.nombre,
-                descripcion: product.descripcion,
-                precioCompra: product.precioCompra,
-                precioVenta: product.precioVenta,
-                stock: product.stock,
-                // Aquí dependemos de cómo envíes el ID de categoría al editar
-                categoriaId: product.categoriaId || "",
+                codigo: product.codigo || "",
+                nombre: product.nombre || "",
+                descripcion: product.descripcion || "",
+                precioCompra: product.precioCompra || "",
+                precioVenta: product.precioVenta || "",
+                stock: product.stock || "",
+
+
+                // Usar el ID encontrado
+                categoriaId: categoriaEncontrada ? categoriaEncontrada.id : "",
             });
         } else {
             setFormData({
@@ -34,7 +43,7 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                 categoriaId: "",
             });
         }
-    }, [product]);
+    }, [product, categories]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
