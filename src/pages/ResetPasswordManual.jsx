@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../features/auth/services/authService";
 
@@ -14,15 +14,71 @@ const ResetPasswordManual = () => {
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [codeVerified, setCodeVerified] = useState(false);
     const navigate = useNavigate();
+
+    // Validaciones de contraseña
+    const passwordRequirements = useMemo(() => {
+        const pwd = password;
+        return {
+            minLength: pwd.length >= 8,
+            hasUpperCase: /[A-Z]/.test(pwd),
+            hasLowerCase: /[a-z]/.test(pwd),
+            hasNumber: /\d/.test(pwd),
+            hasSpecialChar: /@$!%?&._#-/.test(pwd),
+        };
+    }, [password]);
+
+    const isPasswordValid = Object.values(passwordRequirements).every(
+        (req) => req,
+    );
+    const showPasswordChecklist = password.length > 0;
+
+    const handleVerifyCode = async (e) => {
+        e.preventDefault();
+        setMessage("");
+        setError("");
+
+        if (!email || !code) {
+            setError("Por favor ingresa tu email y código de recuperación");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            await authService.verifyCode(email, code);
+            setCodeVerified(true);
+            setMessage(
+                "Código verificado. Ahora puedes cambiar tu contraseña.",
+            );
+        } catch (err) {
+            setCodeVerified(false);
+            setError(
+                err?.response?.data?.message ||
+                    "Código de recuperación inválido o expirado.",
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage("");
         setError("");
 
+        if (!codeVerified) {
+            setError("Debes verificar el código primero");
+            return;
+        }
+
         if (password !== confirmPassword) {
             setError("Las contraseñas no coinciden.");
+            return;
+        }
+
+        if (!isPasswordValid) {
+            setError("La contraseña no cumple con los requisitos de seguridad");
             return;
         }
 
@@ -55,137 +111,332 @@ const ResetPasswordManual = () => {
                             Restablecer contraseña
                         </h4>
 
-                        <form onSubmit={handleSubmit}>
-                            <div className="mb-3">
-                                <label className="form-label">
-                                    Correo electrónico
-                                </label>
+                        {!codeVerified ? (
+                            <form onSubmit={handleVerifyCode}>
+                                <div className="mb-3">
+                                    <label className="form-label fw-bold">
+                                        Correo electrónico
+                                    </label>
 
-                                <input
-                                    type="email"
-                                    className="form-control"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label">
-                                    Código de recuperación
-                                </label>
-
-                                <input
-                                    type="text"
-                                    className="form-control"
-                                    value={code}
-                                    onChange={(e) => setCode(e.target.value)}
-                                    required
-                                />
-                            </div>
-
-                            <div className="mb-3">
-                                <label className="form-label">
-                                    Nueva contraseña
-                                </label>
-
-                                <div className="input-group">
                                     <input
-                                        type={
-                                            showPassword ? "text" : "password"
-                                        }
+                                        type="email"
                                         className="form-control"
-                                        value={password}
+                                        value={email}
                                         onChange={(e) =>
-                                            setPassword(e.target.value)
+                                            setEmail(e.target.value)
                                         }
+                                        placeholder="tu@email.com"
                                         required
+                                        disabled={loading}
                                     />
+                                </div>
 
-                                    <span
-                                        className="input-group-text bg-light"
-                                        onClick={() =>
-                                            setShowPassword(!showPassword)
+                                <div className="mb-3">
+                                    <label className="form-label fw-bold">
+                                        Código de recuperación
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        value={code}
+                                        onChange={(e) =>
+                                            setCode(e.target.value)
                                         }
-                                        style={{
-                                            cursor: "pointer",
-                                        }}
-                                    >
-                                        <i
-                                            className={`bi ${
+                                        placeholder="Introduce el código de 6 dígitos"
+                                        required
+                                        disabled={loading}
+                                    />
+                                </div>
+
+                                {message && (
+                                    <div className="alert alert-info">
+                                        <i className="bi bi-info-circle me-2"></i>
+                                        {message}
+                                    </div>
+                                )}
+
+                                {error && (
+                                    <div className="alert alert-danger">
+                                        <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                        {error}
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    className="btn btn-primary w-100"
+                                    disabled={loading}
+                                >
+                                    {loading
+                                        ? "Verificando..."
+                                        : "Verificar código"}
+                                </button>
+                            </form>
+                        ) : (
+                            <form onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <label className="form-label fw-bold">
+                                        Nueva contraseña
+                                    </label>
+
+                                    <div className="input-group">
+                                        <input
+                                            type={
                                                 showPassword
-                                                    ? "bi-eye-slash"
-                                                    : "bi-eye"
-                                            } text-muted`}
-                                        ></i>
-                                    </span>
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            className="form-control"
+                                            value={password}
+                                            onChange={(e) =>
+                                                setPassword(e.target.value)
+                                            }
+                                            placeholder="Crea una contraseña segura"
+                                            required
+                                        />
+
+                                        <span
+                                            className="input-group-text bg-light"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                            style={{
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <i
+                                                className={`bi ${
+                                                    showPassword
+                                                        ? "bi-eye-slash"
+                                                        : "bi-eye"
+                                                } text-muted`}
+                                            ></i>
+                                        </span>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div className="mb-3">
-                                <label className="form-label">
-                                    Confirmar contraseña
-                                </label>
-
-                                <div className="input-group">
-                                    <input
-                                        type={
-                                            showConfirmPassword
-                                                ? "text"
-                                                : "password"
-                                        }
-                                        className="form-control"
-                                        value={confirmPassword}
-                                        onChange={(e) =>
-                                            setConfirmPassword(e.target.value)
-                                        }
-                                        required
-                                    />
-
-                                    <span
-                                        className="input-group-text bg-light"
-                                        onClick={() =>
-                                            setShowConfirmPassword(
-                                                !showConfirmPassword,
-                                            )
-                                        }
+                                {/* Checklist de requisitos de contraseña */}
+                                {showPasswordChecklist && (
+                                    <div
+                                        className="mt-3 p-3 rounded"
                                         style={{
-                                            cursor: "pointer",
+                                            backgroundColor: "#f8f9fa",
+                                            border: "1px solid #dee2e6",
                                         }}
                                     >
-                                        <i
-                                            className={`bi ${
+                                        <small className="text-muted d-block mb-2 fw-bold">
+                                            Requisitos de contraseña:
+                                        </small>
+                                        <div className="d-flex flex-column gap-2">
+                                            <div className="d-flex align-items-center">
+                                                <i
+                                                    className={`bi ${
+                                                        passwordRequirements.minLength
+                                                            ? "bi-check-circle-fill"
+                                                            : "bi-circle"
+                                                    } me-2`}
+                                                    style={{
+                                                        color: passwordRequirements.minLength
+                                                            ? "#28a745"
+                                                            : "#ccc",
+                                                        fontSize: "0.9rem",
+                                                    }}
+                                                ></i>
+                                                <small
+                                                    style={{
+                                                        color: passwordRequirements.minLength
+                                                            ? "#28a745"
+                                                            : "#6c757d",
+                                                    }}
+                                                >
+                                                    Al menos 8 caracteres (
+                                                    {password.length}/8)
+                                                </small>
+                                            </div>
+
+                                            <div className="d-flex align-items-center">
+                                                <i
+                                                    className={`bi ${
+                                                        passwordRequirements.hasUpperCase
+                                                            ? "bi-check-circle-fill"
+                                                            : "bi-circle"
+                                                    } me-2`}
+                                                    style={{
+                                                        color: passwordRequirements.hasUpperCase
+                                                            ? "#28a745"
+                                                            : "#ccc",
+                                                        fontSize: "0.9rem",
+                                                    }}
+                                                ></i>
+                                                <small
+                                                    style={{
+                                                        color: passwordRequirements.hasUpperCase
+                                                            ? "#28a745"
+                                                            : "#6c757d",
+                                                    }}
+                                                >
+                                                    Una letra mayúscula (A-Z)
+                                                </small>
+                                            </div>
+
+                                            <div className="d-flex align-items-center">
+                                                <i
+                                                    className={`bi ${
+                                                        passwordRequirements.hasLowerCase
+                                                            ? "bi-check-circle-fill"
+                                                            : "bi-circle"
+                                                    } me-2`}
+                                                    style={{
+                                                        color: passwordRequirements.hasLowerCase
+                                                            ? "#28a745"
+                                                            : "#ccc",
+                                                        fontSize: "0.9rem",
+                                                    }}
+                                                ></i>
+                                                <small
+                                                    style={{
+                                                        color: passwordRequirements.hasLowerCase
+                                                            ? "#28a745"
+                                                            : "#6c757d",
+                                                    }}
+                                                >
+                                                    Una letra minúscula (a-z)
+                                                </small>
+                                            </div>
+
+                                            <div className="d-flex align-items-center">
+                                                <i
+                                                    className={`bi ${
+                                                        passwordRequirements.hasNumber
+                                                            ? "bi-check-circle-fill"
+                                                            : "bi-circle"
+                                                    } me-2`}
+                                                    style={{
+                                                        color: passwordRequirements.hasNumber
+                                                            ? "#28a745"
+                                                            : "#ccc",
+                                                        fontSize: "0.9rem",
+                                                    }}
+                                                ></i>
+                                                <small
+                                                    style={{
+                                                        color: passwordRequirements.hasNumber
+                                                            ? "#28a745"
+                                                            : "#6c757d",
+                                                    }}
+                                                >
+                                                    Un número (0-9)
+                                                </small>
+                                            </div>
+
+                                            <div className="d-flex align-items-center">
+                                                <i
+                                                    className={`bi ${
+                                                        passwordRequirements.hasSpecialChar
+                                                            ? "bi-check-circle-fill"
+                                                            : "bi-circle"
+                                                    } me-2`}
+                                                    style={{
+                                                        color: passwordRequirements.hasSpecialChar
+                                                            ? "#28a745"
+                                                            : "#ccc",
+                                                        fontSize: "0.9rem",
+                                                    }}
+                                                ></i>
+                                                <small
+                                                    style={{
+                                                        color: passwordRequirements.hasSpecialChar
+                                                            ? "#28a745"
+                                                            : "#6c757d",
+                                                    }}
+                                                >
+                                                    Un carácter especial
+                                                    (@$!%?&._#-)
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="mb-3 mt-3">
+                                    <label className="form-label fw-bold">
+                                        Confirmar contraseña
+                                    </label>
+
+                                    <div className="input-group">
+                                        <input
+                                            type={
                                                 showConfirmPassword
-                                                    ? "bi-eye-slash"
-                                                    : "bi-eye"
-                                            } text-muted`}
-                                        ></i>
-                                    </span>
-                                </div>
-                            </div>
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            className="form-control"
+                                            value={confirmPassword}
+                                            onChange={(e) =>
+                                                setConfirmPassword(
+                                                    e.target.value,
+                                                )
+                                            }
+                                            placeholder="Confirma tu contraseña"
+                                            required
+                                        />
 
-                            {message && (
-                                <div className="alert alert-success">
-                                    {message}
+                                        <span
+                                            className="input-group-text bg-light"
+                                            onClick={() =>
+                                                setShowConfirmPassword(
+                                                    !showConfirmPassword,
+                                                )
+                                            }
+                                            style={{
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <i
+                                                className={`bi ${
+                                                    showConfirmPassword
+                                                        ? "bi-eye-slash"
+                                                        : "bi-eye"
+                                                } text-muted`}
+                                            ></i>
+                                        </span>
+                                    </div>
                                 </div>
-                            )}
 
-                            {error && (
-                                <div className="alert alert-danger">
-                                    {error}
-                                </div>
-                            )}
+                                {message && (
+                                    <div className="alert alert-success">
+                                        <i className="bi bi-check-circle-fill me-2"></i>
+                                        {message}
+                                    </div>
+                                )}
 
-                            <button
-                                type="submit"
-                                className="btn btn-success w-100"
-                                disabled={loading}
-                            >
-                                {loading
-                                    ? "Restableciendo..."
-                                    : "Restablecer contraseña"}
-                            </button>
-                        </form>
+                                {error && (
+                                    <div className="alert alert-danger">
+                                        <i className="bi bi-exclamation-triangle-fill me-2"></i>
+                                        {error}
+                                    </div>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    className="btn btn-success w-100"
+                                    disabled={loading || !isPasswordValid}
+                                >
+                                    {loading
+                                        ? "Restableciendo..."
+                                        : "Restablecer contraseña"}
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-link w-100 mt-2"
+                                    onClick={() => setCodeVerified(false)}
+                                >
+                                    Cambiar código
+                                </button>
+                            </form>
+                        )}
 
                         <div className="mt-3 text-center">
                             <Link to="/login">Volver al inicio de sesión</Link>

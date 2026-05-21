@@ -6,10 +6,15 @@ export const authService = {
         return response.data;
     },
 
-    // Cambiamos el nombre del parámetro a 'code' para que sea coherente con ResetPassword.jsx
-    // Localiza esta función en tu authService.js
+    verifyCode: async (email, code) => {
+        const response = await api.post("/auth/verify-code/", {
+            email: email,
+            codigo: code,
+        });
+        return response.data;
+    },
+
     resetPassword: async (email, code, password) => {
-        // La URL debe ser limpia para que entre en el .permitAll()
         const response = await api.post("/auth/reset-password", {
             email: email,
             codigo: code,
