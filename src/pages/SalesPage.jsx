@@ -348,7 +348,7 @@ const SalesPage = () => {
                                             <td>
                                                 <div
                                                     className="btn-group btn-group-sm"
-                                                    role="group"
+                                                    role="group"    
                                                 >
                                                     <button
                                                         className="btn btn-outline-info"

@@ -221,41 +221,6 @@ const VentaForm = ({ onSave, loading }) => {
                     </select>
                 </div>
 
-                {/* Tipo de Entrega */}
-                <div className="col-md-6">
-                    <label className="form-label fw-bold">
-                        Tipo de Entrega
-                    </label>
-                    <select
-                        name="tipoEntrega"
-                        className="form-select"
-                        value={formData.tipoEntrega}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="RECOJO">Recojo en tienda</option>
-                        <option value="DELIVERY">Delivery</option>
-                    </select>
-                </div>
-
-                {/* Dirección de Entrega (condicional) */}
-                {formData.tipoEntrega === "DELIVERY" && (
-                    <div className="col-12">
-                        <label className="form-label fw-bold">
-                            Dirección de Entrega
-                        </label>
-                        <input
-                            type="text"
-                            name="direccionEntrega"
-                            className="form-control"
-                            value={formData.direccionEntrega}
-                            onChange={handleChange}
-                            placeholder="Ingresa la dirección de entrega"
-                            required={formData.tipoEntrega === "DELIVERY"}
-                        />
-                    </div>
-                )}
-
                 {/* Separador */}
                 <div className="col-12">
                     <hr />
