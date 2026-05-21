@@ -9,7 +9,7 @@ const VentaForm = ({ onSave, loading }) => {
         clienteId: "",
         vendedorId: "",
         metodoPago: "EFECTIVO",
-        tipoEntrega: "RECOJO",
+        tipoEntrega: "PRESENCIAL",
         direccionEntrega: "",
         detalles: [],
     });
@@ -220,6 +220,42 @@ const VentaForm = ({ onSave, loading }) => {
                         <option value="CREDITO">Crédito</option>
                     </select>
                 </div>
+
+                {/* Tipo de Entrega */}
+                <div className="col-md-6">
+                    <label className="form-label fw-bold">
+                        Tipo de Entrega
+                    </label>
+                    <select
+                        name="tipoEntrega"
+                        className="form-select"
+                        value={formData.tipoEntrega}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="PRESENCIAL">Recojo Presencial</option>
+                        <option value="DELIVERY">Delivery</option>
+                        <option value="FAST_LANE">Fast Lane</option>
+                    </select>
+                </div>
+
+                {/* Dirección de Entrega (solo si es DELIVERY) */}
+                {formData.tipoEntrega === "DELIVERY" && (
+                    <div className="col-md-12">
+                        <label className="form-label fw-bold">
+                            Dirección de Entrega
+                        </label>
+                        <input
+                            type="text"
+                            name="direccionEntrega"
+                            className="form-control"
+                            placeholder="Ingresa la dirección de entrega"
+                            value={formData.direccionEntrega}
+                            onChange={handleChange}
+                            required={formData.tipoEntrega === "DELIVERY"}
+                        />
+                    </div>
+                )}
 
                 {/* Separador */}
                 <div className="col-12">
