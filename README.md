@@ -61,6 +61,7 @@ Nubix Market digitaliza los procesos manuales tradicionales:
 ## 📋 Requisitos Previos
 
 Antes de comenzar, asegúrate de tener instalado:
+
 - **Node.js** (v16 o superior)
 - **npm** (v8 o superior) o **yarn**
 - **Git**
@@ -70,27 +71,28 @@ Antes de comenzar, asegúrate de tener instalado:
 ## 🚀 Instalación
 
 1. **Clonar el repositorio**
-   ```bash
-   git clone https://github.com/nubix/nubix_market_frontend.git
-   cd nubix_market_frontend
-   ```
+```bash
+git clone https://github.com/nubix/nubix_market_frontend.git
+cd nubix_market_frontend
+```
 
 2. **Instalar dependencias**
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 3. **Configurar variables de entorno**
-   ```bash
-   cp .env.example .env.local
-   # Editar .env.local con tus valores
-   ```
+```bash
+cp .env.example .env.local
+# Editar .env.local con tus valores
+```
 
 4. **Ejecutar servidor de desarrollo**
-   ```bash
-   npm run dev
-   ```
-   La aplicación estará disponible en `http://localhost:5173`
+```bash
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:5173`
 
 ---
 
@@ -159,11 +161,12 @@ Este proyecto está bajo licencia [MIT](LICENSE) (o especifica la licencia que u
 ## 🤝 Contribuir
 
 Para contribuir al proyecto:
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+
+1. Fork el repositorio  
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)  
+3. Commit tus cambios (`git commit -m 'Add AmazingFeature'`)  
+4. Push a la rama (`git push origin feature/AmazingFeature`)  
+5. Abre un Pull Request  
 
 ---
 

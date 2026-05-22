@@ -1,0 +1,539 @@
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { Modal } from "bootstrap";
+import { useProducts } from "../features/products/hooks/useProducts";
+import { useCategories } from "../features/categories/hooks/useCategories";
+import { productService } from "../features/products/services/productService";
+import ProductForm from "../features/products/components/ProductForm";
+import Swal from "sweetalert2";
+
+const ProductsPage = () => {
+    const { products, setProducts, handleDelete, loading } = useProducts();
+    const { categories } = useCategories();
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [saving, setSaving] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const [formkey, setFormKey] = useState(Date.now()); // Para resetear el formulario al abrir el modal
+
+    // --- CONFIGURACIÓN DE SWEETALERT (TOAST) ---
+    const Toast = Swal.mixin({
+        toast: true,
+        position: "bottom-end",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.onmouseenter = Swal.stopTimer;
+            toast.onmouseleave = Swal.resumeTimer;
+        },
+    });
+
+    // --- FILTRADO PROFUNDO (Nombre, Código, Descripción) ---
+    const filteredProducts = useMemo(() => {
+        return products.filter(
+            (prod) =>
+                prod.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                prod.codigo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                prod.descripcion
+                    ?.toLowerCase()
+                    .includes(searchTerm.toLowerCase()),
+        );
+    }, [products, searchTerm]);
+
+    // --- LÓGICA DE PAGINACIÓN (10 items) ---
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+    const totalResultados = filteredProducts.length;
+    const totalPages = Math.ceil(totalResultados / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredProducts.slice(
+        indexOfFirstItem,
+        indexOfLastItem,
+    );
+
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    // Métricas
+    const valorInversion = useMemo(
+        () =>
+            products.reduce(
+                (acc, curr) => acc + curr.precioVenta * curr.stock,
+                0,
+            ),
+        [products],
+    );
+
+    // --- MODAL CONFIG ---
+    const modalRef = useRef();
+    const bsModal = useRef();
+
+    useEffect(() => {
+        if (modalRef.current) {
+            bsModal.current = new Modal(modalRef.current);
+            modalRef.current.addEventListener("hidden.bs.modal", () => {
+                setSelectedProduct(null);
+            });
+        }
+    }, []);
+
+    const openModal = (product = null) => {
+        setSelectedProduct(null);
+
+        //reiniciar el formulario
+        setFormKey(Date.now());
+
+        setTimeout(() => {
+            setSelectedProduct(product ? { ...product } : null);
+            bsModal.current.show();
+        }, 10);
+    };
+
+    const handleSave = async (formData) => {
+        setSaving(true);
+        try {
+            if (selectedProduct) {
+                const updated = await productService.update(
+                    selectedProduct.id,
+                    formData,
+                );
+                setProducts((prev) =>
+                    prev.map((p) =>
+                        p.id === selectedProduct.id ? updated : p,
+                    ),
+                );
+                Toast.fire({ icon: "success", title: "Producto actualizado" });
+            } else {
+                const created = await productService.create(formData);
+                setProducts((prev) => [...prev, created]);
+                Toast.fire({
+                    icon: "success",
+                    title: "Producto registrado con éxito",
+                });
+            }
+            bsModal.current.hide();
+        } catch (err) {
+            Toast.fire({
+                icon: "error",
+                title: "Error al guardar el producto",
+            });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const confirmDelete = (id) => {
+        Swal.fire({
+            title: "¿Eliminar producto?",
+            text: "Esta acción no se puede revertir.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#10b981",
+            cancelButtonColor: "#ef4444",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar",
+            reverseButtons: true,
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    await handleDelete(id);
+                    Toast.fire({
+                        icon: "success",
+                        title: "Producto eliminado correctamente",
+                    });
+                } catch (error) {
+                    Toast.fire({ icon: "error", title: "Error al eliminar" });
+                }
+            }
+        });
+    };
+
+    return (
+        <div
+            className="container-fluid animate__animated animate__fadeIn p-4"
+            style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}
+        >
+            {/* CABECERA */}
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                <div>
+                    <h2
+                        className="fw-bold mb-1"
+                        style={{ letterSpacing: "-0.03em", color: "#111827" }}
+                    >
+                        Nubix Market <span style={{ color: "#10b981" }}>/</span>{" "}
+                        Productos
+                    </h2>
+                    <p className="text-muted small mb-0">
+                        Control de inventario y activos del sistema
+                    </p>
+                </div>
+                <button
+                    className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center"
+                    onClick={() => openModal()}
+                    style={{
+                        backgroundColor: "#10b981",
+                        border: "none",
+                        borderRadius: "10px",
+                    }}
+                >
+                    <i className="bi bi-box-seam-fill me-2"></i> Nuevo Producto
+                </button>
+            </div>
+
+            {/* MÉTRICAS Y BUSCADOR AISLADO */}
+            <div className="row g-4 mb-4">
+                <div className="col-md-3">
+                    <div
+                        className="card border-0 shadow-sm p-3"
+                        style={{ borderRadius: "15px" }}
+                    >
+                        <div className="d-flex align-items-center">
+                            <div
+                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
+                                style={{ width: "48px", height: "48px" }}
+                            >
+                                <i className="bi bi-layers-fill fs-4"></i>
+                            </div>
+                            <div className="ms-3">
+                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
+                                    Items
+                                </h6>
+                                <h3 className="fw-bold mb-0">
+                                    {totalResultados}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-3">
+                    <div
+                        className="card border-0 shadow-sm p-3"
+                        style={{ borderRadius: "15px" }}
+                    >
+                        <div className="d-flex align-items-center">
+                            <div
+                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
+                                style={{ width: "48px", height: "48px" }}
+                            >
+                                <i className="bi bi-currency-exchange fs-4"></i>
+                            </div>
+                            <div className="ms-3">
+                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
+                                    Inversión
+                                </h6>
+                                <h3 className="fw-bold mb-0 text-emerald-600">
+                                    S/ {valorInversion.toLocaleString()}
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-6">
+                    <div
+                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3"
+                        style={{ borderRadius: "15px", height: "100%" }}
+                    >
+                        <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
+                        <input
+                            type="search"
+                            id="product_global_search"
+                            name="product_search_unique"
+                            autoComplete="off"
+                            className="form-control border-0 shadow-none bg-transparent"
+                            placeholder="Buscar por nombre, código o descripción..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* TABLA CON ID SECUENCIAL */}
+            <div
+                className="card shadow-sm border-0 overflow-hidden"
+                style={{ borderRadius: "15px" }}
+            >
+                <div className="table-responsive">
+                    <table className="table table-hover align-middle mb-0">
+                        <thead className="bg-light">
+                            <tr>
+                                <th
+                                    className="px-4 py-3 text-secondary small fw-bold"
+                                    style={{ width: "80px" }}
+                                >
+                                    #
+                                </th>
+                                <th className="py-3 text-secondary small fw-bold">
+                                    CÓDIGO
+                                </th>
+                                <th className="py-3 text-secondary small fw-bold">
+                                    PRODUCTO
+                                </th>
+                                <th className="py-3 text-secondary small fw-bold">
+                                    CATEGORÍA
+                                </th>
+                                <th className="py-3 text-secondary small fw-bold text-center">
+                                    STOCK
+                                </th>
+                                <th className="py-3 text-secondary small fw-bold">
+                                    P. VENTA
+                                </th>
+                                <th className="text-end px-4 py-3 text-secondary small fw-bold">
+                                    ACCIONES
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td
+                                        colSpan="7"
+                                        className="text-center py-5"
+                                    >
+                                        <div
+                                            className="spinner-border text-emerald-600"
+                                            role="status"
+                                        ></div>
+                                    </td>
+                                </tr>
+                            ) : currentItems.length > 0 ? (
+                                currentItems.map((prod, index) => (
+                                    <tr key={prod.id}>
+                                        <td className="px-4">
+                                            <span className="text-muted small fw-bold">
+                                                {indexOfFirstItem + index + 1}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="badge bg-light text-dark border fw-medium">
+                                                {prod.codigo}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div className="fw-bold text-dark">
+                                                {prod.nombre}
+                                            </div>
+                                            <div
+                                                className="text-muted extra-small text-truncate"
+                                                style={{ maxWidth: "200px" }}
+                                            >
+                                                {prod.descripcion}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span
+                                                className="text-emerald-600 fw-medium bg-emerald-100 px-2 py-1 rounded"
+                                                style={{ fontSize: "0.8rem" }}
+                                            >
+                                                {prod.categoriaNombre}
+                                            </span>
+                                        </td>
+                                        <td className="text-center">
+                                            <span
+                                                className={`fw-bold ${prod.stock < 10 ? "text-danger" : "text-dark"}`}
+                                            >
+                                                {prod.stock}{" "}
+                                                <small className="fw-normal">
+                                                    un.
+                                                </small>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span className="fw-black">
+                                                S/ {prod.precioVenta.toFixed(2)}
+                                            </span>
+                                        </td>
+                                        <td className="text-end px-4">
+                                            <button
+                                                className="btn-action btn-edit me-2"
+                                                onClick={() => {
+                                                    console.log(prod);
+                                                    openModal(prod)
+                                                }}
+                                                title="Editar"
+                                            >
+                                                <i className="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button
+                                                className="btn-action btn-delete"
+                                                onClick={() =>
+                                                    confirmDelete(prod.id)
+                                                }
+                                                title="Eliminar"
+                                            >
+                                                <i className="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td
+                                        colSpan="7"
+                                        className="text-center py-5 text-muted"
+                                    >
+                                        No se encontraron productos
+                                        coincidentes.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* PAGINACIÓN VERDE */}
+                {totalPages > 1 && (
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
+                        <div className="text-muted small">
+                            Página{" "}
+                            <span className="fw-bold">{currentPage}</span> de{" "}
+                            {totalPages}
+                        </div>
+                        <nav>
+                            <ul className="pagination pagination-sm mb-0 gap-1">
+                                <li
+                                    className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
+                                >
+                                    <button
+                                        className="page-link border-0 rounded-2"
+                                        onClick={() =>
+                                            paginate(currentPage - 1)
+                                        }
+                                    >
+                                        <i className="bi bi-chevron-left"></i>
+                                    </button>
+                                </li>
+                                {[...Array(totalPages).keys()].map((num) => (
+                                    <li key={num + 1}>
+                                        <button
+                                            className={`page-link border-0 rounded-2 fw-bold ${currentPage === num + 1 ? "active-pagination" : "text-dark bg-light"}`}
+                                            onClick={() => paginate(num + 1)}
+                                            style={{
+                                                width: "32px",
+                                                height: "32px",
+                                            }}
+                                        >
+                                            {num + 1}
+                                        </button>
+                                    </li>
+                                ))}
+                                <li
+                                    className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
+                                >
+                                    <button
+                                        className="page-link border-0 rounded-2"
+                                        onClick={() =>
+                                            paginate(currentPage + 1)
+                                        }
+                                    >
+                                        <i className="bi bi-chevron-right"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                )}
+            </div>
+
+            {/* MODAL (Limpieza por Key) */}
+            <div
+                className="modal fade"
+                ref={modalRef}
+                tabIndex="-1"
+                data-bs-backdrop="static"
+            >
+                <div className="modal-dialog modal-lg modal-dialog-centered">
+                    <div
+                        className="modal-content border-0 shadow-lg"
+                        style={{ borderRadius: "15px" }}
+                    >
+                        <div className="modal-header border-0 pt-4 px-4 pb-0">
+                            <h5 className="modal-title fw-bold text-dark d-flex align-items-center">
+                                <i
+                                    className={`bi ${selectedProduct ? "bi-pencil-square" : "bi-box-seam"} text-emerald-600 me-2`}
+                                ></i>
+                                {selectedProduct
+                                    ? "Actualizar Producto"
+                                    : "Registrar Producto"}
+                            </h5>
+                            <button
+                                type="button"
+                                className="btn-close shadow-none"
+                                onClick={() => bsModal.current.hide()}
+                            ></button>
+                        </div>
+                        <div className="modal-body p-4">
+                            <ProductForm
+                                key={formkey}
+                                product={selectedProduct}
+                                categories={categories}
+                                onSave={handleSave}
+                                loading={saving}
+                            />
+
+                            <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                                <button
+                                    type="button"
+                                    className="btn btn-light fw-bold text-secondary px-4 border"
+                                    onClick={() => bsModal.current.hide()}
+                                    style={{ borderRadius: "10px" }}
+                                >
+                                    Cerrar
+                                </button>
+                                <button
+                                    type="submit"
+                                    form="productForm"
+                                    className="btn btn-success px-5 fw-bold shadow-sm"
+                                    disabled={saving}
+                                    style={{
+                                        borderRadius: "10px",
+                                        backgroundColor: "#10b981",
+                                        border: "none",
+                                    }}
+                                >
+                                    {saving ? (
+                                        <span className="spinner-border spinner-border-sm me-2"></span>
+                                    ) : (
+                                        <i className="bi bi-cloud-upload-fill me-2"></i>
+                                    )}
+                                    {saving
+                                        ? "Guardando..."
+                                        : "Confirmar Registro"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <style>{`
+                .text-emerald-600 { color: #10b981 !important; }
+                .bg-emerald-100 { background-color: #d1fae5 !important; }
+                .fw-black { font-weight: 900; color: #111827; }
+                .extra-small { font-size: 0.75rem; }
+
+                /* Reset de Modal (Sin Blur) */
+                .modal.show { backdrop-filter: none !important; background-color: rgba(17, 24, 39, 0.6) !important; }
+
+                /* Acciones Verdes */
+                .btn-action {
+                    border: none; background: transparent; padding: 6px 10px;
+                    border-radius: 8px; transition: all 0.2s;
+                    font-size: 1.15rem;
+                }
+                .btn-edit { color: #10b981; }
+                .btn-edit:hover { background-color: #ecfdf5; transform: scale(1.15); }
+                .btn-delete { color: #ef4444; }
+                .btn-delete:hover { background-color: #fef2f2; transform: scale(1.15); }
+
+                /* Paginación */
+                .active-pagination { background-color: #10b981 !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
+                .page-link:hover:not(.active-pagination) { background-color: #ecfdf5 !important; color: #10b981 !important; }
+                
+                input#product_global_search::placeholder { color: #9ca3af; font-size: 0.9rem; }
+            `}</style>
+        </div>
+    );
+};
+
+export default ProductsPage;

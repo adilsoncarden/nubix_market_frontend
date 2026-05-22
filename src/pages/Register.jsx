@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// src/pages/Register.jsx
+import React, { useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
@@ -7,10 +8,29 @@ const Register = () => {
         email: "",
         password: "",
     });
+
+    const [showPassword, setShowPassword] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
     const [isHovered, setIsHovered] = useState(false);
     const navigate = useNavigate();
+
+    // Validaciones de contraseña
+    const passwordRequirements = useMemo(() => {
+        const pwd = formData.password;
+        return {
+            minLength: pwd.length >= 8,
+            hasUpperCase: /[A-Z]/.test(pwd),
+            hasLowerCase: /[a-z]/.test(pwd),
+            hasNumber: /\d/.test(pwd),
+            hasSpecialChar: /[@$!%?&._#-]/.test(pwd),
+        };
+    }, [formData.password]);
+
+    const isPasswordValid = Object.values(passwordRequirements).every(
+        (req) => req,
+    );
+    const showPasswordChecklist = formData.password.length > 0;
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -67,106 +87,364 @@ const Register = () => {
     };
 
     return (
-        <div className="login-page-container">
-            <div className="login-card shadow">
-                <div className="text-center mb-4">
-                    <div className="mb-3">
-                        <span style={{ fontSize: "45px", color: "#1a733c" }}>
-                            <i className="bi bi-person-plus-fill"></i>
-                        </span>
-                    </div>
-                    <h2 className="fw-bold">Registrarse</h2>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-                    <div style={{ minHeight: "3.5rem" }}>
-                        {alertMessage && (
-                            <div
-                                className={`alert alert-${alertType} text-center m-0`}
-                                role="alert"
-                            >
-                                {alertMessage}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">
-                            Usuario
-                        </label>
-                        <input
-                            type="text"
-                            name="username"
-                            className="form-control"
-                            placeholder=""
-                            value={formData.username}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">
-                            Correo Electrónico
-                        </label>
-                        <input
-                            type="email"
-                            name="email"
-                            className="form-control"
-                            placeholder=""
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <div className="mb-3 text-start">
-                        <label className="form-label small fw-bold text-muted">
-                            Contraseña
-                        </label>
-                        <input
-                            type="password"
-                            name="password"
-                            className="form-control"
-                            placeholder=""
-                            value={formData.password}
-                            onChange={handleChange}
-                            required
-                        />
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="btn w-100 mb-3 fw-bold"
-                        onMouseEnter={() => setIsHovered(true)}
-                        onMouseLeave={() => setIsHovered(false)}
-                        style={{
-                            backgroundColor: "#1a733c",
-                            color: "white",
-                            border: "none",
-                            padding: "10px",
-                            borderRadius: "8px",
-                            transition: "all 0.2s ease",
-                            opacity: isHovered ? "0.8" : "1",
-                            transform: isHovered ? "scale(1.02)" : "scale(1)",
-                        }}
+        <div className="container py-5">
+            <div className="row justify-content-center">
+                {/* Ajustamos a col-xl-4 para que coincida exactamente con el Login */}
+                <div className="col-12 col-md-8 col-lg-5 col-xl-4">
+                    <div
+                        className="card shadow-lg border-0"
+                        style={{ borderRadius: "20px", overflow: "hidden" }}
                     >
-                        Registrarse
-                    </button>
+                        <div className="card-body p-4 p-sm-5">
+                            <div className="text-center mb-4">
+                                <div
+                                    className="mb-3 d-inline-block p-3 rounded-circle"
+                                    style={{ backgroundColor: "#e8f5e9" }}
+                                >
+                                    <span
+                                        style={{
+                                            fontSize: "40px",
+                                            color: "#1a733c",
+                                        }}
+                                    >
+                                        <i className="bi bi-person-plus-fill"></i>
+                                    </span>
+                                </div>
+                                <h2 className="fw-bold mb-1">Crea tu cuenta</h2>
+                                <p className="text-muted small">
+                                    Únete a la comunidad de Nubix Market
+                                </p>
+                            </div>
 
-                    <div className="text-center mt-3">
-                        <p className="text-muted small">
-                            ¿Ya tienes una cuenta?{"  "}
-                            <Link
-                                to="/login"
-                                className="fw-bold text-decoration-none"
-                                style={{ color: "#1a733c" }}
-                            >
-                                Iniciar Sesión
-                            </Link>
-                        </p>
+                            <div style={{ minHeight: "60px" }} className="mb-3">
+                                {alertMessage && (
+                                    <div
+                                        className={`alert alert-${alertType} text-center border-0 small shadow-sm`}
+                                        role="alert"
+                                        style={{ borderRadius: "10px" }}
+                                    >
+                                        <i
+                                            className={`bi ${
+                                                alertType === "success"
+                                                    ? "bi-check-circle-fill"
+                                                    : "bi-exclamation-triangle-fill"
+                                            } me-2`}
+                                        ></i>
+                                        {alertMessage}
+                                    </div>
+                                )}
+                            </div>
+
+                            <form onSubmit={handleSubmit}>
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold text-muted ms-1">
+                                        Nombre de Usuario
+                                    </label>
+                                    <div className="input-group">
+                                        <span
+                                            className="input-group-text bg-light border-end-0"
+                                            style={{
+                                                borderRadius: "10px 0 0 10px",
+                                            }}
+                                        >
+                                            <i className="bi bi-person text-muted"></i>
+                                        </span>
+                                        <input
+                                            type="text"
+                                            name="username"
+                                            className="form-control bg-light border-start-0 py-2"
+                                            placeholder="Tu nombre de usuario"
+                                            style={{
+                                                borderRadius: "0 10px 10px 0",
+                                                fontSize: "0.95rem",
+                                            }}
+                                            value={formData.username}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="form-label small fw-bold text-muted ms-1">
+                                        Correo Electrónico
+                                    </label>
+                                    <div className="input-group">
+                                        <span
+                                            className="input-group-text bg-light border-end-0"
+                                            style={{
+                                                borderRadius: "10px 0 0 10px",
+                                            }}
+                                        >
+                                            <i className="bi bi-envelope text-muted"></i>
+                                        </span>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            className="form-control bg-light border-start-0 py-2"
+                                            placeholder="ejemplo@nubix.com"
+                                            style={{
+                                                borderRadius: "0 10px 10px 0",
+                                                fontSize: "0.95rem",
+                                            }}
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mb-4">
+                                    <label className="form-label small fw-bold text-muted ms-1">
+                                        Contraseña
+                                    </label>
+
+                                    <div className="input-group">
+                                        <span
+                                            className="input-group-text bg-light border-end-0"
+                                            style={{
+                                                borderRadius: "10px 0 0 10px",
+                                            }}
+                                        >
+                                            <i className="bi bi-lock text-muted"></i>
+                                        </span>
+
+                                        <input
+                                            type={
+                                                showPassword
+                                                    ? "text"
+                                                    : "password"
+                                            }
+                                            name="password"
+                                            className="form-control bg-light border-start-0 border-end-0 py-2"
+                                            placeholder="Crea una clave segura"
+                                            style={{
+                                                fontSize: "0.95rem",
+                                            }}
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            required
+                                        />
+
+                                        <span
+                                            className="input-group-text bg-light border-start-0"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                            style={{
+                                                borderRadius: "0 10px 10px 0",
+                                                cursor: "pointer",
+                                            }}
+                                        >
+                                            <i
+                                                className={`bi ${
+                                                    showPassword
+                                                        ? "bi-eye-slash"
+                                                        : "bi-eye"
+                                                } text-muted`}
+                                            ></i>
+                                        </span>
+                                    </div>
+
+                                    {/* Checklist de requisitos de contraseña */}
+                                    {showPasswordChecklist && (
+                                        <div
+                                            className="mt-3 p-3 rounded"
+                                            style={{
+                                                backgroundColor: "#f8f9fa",
+                                                border: "1px solid #dee2e6",
+                                            }}
+                                        >
+                                            <small className="text-muted d-block mb-2 fw-bold">
+                                                Requisitos de contraseña:
+                                            </small>
+                                            <div className="d-flex flex-column gap-2">
+                                                <div className="d-flex align-items-center">
+                                                    <i
+                                                        className={`bi ${
+                                                            passwordRequirements.minLength
+                                                                ? "bi-check-circle-fill"
+                                                                : "bi-circle"
+                                                        } me-2`}
+                                                        style={{
+                                                            color: passwordRequirements.minLength
+                                                                ? "#28a745"
+                                                                : "#ccc",
+                                                            fontSize: "0.9rem",
+                                                        }}
+                                                    ></i>
+                                                    <small
+                                                        style={{
+                                                            color: passwordRequirements.minLength
+                                                                ? "#28a745"
+                                                                : "#6c757d",
+                                                        }}
+                                                    >
+                                                        Al menos 8 caracteres (
+                                                        {
+                                                            formData.password
+                                                                .length
+                                                        }
+                                                        /8)
+                                                    </small>
+                                                </div>
+
+                                                <div className="d-flex align-items-center">
+                                                    <i
+                                                        className={`bi ${
+                                                            passwordRequirements.hasUpperCase
+                                                                ? "bi-check-circle-fill"
+                                                                : "bi-circle"
+                                                        } me-2`}
+                                                        style={{
+                                                            color: passwordRequirements.hasUpperCase
+                                                                ? "#28a745"
+                                                                : "#ccc",
+                                                            fontSize: "0.9rem",
+                                                        }}
+                                                    ></i>
+                                                    <small
+                                                        style={{
+                                                            color: passwordRequirements.hasUpperCase
+                                                                ? "#28a745"
+                                                                : "#6c757d",
+                                                        }}
+                                                    >
+                                                        Una letra mayúscula
+                                                        (A-Z)
+                                                    </small>
+                                                </div>
+
+                                                <div className="d-flex align-items-center">
+                                                    <i
+                                                        className={`bi ${
+                                                            passwordRequirements.hasLowerCase
+                                                                ? "bi-check-circle-fill"
+                                                                : "bi-circle"
+                                                        } me-2`}
+                                                        style={{
+                                                            color: passwordRequirements.hasLowerCase
+                                                                ? "#28a745"
+                                                                : "#ccc",
+                                                            fontSize: "0.9rem",
+                                                        }}
+                                                    ></i>
+                                                    <small
+                                                        style={{
+                                                            color: passwordRequirements.hasLowerCase
+                                                                ? "#28a745"
+                                                                : "#6c757d",
+                                                        }}
+                                                    >
+                                                        Una letra minúscula
+                                                        (a-z)
+                                                    </small>
+                                                </div>
+
+                                                <div className="d-flex align-items-center">
+                                                    <i
+                                                        className={`bi ${
+                                                            passwordRequirements.hasNumber
+                                                                ? "bi-check-circle-fill"
+                                                                : "bi-circle"
+                                                        } me-2`}
+                                                        style={{
+                                                            color: passwordRequirements.hasNumber
+                                                                ? "#28a745"
+                                                                : "#ccc",
+                                                            fontSize: "0.9rem",
+                                                        }}
+                                                    ></i>
+                                                    <small
+                                                        style={{
+                                                            color: passwordRequirements.hasNumber
+                                                                ? "#28a745"
+                                                                : "#6c757d",
+                                                        }}
+                                                    >
+                                                        Un número (0-9)
+                                                    </small>
+                                                </div>
+
+                                                <div className="d-flex align-items-center">
+                                                    <i
+                                                        className={`bi ${
+                                                            passwordRequirements.hasSpecialChar
+                                                                ? "bi-check-circle-fill"
+                                                                : "bi-circle"
+                                                        } me-2`}
+                                                        style={{
+                                                            color: passwordRequirements.hasSpecialChar
+                                                                ? "#28a745"
+                                                                : "#ccc",
+                                                            fontSize: "0.9rem",
+                                                        }}
+                                                    ></i>
+                                                    <small
+                                                        style={{
+                                                            color: passwordRequirements.hasSpecialChar
+                                                                ? "#28a745"
+                                                                : "#6c757d",
+                                                        }}
+                                                    >
+                                                        Un carácter especial
+                                                        (@$!%?&._#-)
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    className="btn w-100 shadow-sm fw-bold mb-3"
+                                    onMouseEnter={() =>
+                                        isPasswordValid && setIsHovered(true)
+                                    }
+                                    onMouseLeave={() => setIsHovered(false)}
+                                    disabled={!isPasswordValid}
+                                    style={{
+                                        backgroundColor: isPasswordValid
+                                            ? "#1a733c"
+                                            : "#cccccc",
+                                        color: "white",
+                                        border: "none",
+                                        padding: "12px",
+                                        borderRadius: "12px",
+                                        transition: "all 0.3s ease",
+                                        transform: isHovered
+                                            ? "translateY(-2px)"
+                                            : "translateY(0)",
+                                        boxShadow: isHovered
+                                            ? "0 5px 15px rgba(26, 115, 60, 0.3)"
+                                            : "none",
+                                        cursor: isPasswordValid
+                                            ? "pointer"
+                                            : "not-allowed",
+                                    }}
+                                >
+                                    {isHovered
+                                        ? "¡Empezar ahora! ✨"
+                                        : "Registrarse"}
+                                </button>
+
+                                <div className="text-center mt-3">
+                                    <p className="text-muted small">
+                                        ¿Ya tienes una cuenta?{" "}
+                                        <Link
+                                            to="/login"
+                                            className="fw-bold text-decoration-none"
+                                            style={{ color: "#1a733c" }}
+                                        >
+                                            Inicia Sesión
+                                        </Link>
+                                    </p>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
     );
