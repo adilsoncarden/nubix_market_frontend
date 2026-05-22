@@ -20,17 +20,13 @@
 ## 📌 Acerca de
 
 ### Misión
-
 Brindar a las familias de la zona productos de primera necesidad con frescura, variedad y cercanía, ofreciendo una atención personalizada que facilite el abastecimiento diario del hogar de manera confiable y accesible.
 
 ### Visión
-
 Para 2030, ser el market preferencial y referente tecnológico en Lima Norte, consolidándose como el líder del vecindario. Reconocidos por innovación, excelencia operativa y rapidez en el servicio a través de canales digitales.
 
 ### Problema que Resuelve
-
 Nubix Market digitaliza los procesos manuales tradicionales:
-
 - **Inventario visual** → Sistema centralizado de control de stock
 - **Consulta física lenta** → Canal digital rápido para verificar disponibilidad
 - **Gestión de créditos manual** → Registro digital seguro de "fiados"
@@ -50,15 +46,15 @@ Nubix Market digitaliza los procesos manuales tradicionales:
 
 ## 🛠️ Tecnologías
 
-| Categoría                | Tecnología          | Versión |
-| ------------------------ | ------------------- | ------- |
-| **Frontend**             | React + Vite        | Latest  |
-| **Lenguaje**             | JavaScript (ES6+)   | -       |
-| **Estilos**              | CSS3 / Tailwind CSS | -       |
-| **Gestión de Estado**    | Redux / Context API | -       |
-| **Backend**              | Spring Boot         | 3.x+    |
-| **Base de Datos**        | MySQL               | 8.0+    |
-| **Control de Versiones** | Git / GitHub        | -       |
+| Categoría | Tecnología | Versión |
+|-----------|-----------|---------|
+| **Frontend** | React + Vite | Latest |
+| **Lenguaje** | JavaScript (ES6+) | - |
+| **Estilos** | CSS3 / Tailwind CSS | - |
+| **Gestión de Estado** | Redux / Context API | - |
+| **Backend** | Spring Boot | 3.x+ |
+| **Base de Datos** | MySQL | 8.0+ |
+| **Control de Versiones** | Git / GitHub | - |
 
 ---
 
@@ -75,30 +71,28 @@ Antes de comenzar, asegúrate de tener instalado:
 ## 🚀 Instalación
 
 1. **Clonar el repositorio**
-
-    ```bash
-    git clone https://github.com/nubix/nubix_market_frontend.git
-    cd nubix_market_frontend
-    ```
+```bash
+git clone https://github.com/nubix/nubix_market_frontend.git
+cd nubix_market_frontend
+```
 
 2. **Instalar dependencias**
-
-    ```bash
-    npm install
-    ```
+```bash
+npm install
+```
 
 3. **Configurar variables de entorno**
-
-    ```bash
-    cp .env.example .env.local
-    # Editar .env.local con tus valores
-    ```
+```bash
+cp .env.example .env.local
+# Editar .env.local con tus valores
+```
 
 4. **Ejecutar servidor de desarrollo**
-    ```bash
-    npm run dev
-    ```
-    La aplicación estará disponible en `http://localhost:5173`
+```bash
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:5173`
 
 ---
 
@@ -133,7 +127,6 @@ src/
 ## 📖 Uso
 
 ### Desarrollo
-
 ```bash
 npm run dev      # Inicia servidor con hot reload
 npm run build    # Genera build de producción
@@ -142,7 +135,6 @@ npm run lint     # Ejecuta linter
 ```
 
 ### Compilación
-
 ```bash
 npm run build    # Crea carpeta dist/ optimizada
 ```
@@ -170,11 +162,11 @@ Este proyecto está bajo licencia [MIT](LICENSE) (o especifica la licencia que u
 
 Para contribuir al proyecto:
 
-1. Fork el repositorio
-2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+1. Fork el repositorio  
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)  
+3. Commit tus cambios (`git commit -m 'Add AmazingFeature'`)  
+4. Push a la rama (`git push origin feature/AmazingFeature`)  
+5. Abre un Pull Request  
 
 ---
 
