@@ -17,13 +17,14 @@ const ResetPassword = () => {
 
     // Validaciones de contraseña
     const passwordRequirements = useMemo(() => {
-        const pwd = password;
+        const pwd = password || ""; // Aseguramos que siempre lea un texto
         return {
             minLength: pwd.length >= 8,
             hasUpperCase: /[A-Z]/.test(pwd),
             hasLowerCase: /[a-z]/.test(pwd),
             hasNumber: /\d/.test(pwd),
-            hasSpecialChar: /@$!%?&._#-/.test(pwd),
+            // Regex exacto y seguro para los símbolos: @ $ ! % ? & . _ # -
+            hasSpecialChar: /[@$!%?&._#-]/ .test(pwd),
         };
     }, [password]);
 
@@ -345,6 +346,7 @@ const ResetPassword = () => {
                                                 >
                                                     Un carácter especial
                                                     (@$!%?&._#-)
+
                                                 </small>
                                             </div>
                                         </div>

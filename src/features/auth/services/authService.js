@@ -7,7 +7,7 @@ export const authService = {
     },
 
     verifyCode: async (email, code) => {
-        const response = await api.post("/auth/verify-code/", {
+        const response = await api.post("/auth/verify-code", {
             email: email,
             codigo: code,
         });
