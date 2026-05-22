@@ -100,17 +100,6 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         required
                     />
                 </div>
-                <div className="col-12">
-                    <label className="form-label fw-bold">Descripción</label>
-                    <textarea
-                        name="descripcion"
-                        className="form-control"
-                        rows="2"
-                        value={formData.descripcion}
-                        onChange={handleChange}
-                        required
-                    ></textarea>
-                </div>
                 <div className="col-md-4">
                     <label className="form-label fw-bold">P. Compra</label>
                     <input
