@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 
 const CategoryForm = ({ category, onSave, loading }) => {
-    const [formData, setFormData] = useState({ nombre: "", descripcion: "" });
+    const [formData, setFormData] = useState({ nombre: "" });
 
     useEffect(() => {
         if (category) {
             setFormData({
                 nombre: category.nombre,
-                descripcion: category.descripcion,
             });
         } else {
-            setFormData({ nombre: "", descripcion: "" });
+            setFormData({ nombre: ""});
         }
     }, [category]);
 
@@ -37,17 +36,6 @@ const CategoryForm = ({ category, onSave, loading }) => {
                     onChange={handleChange}
                     required
                 />
-            </div>
-            <div className="mb-3">
-                <label className="form-label fw-bold">Descripción</label>
-                <textarea
-                    name="descripcion"
-                    className="form-control"
-                    rows="3"
-                    value={formData.descripcion}
-                    onChange={handleChange}
-                    required
-                ></textarea>
             </div>
         </form>
     );
