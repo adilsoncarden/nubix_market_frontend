@@ -1,10 +1,22 @@
 import api from "../../../config/axios";
 
 export const productService = {
+
+    // Obtener Producto
     getAll: async () => {
         const response = await api.get("/admin/productos");
         return response.data;
     },
+
+    // Obtener Imágenes
+
+    getImages: async () => {
+
+        const response = await api.get("/admin/productos/imagenes");
+        return response.data;
+    },
+
+    // Crear Producto
     create: async (productData) => {
         const response = await api.post("/admin/productos/create", productData);
         return response.data;
@@ -30,16 +42,7 @@ export const productService = {
         return response.data;
     },
 
-    update: async (id, productData) => {
-        const response = await api.put(
-            `/admin/productos/update/${id}`,
-            productData,
-        );
-        return response.data;
-    },
-    delete: async (id) => {
-        await api.delete(`/admin/productos/${id}`);
-    },
+    // ASIGNAR IMAGEN A PRODUCTO
 
     assignImage: async (productoId, imagenId) => {
 
@@ -55,4 +58,23 @@ export const productService = {
 
     return response.data;
   },
+
+  // ACTUALIZAR PRODUCTO  - (solo lo cambie de lugar)
+    update: async (id, productData) => {
+
+        const response = await api.put(
+            `/admin/productos/update/${id}`,
+            productData,
+        );
+
+        return response.data;
+    },
+
+    // ELIMINAR PRODUCTO
+    delete: async (id) => {
+
+        await api.delete(
+            `/admin/productos/${id}`
+        );
+    }
 };

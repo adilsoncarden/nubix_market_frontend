@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 
-const ProductForm = ({ product, categories, onSave, loading, imageFile }) => {
+const ProductForm = ({ product, categories, onSave, loading }) => {
 
     const [formData, setFormData] = useState({
         codigo: "",
@@ -48,39 +48,11 @@ const ProductForm = ({ product, categories, onSave, loading, imageFile }) => {
         setFormData({ ...formData, [name]: value });
     };
 
-    // 2) Nueva función handleSubmit para subir primero la imagen
-    const handleSubmit = async (e) => {
+
+    const handleSubmit = (e) => {
         e.preventDefault();
-
-        let imageUrl = product?.imagenUrl || "";
-        
-        if (imageFile) {
-            const uploadData = new FormData();
-            uploadData.append("file", imageFile);
-
-            try {
-                const response = await fetch("http://localhost:8080/api/media/upload", {
-                    method: "POST",
-                    body: uploadData,
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    imageUrl = data.url; // aqui obtenemos las ruta que nos da el backend
-                } else {
-                    alert("Error al subir la imagen al servidor");
-                    return;
-                }
-            } catch (error) {
-                console.error("Error subiendo:", error);
-                return;
-            }
-        }
-
-        // guardamos el producto completo junto con la ruta de la imagen
-        onSave({ ...formData, imagenUrl });
+        onSave(formData);
     };
-
 
    return (
         <form onSubmit={handleSubmit} id="productForm">

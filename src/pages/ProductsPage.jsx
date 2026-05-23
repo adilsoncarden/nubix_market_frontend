@@ -7,6 +7,7 @@ import ProductForm from "../features/products/components/ProductForm";
 import Swal from "sweetalert2";
 
 import ImagenUploader from "../features/products/components/ImagenUploader";
+import ImageSelectorModal from "../features/products/components/ImageSelectorModal";
 
 
 const ProductsPage = () => {
@@ -22,6 +23,10 @@ const ProductsPage = () => {
     const [selectedProductForImage, setSelectedProductForImage] = useState(null);
 
     const [imagenSubida, setImagenSubida] = useState(null);
+    // TODAS LAS IMAGENES GUARDADAS
+    const [images, setImages] = useState([]);   
+    // modal de selección de imagen
+    const [showImageModal, setShowImageModal] = useState(false);
 
     const [formkey, setFormKey] = useState(Date.now()); // Para resetear el formulario al abrir el modal
 
@@ -87,6 +92,27 @@ const ProductsPage = () => {
         }
     }, []);
 
+    // CARGAR TODAS LAS IMAGENES
+useEffect(() => {
+
+    const cargarImagenes = async () => {
+
+        try {
+
+            const data = await productService.getImages();
+
+            setImages(data);
+
+        } catch (error) {
+
+            console.error("Error cargando imágenes", error);
+        }
+    };
+
+    cargarImagenes();
+
+}, []);
+
     const openModal = (product = null) => {
         setSelectedProduct(null);
 
@@ -103,7 +129,7 @@ const ProductsPage = () => {
 
         setSelectedProductForImage(product);
 
-        imageInputRef.current.click();
+        setShowImageModal(true);
     };
 
 
@@ -645,7 +671,46 @@ const handleSave = async (formData) => {
                     </div>
                 </div>
             </div>
+                    <ImageSelectorModal
+                            show={showImageModal}
+                            images={images}
+                            onClose={() => setShowImageModal(false)}
+                            onSelect={async (img) => {
 
+                        try {
+
+            const productoActualizado =
+                await productService.assignImage(
+                    selectedProductForImage.id,
+                    img.id
+                );
+
+            setProducts((prev) =>
+                prev.map((p) =>
+                    p.id === productoActualizado.id
+                        ? productoActualizado
+                        : p
+                )
+            );
+
+            setShowImageModal(false);
+
+            Toast.fire({
+                icon: "success",
+                title: "Imagen asignada",
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            Toast.fire({
+                icon: "error",
+                title: "Error al asignar imagen",
+            });
+        }
+    }}
+/>
             <input
                     type="file"
                     accept="image/*"
