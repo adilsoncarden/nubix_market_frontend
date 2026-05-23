@@ -6,12 +6,17 @@ import { productService } from "../features/products/services/productService";
 import ProductForm from "../features/products/components/ProductForm";
 import Swal from "sweetalert2";
 
+import ImagenUploader from "../features/products/components/ImagenUploader";
+
+
 const ProductsPage = () => {
     const { products, setProducts, handleDelete, loading } = useProducts();
     const { categories } = useCategories();
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    // para las imagenes
+    const [imageFile, setImageFile] = useState(null);
 
     const [formkey, setFormKey] = useState(Date.now()); // Para resetear el formulario al abrir el modal
 
@@ -89,38 +94,79 @@ const ProductsPage = () => {
         }, 10);
     };
 
-    const handleSave = async (formData) => {
-        setSaving(true);
-        try {
-            if (selectedProduct) {
-                const updated = await productService.update(
-                    selectedProduct.id,
-                    formData,
-                );
-                setProducts((prev) =>
-                    prev.map((p) =>
-                        p.id === selectedProduct.id ? updated : p,
-                    ),
-                );
-                Toast.fire({ icon: "success", title: "Producto actualizado" });
-            } else {
-                const created = await productService.create(formData);
-                setProducts((prev) => [...prev, created]);
-                Toast.fire({
-                    icon: "success",
-                    title: "Producto registrado con éxito",
-                });
-            }
-            bsModal.current.hide();
-        } catch (err) {
-            Toast.fire({
-                icon: "error",
-                title: "Error al guardar el producto",
-            });
-        } finally {
-            setSaving(false);
+const handleSave = async (formData) => {
+
+    setSaving(true);
+
+    try {
+
+        let imagenId = null;
+
+        // SUBIR IMAGEN
+        if (imageFile) {
+
+            const imagenSubida =
+                await productService.uploadImage(imageFile);
+
+            console.log(imagenSubida);
+
+            imagenId = imagenSubida.id;
         }
-    };
+
+        // AGREGAR imagenId AL PRODUCTO
+        const nuevoProducto = {
+            ...formData,
+            imagenId,
+        };
+
+        // CREAR PRODUCTO
+        if (selectedProduct) {
+
+            const updated = await productService.update(
+                selectedProduct.id,
+                nuevoProducto
+            );
+
+            setProducts((prev) =>
+                prev.map((p) =>
+                    p.id === selectedProduct.id ? updated : p
+                )
+            );
+
+            Toast.fire({
+                icon: "success",
+                title: "Producto actualizado",
+            });
+
+        } else {
+
+            const created =
+                await productService.create(nuevoProducto);
+
+            setProducts((prev) => [...prev, created]);
+
+            Toast.fire({
+                icon: "success",
+                title: "Producto registrado con éxito",
+            });
+        }
+
+        bsModal.current.hide();
+
+    } catch (err) {
+
+        console.error(err);
+
+        Toast.fire({
+            icon: "error",
+            title: "Error al guardar el producto",
+        });
+
+    } finally {
+
+        setSaving(false);
+    }
+};
 
     const confirmDelete = (id) => {
         Swal.fire({
@@ -435,6 +481,23 @@ const ProductsPage = () => {
                 )}
             </div>
 
+
+              {/* SUBIR IMAGEN FUERA DEL MODAL */}
+                <div
+                       className="card shadow-sm border-0 mt-4 p-4"
+                       style={{ borderRadius: "15px" }}
+                        >
+                     <h5 className="fw-bold mb-3 text-dark">
+                             Adjunta una imagen
+                         </h5>
+
+                  <ImagenUploader
+                             onImageSelected={(file) => setImageFile(file)}
+                                   />
+                        </div>
+
+                     
+
             {/* MODAL (Limpieza por Key) */}
             <div
                 className="modal fade"
@@ -469,6 +532,7 @@ const ProductsPage = () => {
                                 categories={categories}
                                 onSave={handleSave}
                                 loading={saving}
+                                imageFile={imageFile}
                             />
 
                             <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">

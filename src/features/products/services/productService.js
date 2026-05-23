@@ -9,6 +9,27 @@ export const productService = {
         const response = await api.post("/admin/productos/create", productData);
         return response.data;
     },
+
+    // SUBIR IMAGEN
+    uploadImage: async (file) => {
+
+        const formData = new FormData();
+
+        formData.append("archivo", file);
+
+        const response = await api.post(
+            "/admin/productos/imagenes/upload",
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        return response.data;
+    },
+
     update: async (id, productData) => {
         const response = await api.put(
             `/admin/productos/update/${id}`,
