@@ -17,6 +17,7 @@ const ProductsPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     // para las imagenes
     const [imageFile, setImageFile] = useState(null);
+    const [imagenSubida, setImagenSubida] = useState(null);
 
     const [formkey, setFormKey] = useState(Date.now()); // Para resetear el formulario al abrir el modal
 
@@ -100,19 +101,7 @@ const handleSave = async (formData) => {
 
     try {
 
-        let imagenId = null;
-
-        // SUBIR IMAGEN
-        if (imageFile) {
-
-            const imagenSubida =
-                await productService.uploadImage(imageFile);
-
-            console.log(imagenSubida);
-
-            imagenId = imagenSubida.id;
-        }
-
+      let imagenId = imagenSubida?.id || null;
         // AGREGAR imagenId AL PRODUCTO
         const nuevoProducto = {
             ...formData,
@@ -491,9 +480,38 @@ const handleSave = async (formData) => {
                              Adjunta una imagen
                          </h5>
 
-                  <ImagenUploader
-                             onImageSelected={(file) => setImageFile(file)}
-                                   />
+                 <ImagenUploader
+     onImageSelected={async (file) => {
+
+        try {
+
+            setImageFile(file);
+
+            const imagen =
+                await productService.uploadImage(file);
+
+            console.log(imagen);
+
+            setImagenSubida(imagen);
+
+            Swal.fire({
+                icon: "success",
+                title: "Imagen subida correctamente",
+                timer: 1500,
+                showConfirmButton: false,
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            Swal.fire({
+                icon: "error",
+                title: "Error al subir imagen",
+            });
+        }
+    }}
+/>
                         </div>
 
                      

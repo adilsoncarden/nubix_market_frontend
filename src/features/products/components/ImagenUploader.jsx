@@ -27,14 +27,36 @@ const ImagenUploader = ({ onImageSelected }) => {
         }
     };
 
-    const processFile = (file) => {
-        if (!file.type.match("image.*")) {
-            alert("Por favor, sube solo archivos de imagen.");
-            return;
+    const processFile = async (file) => {
+
+    if (!file.type.match("image.*")) {
+
+        alert("Por favor, sube solo archivos de imagen.");
+
+        return;
+    }
+
+    // mostrar preview temporal
+    setPreviewUrl(URL.createObjectURL(file));
+
+    try {
+
+        await onImageSelected(file);
+
+        // LIMPIAR TODO DESPUÉS DE SUBIR
+        setPreviewUrl(null);
+
+        if (inputRef.current) {
+            inputRef.current.value = "";
         }
-        setPreviewUrl(URL.createObjectURL(file));
-        onImageSelected(file);
-    };
+
+    } catch (error) {
+
+        console.error(error);
+
+        alert("Error al subir imagen");
+    }
+};
 
     const removeImage = () => {
         setPreviewUrl(null);
