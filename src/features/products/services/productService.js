@@ -40,4 +40,19 @@ export const productService = {
     delete: async (id) => {
         await api.delete(`/admin/productos/${id}`);
     },
+
+    assignImage: async (productoId, imagenId) => {
+
+    const response = await api.put(
+        `/admin/productos/${productoId}`,
+        null,
+        {
+            params: {
+                imagenId,
+            },
+        }
+    );
+
+    return response.data;
+  },
 };

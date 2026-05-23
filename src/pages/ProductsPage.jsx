@@ -17,6 +17,10 @@ const ProductsPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     // para las imagenes
     const [imageFile, setImageFile] = useState(null);
+
+    const imageInputRef = useRef(null);
+    const [selectedProductForImage, setSelectedProductForImage] = useState(null);
+
     const [imagenSubida, setImagenSubida] = useState(null);
 
     const [formkey, setFormKey] = useState(Date.now()); // Para resetear el formulario al abrir el modal
@@ -94,6 +98,52 @@ const ProductsPage = () => {
             bsModal.current.show();
         }, 10);
     };
+
+    const openImageSelector = (product) => {
+
+        setSelectedProductForImage(product);
+
+        imageInputRef.current.click();
+    };
+
+
+    const assignImageToProduct = async (file) => {
+        try {
+            // 1. subir una imagen
+            const imagenSubida = 
+               await productService.uploadImage(file);
+
+            // 2. asignar esa imagen al producto
+            const productoActualizado = 
+               await productService.assignImage(selectedProductForImage.id, imagenSubida.id
+               );
+            
+            // 3. actualizar la tabla
+            setProducts((prev) =>
+                prev.map((p) =>
+                    p.id === productoActualizado.id
+                        ? productoActualizado 
+                        : p
+                    )
+                );
+                
+            Toast.fire({
+                icon: "success",
+                title: "Imagen asignada al producto",
+            });
+        } catch (error) {
+            
+            console.error(error);
+
+            Toast.fire({
+                icon: "error",
+                title: "Error al asignar imagen",
+            });
+          }
+        };
+
+
+
 
 const handleSave = async (formData) => {
 
@@ -390,6 +440,14 @@ const handleSave = async (formData) => {
                                                 <i className="bi bi-pencil-square"></i>
                                             </button>
                                             <button
+                                                 className="btn-action btn-image me-2"
+                                                        onClick={() => openImageSelector(prod)}
+                                                                title="Asignar Imagen"
+                                                            >
+                                                        <i className="bi bi-image-fill"></i>
+                                                    </button>
+
+                                            <button
                                                 className="btn-action btn-delete"
                                                 onClick={() =>
                                                     confirmDelete(prod.id)
@@ -588,6 +646,22 @@ const handleSave = async (formData) => {
                 </div>
             </div>
 
+            <input
+                    type="file"
+                    accept="image/*"
+                    ref={imageInputRef}
+                    className="d-none"
+                    onChange={(e) => {
+
+                        if (e.target.files[0]) {
+
+                            assignImageToProduct(
+                                e.target.files[0]
+                            );
+                       }
+                    }}
+            />
+
             <style>{`
                 .text-emerald-600 { color: #10b981 !important; }
                 .bg-emerald-100 { background-color: #d1fae5 !important; }
@@ -607,6 +681,10 @@ const handleSave = async (formData) => {
                 .btn-edit:hover { background-color: #ecfdf5; transform: scale(1.15); }
                 .btn-delete { color: #ef4444; }
                 .btn-delete:hover { background-color: #fef2f2; transform: scale(1.15); }
+
+                /* Acciones de Imagen */
+                .btn-image { color: #f59e0b;}
+                .btn-image:hover { background-color: #fef3c7; transform: scale(1.15);}
 
                 /* Paginación */
                 .active-pagination { background-color: #10b981 !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
