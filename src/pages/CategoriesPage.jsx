@@ -202,9 +202,6 @@ const CategoriesPage = () => {
                                 <th className="py-3 text-secondary small fw-bold text-center">
                                     CATEGORÍA
                                 </th>
-                                <th className="py-3 text-secondary small fw-bold text-center">
-                                    DESCRIPCIÓN
-                                </th>
                                 <th className="text-end px-4 py-3 text-secondary small fw-bold">
                                     ACCIONES
                                 </th>
@@ -241,16 +238,6 @@ const CategoriesPage = () => {
                                             <span className="fw-bold text-dark">
                                                 {cat.nombre}
                                             </span> 
-                                        </td>
-                                        <td className="text-center">
-                                            <span className="text-muted small">
-                                                {cat.descripcion || (
-                                                    <i className="opacity-50 text-xs">
-                                                        Sin descripción
-                                                        detallada
-                                                    </i>
-                                                )}
-                                            </span>
                                         </td>
                                         <td className="text-end px-4">
                                             <button
