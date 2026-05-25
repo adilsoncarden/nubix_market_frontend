@@ -2,35 +2,25 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Modal } from "bootstrap";
 import { useProducts } from "../features/products/hooks/useProducts";
 import { useCategories } from "../features/categories/hooks/useCategories";
-import { productService } from "../features/products/services/productService";
+import {
+    productService,
+    getProductImageUrl,
+} from "../features/products/services/productService";
 import ProductForm from "../features/products/components/ProductForm";
+import ProductImageField from "../features/products/components/ProductImageField";
 import Swal from "sweetalert2";
-
-import ImagenUploader from "../features/products/components/ImagenUploader";
-import ImageSelectorModal from "../features/products/components/ImageSelectorModal";
-
+import { useProductCatalog } from "../store/ProductCatalogContext";
 
 const ProductsPage = () => {
     const { products, setProducts, handleDelete, loading } = useProducts();
+    const { invalidate: invalidateCatalog } = useProductCatalog();
     const { categories } = useCategories();
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    // para las imagenes
-    const [imageFile, setImageFile] = useState(null);
+    const [pendingImageFile, setPendingImageFile] = useState(null);
+    const [formkey, setFormKey] = useState(Date.now());
 
-    const imageInputRef = useRef(null);
-    const [selectedProductForImage, setSelectedProductForImage] = useState(null);
-
-    const [imagenSubida, setImagenSubida] = useState(null);
-    // TODAS LAS IMAGENES GUARDADAS
-    const [images, setImages] = useState([]);   
-    // modal de selección de imagen
-    const [showImageModal, setShowImageModal] = useState(false);
-
-    const [formkey, setFormKey] = useState(Date.now()); // Para resetear el formulario al abrir el modal
-
-    // --- CONFIGURACIÓN DE SWEETALERT (TOAST) ---
     const Toast = Swal.mixin({
         toast: true,
         position: "bottom-end",
@@ -43,19 +33,14 @@ const ProductsPage = () => {
         },
     });
 
-    // --- FILTRADO PROFUNDO (Nombre, Código, Descripción) ---
     const filteredProducts = useMemo(() => {
         return products.filter(
             (prod) =>
                 prod.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                prod.codigo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                prod.descripcion
-                    ?.toLowerCase()
-                    .includes(searchTerm.toLowerCase()),
+                prod.codigo?.toLowerCase().includes(searchTerm.toLowerCase()),
         );
     }, [products, searchTerm]);
 
-    // --- LÓGICA DE PAGINACIÓN (10 items) ---
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const totalResultados = filteredProducts.length;
@@ -69,7 +54,6 @@ const ProductsPage = () => {
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // Métricas
     const valorInversion = useMemo(
         () =>
             products.reduce(
@@ -79,7 +63,6 @@ const ProductsPage = () => {
         [products],
     );
 
-    // --- MODAL CONFIG ---
     const modalRef = useRef();
     const bsModal = useRef();
 
@@ -88,35 +71,14 @@ const ProductsPage = () => {
             bsModal.current = new Modal(modalRef.current);
             modalRef.current.addEventListener("hidden.bs.modal", () => {
                 setSelectedProduct(null);
+                setPendingImageFile(null);
             });
         }
     }, []);
 
-    // CARGAR TODAS LAS IMAGENES
-useEffect(() => {
-
-    const cargarImagenes = async () => {
-
-        try {
-
-            const data = await productService.getImages();
-
-            setImages(data);
-
-        } catch (error) {
-
-            console.error("Error cargando imágenes", error);
-        }
-    };
-
-    cargarImagenes();
-
-}, []);
-
     const openModal = (product = null) => {
         setSelectedProduct(null);
-
-        //reiniciar el formulario
+        setPendingImageFile(null);
         setFormKey(Date.now());
 
         setTimeout(() => {
@@ -125,113 +87,65 @@ useEffect(() => {
         }, 10);
     };
 
-    const openImageSelector = (product) => {
-
-        setSelectedProductForImage(product);
-
-        setShowImageModal(true);
+    const updateProductInList = (updated) => {
+        setProducts((prev) =>
+            prev.map((p) => (p.id === updated.id ? updated : p)),
+        );
+        setSelectedProduct((prev) =>
+            prev?.id === updated.id ? { ...prev, ...updated } : prev,
+        );
+        invalidateCatalog();
     };
 
+    const handleSave = async (formData) => {
+        setSaving(true);
 
-    const assignImageToProduct = async (file) => {
         try {
-            // 1. subir una imagen
-            const imagenSubida = 
-               await productService.uploadImage(file);
-
-            // 2. asignar esa imagen al producto
-            const productoActualizado = 
-               await productService.assignImage(selectedProductForImage.id, imagenSubida.id
-               );
-            
-            // 3. actualizar la tabla
-            setProducts((prev) =>
-                prev.map((p) =>
-                    p.id === productoActualizado.id
-                        ? productoActualizado 
-                        : p
-                    )
+            if (selectedProduct) {
+                const updated = await productService.update(
+                    selectedProduct.id,
+                    formData,
                 );
-                
-            Toast.fire({
-                icon: "success",
-                title: "Imagen asignada al producto",
-            });
-        } catch (error) {
-            
-            console.error(error);
+                setProducts((prev) =>
+                    prev.map((p) =>
+                        p.id === selectedProduct.id ? updated : p,
+                    ),
+                );
+                invalidateCatalog();
+                Toast.fire({
+                    icon: "success",
+                    title: "Producto actualizado",
+                });
+            } else {
+                const created = await productService.create(formData);
 
+                let finalProduct = created;
+                if (pendingImageFile) {
+                    finalProduct = await productService.uploadProductImage(
+                        created.id,
+                        pendingImageFile,
+                    );
+                }
+
+                setProducts((prev) => [...prev, finalProduct]);
+                invalidateCatalog();
+                Toast.fire({
+                    icon: "success",
+                    title: "Producto registrado con éxito",
+                });
+            }
+
+            bsModal.current.hide();
+        } catch (err) {
+            console.error(err);
             Toast.fire({
                 icon: "error",
-                title: "Error al asignar imagen",
+                title: "Error al guardar el producto",
             });
-          }
-        };
-
-
-
-
-const handleSave = async (formData) => {
-
-    setSaving(true);
-
-    try {
-
-      let imagenId = imagenSubida?.id || null;
-        // AGREGAR imagenId AL PRODUCTO
-        const nuevoProducto = {
-            ...formData,
-            imagenId,
-        };
-
-        // CREAR PRODUCTO
-        if (selectedProduct) {
-
-            const updated = await productService.update(
-                selectedProduct.id,
-                nuevoProducto
-            );
-
-            setProducts((prev) =>
-                prev.map((p) =>
-                    p.id === selectedProduct.id ? updated : p
-                )
-            );
-
-            Toast.fire({
-                icon: "success",
-                title: "Producto actualizado",
-            });
-
-        } else {
-
-            const created =
-                await productService.create(nuevoProducto);
-
-            setProducts((prev) => [...prev, created]);
-
-            Toast.fire({
-                icon: "success",
-                title: "Producto registrado con éxito",
-            });
+        } finally {
+            setSaving(false);
         }
-
-        bsModal.current.hide();
-
-    } catch (err) {
-
-        console.error(err);
-
-        Toast.fire({
-            icon: "error",
-            title: "Error al guardar el producto",
-        });
-
-    } finally {
-
-        setSaving(false);
-    }
-};
+    };
 
     const confirmDelete = (id) => {
         Swal.fire({
@@ -264,7 +178,6 @@ const handleSave = async (formData) => {
             className="container-fluid animate__animated animate__fadeIn p-4"
             style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}
         >
-            {/* CABECERA */}
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
                     <h2
@@ -291,7 +204,6 @@ const handleSave = async (formData) => {
                 </button>
             </div>
 
-            {/* MÉTRICAS Y BUSCADOR AISLADO */}
             <div className="row g-4 mb-4">
                 <div className="col-md-3">
                     <div
@@ -351,7 +263,7 @@ const handleSave = async (formData) => {
                             name="product_search_unique"
                             autoComplete="off"
                             className="form-control border-0 shadow-none bg-transparent"
-                            placeholder="Buscar por nombre, código o descripción..."
+                            placeholder="Buscar por nombre o código..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -359,7 +271,6 @@ const handleSave = async (formData) => {
                 </div>
             </div>
 
-            {/* TABLA CON ID SECUENCIAL */}
             <div
                 className="card shadow-sm border-0 overflow-hidden"
                 style={{ borderRadius: "15px" }}
@@ -370,9 +281,15 @@ const handleSave = async (formData) => {
                             <tr>
                                 <th
                                     className="px-4 py-3 text-secondary small fw-bold"
-                                    style={{ width: "80px" }}
+                                    style={{ width: "60px" }}
                                 >
                                     #
+                                </th>
+                                <th
+                                    className="py-3 text-secondary small fw-bold"
+                                    style={{ width: "70px" }}
+                                >
+                                    IMG
                                 </th>
                                 <th className="py-3 text-secondary small fw-bold">
                                     CÓDIGO
@@ -398,7 +315,7 @@ const handleSave = async (formData) => {
                             {loading ? (
                                 <tr>
                                     <td
-                                        colSpan="7"
+                                        colSpan="8"
                                         className="text-center py-5"
                                     >
                                         <div
@@ -408,87 +325,104 @@ const handleSave = async (formData) => {
                                     </td>
                                 </tr>
                             ) : currentItems.length > 0 ? (
-                                currentItems.map((prod, index) => (
-                                    <tr key={prod.id}>
-                                        <td className="px-4">
-                                            <span className="text-muted small fw-bold">
-                                                {indexOfFirstItem + index + 1}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className="badge bg-light text-dark border fw-medium">
-                                                {prod.codigo}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div className="fw-bold text-dark">
-                                                {prod.nombre}
-                                            </div>
-                                            <div
-                                                className="text-muted extra-small text-truncate"
-                                                style={{ maxWidth: "200px" }}
-                                            >
-                                                {prod.descripcion}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span
-                                                className="text-emerald-600 fw-medium bg-emerald-100 px-2 py-1 rounded"
-                                                style={{ fontSize: "0.8rem" }}
-                                            >
-                                                {prod.categoriaNombre}
-                                            </span>
-                                        </td>
-                                        <td className="text-center">
-                                            <span
-                                                className={`fw-bold ${prod.stock < 10 ? "text-danger" : "text-dark"}`}
-                                            >
-                                                {prod.stock}{" "}
-                                                <small className="fw-normal">
-                                                    un.
-                                                </small>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span className="fw-black">
-                                                S/ {prod.precioVenta.toFixed(2)}
-                                            </span>
-                                        </td>
-                                        <td className="text-end px-4">
-                                            <button
-                                                className="btn-action btn-edit me-2"
-                                                onClick={() => {
-                                                    console.log(prod);
-                                                    openModal(prod)
-                                                }}
-                                                title="Editar"
-                                            >
-                                                <i className="bi bi-pencil-square"></i>
-                                            </button>
-                                            <button
-                                                 className="btn-action btn-image me-2"
-                                                        onClick={() => openImageSelector(prod)}
-                                                                title="Asignar Imagen"
-                                                            >
-                                                        <i className="bi bi-image-fill"></i>
-                                                    </button>
-
-                                            <button
-                                                className="btn-action btn-delete"
-                                                onClick={() =>
-                                                    confirmDelete(prod.id)
-                                                }
-                                                title="Eliminar"
-                                            >
-                                                <i className="bi bi-trash3-fill"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
+                                currentItems.map((prod, index) => {
+                                    const imageUrl = getProductImageUrl(
+                                        prod.imagen,
+                                    );
+                                    return (
+                                        <tr key={prod.id}>
+                                            <td className="px-4">
+                                                <span className="text-muted small fw-bold">
+                                                    {indexOfFirstItem +
+                                                        index +
+                                                        1}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                {imageUrl ? (
+                                                    <img
+                                                        src={imageUrl}
+                                                        alt={prod.nombre}
+                                                        className="rounded border"
+                                                        style={{
+                                                            width: "44px",
+                                                            height: "44px",
+                                                            objectFit: "cover",
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <div
+                                                        className="rounded border bg-light d-flex align-items-center justify-content-center text-muted"
+                                                        style={{
+                                                            width: "44px",
+                                                            height: "44px",
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-image"></i>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <span className="badge bg-light text-dark border fw-medium">
+                                                    {prod.codigo}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div className="fw-bold text-dark">
+                                                    {prod.nombre}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    className="text-emerald-600 fw-medium bg-emerald-100 px-2 py-1 rounded"
+                                                    style={{ fontSize: "0.8rem" }}
+                                                >
+                                                    {prod.categoriaNombre}
+                                                </span>
+                                            </td>
+                                            <td className="text-center">
+                                                <span
+                                                    className={`fw-bold ${prod.stock < 10 ? "text-danger" : "text-dark"}`}
+                                                >
+                                                    {prod.stock}{" "}
+                                                    <small className="fw-normal">
+                                                        un.
+                                                    </small>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span className="fw-black">
+                                                    S/{" "}
+                                                    {prod.precioVenta.toFixed(2)}
+                                                </span>
+                                            </td>
+                                            <td className="text-end px-4">
+                                                <button
+                                                    className="btn-action btn-edit me-2"
+                                                    onClick={() =>
+                                                        openModal(prod)
+                                                    }
+                                                    title="Editar"
+                                                >
+                                                    <i className="bi bi-pencil-square"></i>
+                                                </button>
+                                                <button
+                                                    className="btn-action btn-delete"
+                                                    onClick={() =>
+                                                        confirmDelete(prod.id)
+                                                    }
+                                                    title="Eliminar"
+                                                >
+                                                    <i className="bi bi-trash3-fill"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
                                     <td
-                                        colSpan="7"
+                                        colSpan="8"
                                         className="text-center py-5 text-muted"
                                     >
                                         No se encontraron productos
@@ -500,7 +434,6 @@ const handleSave = async (formData) => {
                     </table>
                 </div>
 
-                {/* PAGINACIÓN VERDE */}
                 {totalPages > 1 && (
                     <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
                         <div className="text-muted small">
@@ -554,53 +487,6 @@ const handleSave = async (formData) => {
                 )}
             </div>
 
-
-              {/* SUBIR IMAGEN FUERA DEL MODAL */}
-                <div
-                       className="card shadow-sm border-0 mt-4 p-4"
-                       style={{ borderRadius: "15px" }}
-                        >
-                     <h5 className="fw-bold mb-3 text-dark">
-                             Adjunta una imagen
-                         </h5>
-
-                 <ImagenUploader
-     onImageSelected={async (file) => {
-
-        try {
-
-            setImageFile(file);
-
-            const imagen =
-                await productService.uploadImage(file);
-
-            console.log(imagen);
-
-            setImagenSubida(imagen);
-
-            Swal.fire({
-                icon: "success",
-                title: "Imagen subida correctamente",
-                timer: 1500,
-                showConfirmButton: false,
-            });
-
-        } catch (error) {
-
-            console.error(error);
-
-            Swal.fire({
-                icon: "error",
-                title: "Error al subir imagen",
-            });
-        }
-    }}
-/>
-                        </div>
-
-                     
-
-            {/* MODAL (Limpieza por Key) */}
             <div
                 className="modal fade"
                 ref={modalRef}
@@ -628,13 +514,20 @@ const handleSave = async (formData) => {
                             ></button>
                         </div>
                         <div className="modal-body p-4">
+                            <ProductImageField
+                                key={`img-${formkey}-${selectedProduct?.id ?? "new"}`}
+                                productId={selectedProduct?.id}
+                                imagen={selectedProduct?.imagen}
+                                onImageUpdated={updateProductInList}
+                                onPendingFile={setPendingImageFile}
+                                disabled={saving}
+                            />
                             <ProductForm
                                 key={formkey}
                                 product={selectedProduct}
                                 categories={categories}
                                 onSave={handleSave}
                                 loading={saving}
-                                imageFile={imageFile}
                             />
 
                             <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
@@ -671,72 +564,12 @@ const handleSave = async (formData) => {
                     </div>
                 </div>
             </div>
-                    <ImageSelectorModal
-                            show={showImageModal}
-                            images={images}
-                            onClose={() => setShowImageModal(false)}
-                            onSelect={async (img) => {
-
-                        try {
-
-            const productoActualizado =
-                await productService.assignImage(
-                    selectedProductForImage.id,
-                    img.id
-                );
-
-            setProducts((prev) =>
-                prev.map((p) =>
-                    p.id === productoActualizado.id
-                        ? productoActualizado
-                        : p
-                )
-            );
-
-            setShowImageModal(false);
-
-            Toast.fire({
-                icon: "success",
-                title: "Imagen asignada",
-            });
-
-        } catch (error) {
-
-            console.error(error);
-
-            Toast.fire({
-                icon: "error",
-                title: "Error al asignar imagen",
-            });
-        }
-    }}
-/>
-            <input
-                    type="file"
-                    accept="image/*"
-                    ref={imageInputRef}
-                    className="d-none"
-                    onChange={(e) => {
-
-                        if (e.target.files[0]) {
-
-                            assignImageToProduct(
-                                e.target.files[0]
-                            );
-                       }
-                    }}
-            />
 
             <style>{`
                 .text-emerald-600 { color: #10b981 !important; }
                 .bg-emerald-100 { background-color: #d1fae5 !important; }
                 .fw-black { font-weight: 900; color: #111827; }
-                .extra-small { font-size: 0.75rem; }
-
-                /* Reset de Modal (Sin Blur) */
                 .modal.show { backdrop-filter: none !important; background-color: rgba(17, 24, 39, 0.6) !important; }
-
-                /* Acciones Verdes */
                 .btn-action {
                     border: none; background: transparent; padding: 6px 10px;
                     border-radius: 8px; transition: all 0.2s;
@@ -746,15 +579,8 @@ const handleSave = async (formData) => {
                 .btn-edit:hover { background-color: #ecfdf5; transform: scale(1.15); }
                 .btn-delete { color: #ef4444; }
                 .btn-delete:hover { background-color: #fef2f2; transform: scale(1.15); }
-
-                /* Acciones de Imagen */
-                .btn-image { color: #f59e0b;}
-                .btn-image:hover { background-color: #fef3c7; transform: scale(1.15);}
-
-                /* Paginación */
                 .active-pagination { background-color: #10b981 !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
                 .page-link:hover:not(.active-pagination) { background-color: #ecfdf5 !important; color: #10b981 !important; }
-                
                 input#product_global_search::placeholder { color: #9ca3af; font-size: 0.9rem; }
             `}</style>
         </div>

@@ -8,6 +8,7 @@ import {
 
 import { AuthProvider } from "./store/AuthContext";
 import { CartProvider } from "./store/CartContext";
+import { ProductCatalogProvider } from "./store/ProductCatalogContext";
 
 import "./App.css";
 
@@ -67,7 +68,8 @@ export default function App() {
     return (
         <BrowserRouter>
             <AuthProvider>
-                <CartProvider>
+                <ProductCatalogProvider>
+                    <CartProvider>
                     <Routes>
                         {/* ───────────── WEB PÚBLICA ───────────── */}
                         <Route element={<PublicLayout />}>
@@ -149,7 +151,8 @@ export default function App() {
                         {/* ───────────── FALLBACK ───────────── */}
                         <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
-                </CartProvider>
+                    </CartProvider>
+                </ProductCatalogProvider>
             </AuthProvider>
         </BrowserRouter>
     );
