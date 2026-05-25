@@ -24,6 +24,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ShopPage from "./pages/ShopPage";
 import CartPage from "./pages/CartPage";
+import ProductDetail from "./pages/ProductDetail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ResetPasswordManual from "./pages/ResetPasswordManual";
@@ -77,6 +78,7 @@ export default function App() {
                             <Route index element={<MainContent />} />
 
                             {/* TIENDA */}
+                            <Route path="/producto/:id" element={<ProductDetail />} />
                             <Route path="/shop" element={<ShopPage />} />
                             <Route path="/cart" element={<CartPage />} />
 
