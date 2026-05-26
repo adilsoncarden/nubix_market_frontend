@@ -1,157 +1,308 @@
+import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { useAuth } from "../store/AuthContext";
+import { useTheme } from "../store/ThemeContext";
 import Chart from "react-apexcharts";
+import { saleService } from "../features/sales/services/saleService";
+import { productService } from "../features/products/services/productService";
+import { clientService } from "../features/users/services/clientService";
+import { employeeService } from "../features/users/services/employeeService";
+import { getSuppliers } from "../features/suppliers/services/supplierService";
+import {
+    computeDashboardMetrics,
+    normalizeList,
+} from "../features/dashboard/utils/dashboardMetrics";
 
 const AdminLayout = () => {
     const { user } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const location = useLocation();
+    const [now, setNow] = useState(() => new Date());
+    const [dashboardLoading, setDashboardLoading] = useState(true);
+    const [rawData, setRawData] = useState({
+        sales: [],
+        products: [],
+        clients: [],
+        employees: [],
+        suppliers: [],
+    });
 
     const isDashboardHome =
         location.pathname === "/admin" ||
         location.pathname === "/admin/" ||
         location.pathname.endsWith("/dashboard");
 
-    // --- CONFIGURACIONES DE GRÁFICOS (APEXCHARTS) ---
+    useEffect(() => {
+        const timer = setInterval(() => setNow(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
-    // 1. Ventas Semanales (Tu diseño original)
-    const salesOptions = {
-        chart: { id: "sales-chart", toolbar: { show: false } },
-        colors: ["#198754"],
-        stroke: { curve: "smooth", width: 3 },
-        xaxis: {
-            categories: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-        },
-    };
-    const salesSeries = [
-        { name: "Ventas", data: [30, 40, 35, 50, 49, 60, 70] },
-    ];
+    useEffect(() => {
+        let cancelled = false;
 
-    // 2. Distribución de Productos (Tu diseño original)
-    const categoryOptions = {
-        labels: ["Lácteos", "Limpieza", "Bebidas", "Cárnicos", "Otros"],
-        colors: ["#198754", "#0d6efd", "#fd7e14", "#dc3545", "#6c757d"],
-        legend: { position: "bottom" },
-        plotOptions: { pie: { donut: { size: "65%" } } },
-    };
-    const categorySeries = [44, 55, 13, 33, 22];
+        const fetchDashboardData = async () => {
+            setDashboardLoading(true);
+            try {
+                const [sales, products, clients, employees, suppliers] =
+                    await Promise.all([
+                        saleService.getAll(),
+                        productService.getAll(),
+                        clientService.getAll(),
+                        employeeService.getAll(),
+                        getSuppliers(),
+                    ]);
 
-    // 3. Rendimiento de Empleados (Tu diseño original)
-    const employeeOptions = {
-        chart: { toolbar: { show: false } },
-        xaxis: {
-            categories: [
-                "Asistencia",
-                "Ventas",
-                "Puntualidad",
-                "Soporte",
-                "Gestión",
-            ],
-        },
-        colors: ["#6f42c1"],
-        fill: { opacity: 0.4 },
-    };
-    const employeeSeries = [
-        { name: "Promedio Equipo", data: [80, 50, 30, 40, 100] },
-    ];
+                if (!cancelled) {
+                    setRawData({
+                        sales: normalizeList(sales),
+                        products: normalizeList(products),
+                        clients: normalizeList(clients),
+                        employees: normalizeList(employees),
+                        suppliers: normalizeList(suppliers),
+                    });
+                }
+            } catch (err) {
+                console.error("[Dashboard] Error al cargar datos:", err);
+            } finally {
+                if (!cancelled) {
+                    setDashboardLoading(false);
+                }
+            }
+        };
 
-    // 4. Top Proveedores (Tu diseño original)
-    const supplierOptions = {
-        plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-        colors: ["#20c997"],
-        xaxis: {
-            categories: ["Nestlé", "Gloria", "Alicorp", "Procter", "Unilever"],
-        },
-    };
-    const supplierSeries = [
-        { name: "Pedidos Mensuales", data: [400, 430, 448, 470, 540] },
-    ];
+        fetchDashboardData();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
-    // --- NUEVOS DISEÑOS AGREGADOS ---
+    const metrics = useMemo(
+        () => computeDashboardMetrics(rawData),
+        [rawData],
+    );
 
-    // 5. Mapa de Calor (Actividad de Ventas por Hora)
-    const heatMapOptions = {
-        chart: { toolbar: { show: false } },
-        dataLabels: { enabled: false },
-        colors: ["#198754"],
-        xaxis: {
-            categories: [
-                "08am",
-                "10am",
-                "12pm",
-                "02pm",
-                "04pm",
-                "06pm",
-                "08pm",
-            ],
-        },
-    };
-    const heatMapSeries = [
-        { name: "Lun", data: [10, 20, 30, 40, 50, 60, 20] },
-        { name: "Mie", data: [20, 30, 45, 80, 40, 20, 10] },
-        { name: "Vie", data: [30, 60, 90, 100, 80, 50, 30] },
-    ];
+    const chartTheme = useMemo(
+        () => ({
+            foreColor: theme === "dark" ? "#94a3b8" : "#64748b",
+            gridColor: theme === "dark" ? "#334155" : "#e2e8f0",
+            labelColor: theme === "dark" ? "#e2e8f0" : "#334155",
+            goalLabelColor: theme === "dark" ? "#94a3b8" : "#64748b",
+            goalValueColor: theme === "dark" ? "#f8fafc" : "#1e293b",
+        }),
+        [theme],
+    );
 
-    // 6. Meta de Ventas Mensual (Radial)
-    const goalOptions = {
-        plotOptions: {
-            radialBar: {
-                startAngle: -135,
-                endAngle: 135,
-                dataLabels: {
-                    name: { fontSize: "14px", color: "#64748b", offsetY: 100 },
-                    value: {
-                        offsetY: 60,
-                        fontSize: "22px",
-                        color: "#1e293b",
-                        formatter: (val) => val + "%",
+    const salesOptions = useMemo(
+        () => ({
+            chart: { id: "sales-chart", toolbar: { show: false } },
+            colors: ["#198754"],
+            stroke: { curve: "smooth", width: 3 },
+            xaxis: {
+                categories: metrics.salesTrendLabels,
+                labels: { style: { colors: chartTheme.foreColor } },
+            },
+            yaxis: {
+                labels: { style: { colors: chartTheme.foreColor } },
+            },
+            grid: { borderColor: chartTheme.gridColor },
+            tooltip: { theme },
+        }),
+        [metrics.salesTrendLabels, chartTheme, theme],
+    );
+
+    const salesSeries = useMemo(
+        () => [{ name: "Ventas", data: metrics.salesTrend }],
+        [metrics.salesTrend],
+    );
+
+    const categoryOptions = useMemo(
+        () => ({
+            labels: metrics.categoryLabels,
+            colors: ["#198754", "#0d6efd", "#fd7e14", "#dc3545", "#6c757d"],
+            legend: {
+                position: "bottom",
+                labels: { colors: chartTheme.foreColor },
+            },
+            plotOptions: { pie: { donut: { size: "65%" } } },
+            tooltip: { theme },
+        }),
+        [metrics.categoryLabels, chartTheme.foreColor, theme],
+    );
+
+    const categorySeries = metrics.categorySeries;
+
+    const employeeOptions = useMemo(
+        () => ({
+            chart: { toolbar: { show: false } },
+            xaxis: {
+                categories: [
+                    "Equipo",
+                    "Ticket",
+                    "Pedidos",
+                    "Entregas",
+                    "Pagos",
+                ],
+                labels: { style: { colors: chartTheme.foreColor } },
+            },
+            yaxis: {
+                show: false,
+                max: 100,
+            },
+            colors: ["#6f42c1"],
+            fill: { opacity: 0.4 },
+            tooltip: { theme },
+        }),
+        [chartTheme.foreColor, theme],
+    );
+
+    const employeeSeries = useMemo(
+        () => [{ name: "Indicadores", data: metrics.employeeSeries }],
+        [metrics.employeeSeries],
+    );
+
+    const supplierOptions = useMemo(
+        () => ({
+            plotOptions: { bar: { borderRadius: 4, horizontal: true } },
+            colors: ["#20c997"],
+            xaxis: {
+                categories: metrics.supplierLabels,
+                labels: { style: { colors: chartTheme.foreColor } },
+            },
+            yaxis: {
+                labels: { style: { colors: chartTheme.foreColor } },
+            },
+            grid: { borderColor: chartTheme.gridColor },
+            tooltip: { theme },
+        }),
+        [metrics.supplierLabels, chartTheme, theme],
+    );
+
+    const supplierSeries = useMemo(
+        () => [{ name: "Registrados", data: metrics.supplierSeries }],
+        [metrics.supplierSeries],
+    );
+
+    const heatMapOptions = useMemo(
+        () => ({
+            chart: { toolbar: { show: false } },
+            dataLabels: { enabled: false },
+            colors: ["#198754"],
+            xaxis: {
+                categories: [
+                    "08am",
+                    "10am",
+                    "12pm",
+                    "02pm",
+                    "04pm",
+                    "06pm",
+                    "08pm",
+                ],
+                labels: { style: { colors: chartTheme.foreColor } },
+            },
+            yaxis: {
+                labels: { style: { colors: chartTheme.foreColor } },
+            },
+            tooltip: { theme },
+        }),
+        [chartTheme.foreColor, theme],
+    );
+
+    const goalOptions = useMemo(
+        () => ({
+            plotOptions: {
+                radialBar: {
+                    startAngle: -135,
+                    endAngle: 135,
+                    dataLabels: {
+                        name: {
+                            fontSize: "14px",
+                            color: chartTheme.goalLabelColor,
+                            offsetY: 100,
+                        },
+                        value: {
+                            offsetY: 60,
+                            fontSize: "22px",
+                            color: chartTheme.goalValueColor,
+                            formatter: (val) => val + "%",
+                        },
                     },
                 },
             },
-        },
-        fill: { colors: ["#198754"] },
-        labels: ["Meta Mensual"],
-    };
-
-    const stats = [
-        {
-            label: "Productos",
-            value: "154",
-            icon: "bi-box-seam",
-            color: "#198754",
-        },
-        {
-            label: "Clientes",
-            value: "1,240",
-            icon: "bi-people",
-            color: "#0d6efd",
-        },
-        {
-            label: "Proveedores",
-            value: "36",
-            icon: "bi-truck",
-            color: "#fd7e14",
-        },
-        {
-            label: "Empleados",
-            value: "12",
-            icon: "bi-person-badge",
-            color: "#6f42c1",
-        },
-    ];
+            fill: { colors: ["#198754"] },
+            labels: ["Meta Mensual"],
+            tooltip: { theme },
+        }),
+        [chartTheme, theme],
+    );
 
     return (
-        <div className="d-flex vh-100 overflow-hidden bg-light">
+        <div
+            className="d-flex vh-100 overflow-hidden bg-body-secondary admin-shell"
+            data-bs-theme={theme}
+        >
             <Sidebar />
 
             <div className="flex-grow-1 d-flex flex-column overflow-hidden">
-                <header className="navbar border-bottom px-4 py-3 bg-white shadow-sm sticky-top">
-                    <div className="container-fluid p-0">
+                <header className="navbar border-bottom px-4 py-3 bg-body shadow-sm sticky-top">
+                    <div className="container-fluid p-0 d-flex align-items-center flex-wrap gap-3">
                         <h5 className="m-0 fw-bold text-secondary">
                             Dashboard Operativo
                         </h5>
-                        <div className="d-flex align-items-center">
-                            <span className="me-3 fw-bold small text-muted">
+
+                        <div className="d-flex align-items-center flex-wrap gap-3 ms-md-3">
+                            <div className="small">
+                                <div
+                                    className="fw-bold"
+                                    style={{ color: "#198754" }}
+                                >
+                                    {now.toLocaleTimeString("es-PE")}
+                                </div>
+                                <div className="text-muted">
+                                    {now.toLocaleDateString("es-PE", {
+                                        weekday: "long",
+                                        year: "numeric",
+                                        month: "long",
+                                        day: "numeric",
+                                    })}
+                                </div>
+                            </div>
+                            <div className="vr d-none d-md-block opacity-25" />
+                            <div className="small text-muted">
+                                Ventas hoy:{" "}
+                                <span className="fw-bold text-body">
+                                    {dashboardLoading
+                                        ? "..."
+                                        : metrics.ventasHoy}
+                                </span>
+                            </div>
+                            <div className="small text-muted">
+                                Pendientes:{" "}
+                                <span className="fw-bold text-body">
+                                    {dashboardLoading
+                                        ? "..."
+                                        : metrics.pedidosPendientes}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="d-flex align-items-center ms-auto gap-3">
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                onClick={toggleTheme}
+                                title={
+                                    theme === "light"
+                                        ? "Activar modo oscuro"
+                                        : "Activar modo claro"
+                                }
+                            >
+                                <i
+                                    className={`bi ${theme === "light" ? "bi-moon-stars" : "bi-sun"} me-1`}
+                                ></i>
+                                {theme === "light" ? "Oscuro" : "Claro"}
+                            </button>
+                            <span className="fw-bold small text-muted">
                                 Sesión:{" "}
                                 <span style={{ color: "#198754" }}>
                                     {user?.username}
@@ -174,22 +325,22 @@ const AdminLayout = () => {
                 <main className="p-4 flex-grow-1 overflow-auto">
                     <div className="container-fluid">
                         <style>{`
-                            .card-dashboard { border-radius: 18px; border: none; background: #fff; }
+                            .card-dashboard { border-radius: 18px; border: none; background: var(--bs-body-bg); }
                             .icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-                            .stat-value { font-size: 1.75rem; font-weight: 800; color: #334155; }
-                            .chart-title { font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-                            .table-custom thead { background-color: #f8fafc; }
+                            .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--bs-body-color); }
+                            .chart-title { font-size: 0.85rem; font-weight: 700; color: var(--bs-secondary-color); text-transform: uppercase; letter-spacing: 0.5px; }
+                            .table-custom thead { background-color: var(--bs-tertiary-bg); }
                             .badge-critical { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+                            [data-bs-theme="dark"] .badge-critical { background-color: rgba(153, 27, 27, 0.25); color: #fca5a5; border-color: #991b1b; }
                         `}</style>
 
                         {isDashboardHome ? (
                             <div className="animate__animated animate__fadeIn">
-                                {/* RESUMEN SUPERIOR */}
                                 <div className="row g-4 mb-4">
-                                    {stats.map((stat, i) => (
+                                    {metrics.stats.map((stat, i) => (
                                         <div
                                             className="col-12 col-md-6 col-lg-3"
-                                            key={i}
+                                            key={stat.label}
                                         >
                                             <div className="card card-dashboard p-3 shadow-sm h-100">
                                                 <div className="d-flex align-items-center">
@@ -209,7 +360,9 @@ const AdminLayout = () => {
                                                             {stat.label}
                                                         </p>
                                                         <div className="stat-value">
-                                                            {stat.value}
+                                                            {dashboardLoading
+                                                                ? "..."
+                                                                : stat.value}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -218,7 +371,6 @@ const AdminLayout = () => {
                                     ))}
                                 </div>
 
-                                {/* BLOQUE 1: VENTAS Y CATEGORÍAS (Originales) */}
                                 <div className="row g-4 mb-4">
                                     <div className="col-lg-8">
                                         <div className="card card-dashboard p-4 shadow-sm h-100">
@@ -248,7 +400,6 @@ const AdminLayout = () => {
                                     </div>
                                 </div>
 
-                                {/* BLOQUE 2: PROVEEDORES Y EMPLEADOS (Originales) */}
                                 <div className="row g-4 mb-4">
                                     <div className="col-lg-6">
                                         <div className="card card-dashboard p-4 shadow-sm h-100">
@@ -278,7 +429,6 @@ const AdminLayout = () => {
                                     </div>
                                 </div>
 
-                                {/* BLOQUE 3: NUEVOS DISEÑOS (Análisis Horario y Metas) */}
                                 <div className="row g-4 mb-4">
                                     <div className="col-lg-8">
                                         <div className="card card-dashboard p-4 shadow-sm h-100">
@@ -287,7 +437,7 @@ const AdminLayout = () => {
                                             </h6>
                                             <Chart
                                                 options={heatMapOptions}
-                                                series={heatMapSeries}
+                                                series={metrics.heatMapSeries}
                                                 type="heatmap"
                                                 height={280}
                                             />
@@ -300,18 +450,19 @@ const AdminLayout = () => {
                                             </h6>
                                             <Chart
                                                 options={goalOptions}
-                                                series={[76]}
+                                                series={[metrics.goalPercent]}
                                                 type="radialBar"
                                                 height={280}
                                             />
                                             <p className="small text-muted mt-n2">
-                                                Faltan 24% para llegar a la meta
+                                                {dashboardLoading
+                                                    ? "Calculando meta..."
+                                                    : `Faltan ${metrics.goalRemaining}% para llegar a la meta`}
                                             </p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* BLOQUE 4: TABLA DE STOCK CRÍTICO */}
                                 <div className="row g-4">
                                     <div className="col-12">
                                         <div className="card card-dashboard p-4 shadow-sm">
@@ -337,34 +488,64 @@ const AdminLayout = () => {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        <tr>
-                                                            <td className="fw-bold">
-                                                                Leche Gloria 1L
-                                                            </td>
-                                                            <td>Lácteos</td>
-                                                            <td className="text-danger fw-bold">
-                                                                5 u.
-                                                            </td>
-                                                            <td>
-                                                                <span className="badge badge-critical">
-                                                                    Reordenar Ya
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td className="fw-bold">
-                                                                Detergente Opal
-                                                            </td>
-                                                            <td>Limpieza</td>
-                                                            <td className="text-danger fw-bold">
-                                                                3 u.
-                                                            </td>
-                                                            <td>
-                                                                <span className="badge badge-critical">
-                                                                    Sin Stock
-                                                                </span>
-                                                            </td>
-                                                        </tr>
+                                                        {dashboardLoading ? (
+                                                            <tr>
+                                                                <td
+                                                                    colSpan="4"
+                                                                    className="text-center text-muted py-4"
+                                                                >
+                                                                    Cargando
+                                                                    inventario...
+                                                                </td>
+                                                            </tr>
+                                                        ) : metrics.criticalStock
+                                                              .length === 0 ? (
+                                                            <tr>
+                                                                <td
+                                                                    colSpan="4"
+                                                                    className="text-center text-muted py-4"
+                                                                >
+                                                                    No hay
+                                                                    productos
+                                                                    con stock
+                                                                    crítico.
+                                                                </td>
+                                                            </tr>
+                                                        ) : (
+                                                            metrics.criticalStock.map(
+                                                                (product) => (
+                                                                    <tr
+                                                                        key={
+                                                                            product.id
+                                                                        }
+                                                                    >
+                                                                        <td className="fw-bold">
+                                                                            {
+                                                                                product.nombre
+                                                                            }
+                                                                        </td>
+                                                                        <td>
+                                                                            {product.categoriaNombre ||
+                                                                                "Sin categoría"}
+                                                                        </td>
+                                                                        <td className="text-danger fw-bold">
+                                                                            {product.stock ??
+                                                                                0}{" "}
+                                                                            u.
+                                                                        </td>
+                                                                        <td>
+                                                                            <span className="badge badge-critical">
+                                                                                {(product.stock ??
+                                                                                    0) ===
+                                                                                0
+                                                                                    ? "Sin Stock"
+                                                                                    : "Reordenar Ya"}
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                ),
+                                                            )
+                                                        )}
                                                     </tbody>
                                                 </table>
                                             </div>

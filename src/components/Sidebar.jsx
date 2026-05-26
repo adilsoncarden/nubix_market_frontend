@@ -57,7 +57,7 @@ const Sidebar = () => {
 
     return (
         <aside
-            className="d-flex flex-column bg-white vh-100 border-end shadow-sm"
+            className="d-flex flex-column bg-body vh-100 border-end shadow-sm"
             style={{ width: "280px" }}
         >
             <style>{`
@@ -163,8 +163,8 @@ const Sidebar = () => {
             </div>
 
             {/* User Profile Section */}
-            <div className="p-3 mt-auto border-top bg-light/50">
-                <div className="d-flex align-items-center p-2 rounded-4 bg-white shadow-sm border mb-3">
+            <div className="p-3 mt-auto border-top bg-body-secondary">
+                <div className="d-flex align-items-center p-2 rounded-4 bg-body shadow-sm border mb-3">
                     <div className="flex-shrink-0">
                         <div className="avatar-border rounded-circle">
                             <div
@@ -184,7 +184,7 @@ const Sidebar = () => {
                     </div>
                     <div className="flex-grow-1 ms-3 min-w-0">
                         <p
-                            className="mb-0 text-dark fw-bold text-truncate"
+                            className="mb-0 text-body fw-bold text-truncate"
                             style={{ fontSize: "0.9rem" }}
                         >
                             {user ? user.username : "Adilson"}

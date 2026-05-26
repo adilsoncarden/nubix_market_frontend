@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 
 import { AuthProvider } from "./store/AuthContext";
+import { ThemeProvider } from "./store/ThemeContext";
 import { CartProvider } from "./store/CartContext";
 import { FavoritesProvider } from "./store/FavoritesContext";
 import { ProductCatalogProvider } from "./store/ProductCatalogContext";
@@ -148,7 +149,13 @@ export default function App() {
                                     <ProtectedRoute allowedRoles={["ADMIN"]} />
                                 }
                             >
-                                <Route element={<AdminLayout />}>
+                                <Route
+                                    element={
+                                        <ThemeProvider>
+                                            <AdminLayout />
+                                        </ThemeProvider>
+                                    }
+                                >
                                     <Route
                                         path="/admin/dashboard"
                                         element={<AdminDashboard />}

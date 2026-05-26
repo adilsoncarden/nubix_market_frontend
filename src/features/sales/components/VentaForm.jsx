@@ -292,7 +292,7 @@ const VentaForm = ({ onSave, loading }) => {
                     <input
                         type="text"
                         className="form-control"
-                        value="Recojo Presencial"
+                        value="Presencial"
                         disabled
                     />
                 </div>
