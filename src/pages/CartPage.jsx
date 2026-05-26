@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useCart } from "../store/CartContext";
 import { useNavigate } from "react-router-dom";
+import { saleService } from "../features/sales/services/saleService";
+import { useProductCatalog } from "../store/ProductCatalogContext";
 
 // ─── Utilidad PDF (DISEÑO RENOVADO SEGÚN TU IMAGEN) ───────────────────────────
 const generarPDF = async (orden) => {
@@ -168,14 +170,19 @@ const generarNumero = (tipo) => {
 
 // ─── Modal de Pago ────────────────────────────────────────────────────────────
 function ModalPago({ total, delivery, subtotal, items, onClose, onSuccess }) {
-  const [tipo,     setTipo]     = useState("boleta");
-  const [step,     setStep]     = useState("form");   // "form" | "confirm" | "success"
-  const [loading,  setLoading]  = useState(false);
-  const [emailOk,  setEmailOk]  = useState(null);
+  const [tipo, setTipo] = useState("boleta");
+  const [tipoEntrega, setTipoEntrega] = useState("FAST_LANE");
+  const [metodoPago, setMetodoPago] = useState("YAPE");
+  const [step, setStep] = useState("form");
+  const [loading, setLoading] = useState(false);
+  const [emailOk, setEmailOk] = useState(null);
+  const [ventaCreada, setVentaCreada] = useState(null);
+  const [errorCheckout, setErrorCheckout] = useState(null);
 
   const [form, setForm] = useState({
     nombre: "", dni: "", email: "",
     razonSocial: "", ruc: "", direccion: "",
+    direccionEntrega: "", distrito: "", referencia: "",
   });
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -184,27 +191,62 @@ function ModalPago({ total, delivery, subtotal, items, onClose, onSuccess }) {
     ? form.nombre.trim() && form.dni.trim().length === 8 && form.email.trim()
     : form.razonSocial.trim() && form.ruc.trim().length === 11 && form.email.trim();
 
+  const entregaValida = tipoEntrega !== "DELIVERY" || form.direccionEntrega.trim();
+
   const handleConfirmar = async () => {
     setLoading(true);
-    const numero = generarNumero(tipo);
-    const fecha  = new Date().toLocaleDateString("es-PE", {
+    setErrorCheckout(null);
+    const fecha = new Date().toLocaleDateString("es-PE", {
       day: "2-digit", month: "2-digit", year: "numeric",
     });
 
-    const orden = {
-      tipo, numero, fecha,
-      cliente: tipo === "boleta"
-        ? { nombre: form.nombre, dni: form.dni, email: form.email }
-        : { razonSocial: form.razonSocial, ruc: form.ruc, direccion: form.direccion, email: form.email },
-      items, subtotal, delivery, total,
-    };
+    try {
+      const venta = await saleService.checkout({
+        tipoComprobante: tipo === "boleta" ? "BOLETA" : "FACTURA",
+        metodoPago,
+        tipoEntrega,
+        nombreComprobante: form.nombre,
+        dni: form.dni,
+        ruc: form.ruc,
+        razonSocial: form.razonSocial,
+        emailComprobante: form.email,
+        direccionFiscal: form.direccion,
+        direccionEntrega: tipoEntrega === "DELIVERY" ? form.direccionEntrega : null,
+        distrito: tipoEntrega === "DELIVERY" ? form.distrito : null,
+        referencia: tipoEntrega === "DELIVERY" ? form.referencia : null,
+        costoEnvio: tipoEntrega === "DELIVERY" ? delivery : 0,
+        detalles: items.map((item) => ({
+          productoId: item.id,
+          cantidad: item.qty,
+        })),
+      });
 
-    const ok = await enviarEmailConfirmacion(orden);
-    setEmailOk(ok);
-    await generarPDF(orden);
-    setLoading(false);
-    setStep("success");
-    onSuccess();
+      setVentaCreada(venta);
+      const numero = `V-${String(venta.id).padStart(5, "0")}`;
+      const orden = {
+        tipo, numero, fecha,
+        codigoRecojo: venta.codigoRecojo,
+        cliente: tipo === "boleta"
+          ? { nombre: form.nombre, dni: form.dni, email: form.email }
+          : { razonSocial: form.razonSocial, ruc: form.ruc, direccion: form.direccion, email: form.email },
+        items, subtotal, delivery, total,
+      };
+
+      const ok = await enviarEmailConfirmacion(orden);
+      setEmailOk(ok);
+      await generarPDF(orden);
+      setStep("success");
+      onSuccess();
+    } catch (err) {
+      console.error("[Checkout] Error:", err.response?.data ?? err.message);
+      setErrorCheckout(
+        typeof err.response?.data === "string"
+          ? err.response.data
+          : "No se pudo registrar la venta. Verifica stock e intenta de nuevo.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -224,6 +266,53 @@ function ModalPago({ total, delivery, subtotal, items, onClose, onSuccess }) {
         {/* STEP: formulario */}
         {step === "form" && (
           <div className="modal-pago-body">
+
+            <div className="pago-fields mb-3">
+              <label className="fw-bold d-block mb-2">Tipo de entrega</label>
+              <select
+                className="form-select"
+                value={tipoEntrega}
+                onChange={(e) => setTipoEntrega(e.target.value)}
+              >
+                <option value="FAST_LANE">Fast Lane (recojo en tienda)</option>
+                <option value="DELIVERY">Delivery</option>
+              </select>
+            </div>
+
+            {tipoEntrega === "DELIVERY" && (
+              <div className="pago-fields mb-3">
+                <div className="pago-field">
+                  <label>Dirección de entrega</label>
+                  <input
+                    type="text"
+                    value={form.direccionEntrega}
+                    onChange={set("direccionEntrega")}
+                  />
+                </div>
+                <div className="pago-field">
+                  <label>Distrito</label>
+                  <input type="text" value={form.distrito} onChange={set("distrito")} />
+                </div>
+                <div className="pago-field">
+                  <label>Referencia</label>
+                  <input type="text" value={form.referencia} onChange={set("referencia")} />
+                </div>
+              </div>
+            )}
+
+            <div className="pago-fields mb-3">
+              <label className="fw-bold d-block mb-2">Método de pago</label>
+              <select
+                className="form-select"
+                value={metodoPago}
+                onChange={(e) => setMetodoPago(e.target.value)}
+              >
+                <option value="YAPE">Yape</option>
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+                <option value="TARJETA">Tarjeta</option>
+              </select>
+            </div>
 
             {/* Selector boleta / factura */}
             <div className="tipo-selector mb-4">
@@ -326,10 +415,14 @@ function ModalPago({ total, delivery, subtotal, items, onClose, onSuccess }) {
               <span className="modal-total-amount">S/ {total.toFixed(2)}</span>
             </div>
 
+            {errorCheckout && (
+              <div className="alert alert-danger py-2 small">{errorCheckout}</div>
+            )}
+
             <button
               className="btn-modal-confirmar"
               onClick={() => setStep("confirm")}
-              disabled={!valido}
+              disabled={!valido || !entregaValida}
             >
               Revisar pedido
             </button>
@@ -415,8 +508,13 @@ function ModalPago({ total, delivery, subtotal, items, onClose, onSuccess }) {
             </div>
             <h5 className="success-title">Compra realizada</h5>
             <p className="success-msg">
-              Tu {tipo} se ha generado y descargado automaticamente.
+              Pedido registrado correctamente. Tu comprobante se ha descargado.
             </p>
+            {ventaCreada?.codigoRecojo && (
+              <p className="success-msg fw-bold">
+                Código de recojo: {ventaCreada.codigoRecojo}
+              </p>
+            )}
             {emailOk === true  && <p className="success-email ok"><i className="bi bi-envelope-check me-1"></i>Confirmacion enviada a {form.email}</p>}
             {emailOk === false && <p className="success-email fail"><i className="bi bi-envelope-x me-1"></i>No se pudo enviar el email. Revisa tu backend.</p>}
             <button className="btn-modal-confirmar" onClick={onClose}>
@@ -433,6 +531,7 @@ function ModalPago({ total, delivery, subtotal, items, onClose, onSuccess }) {
 // ─── CartPage (ORIGINAL INTACTO) ─────────────────────────────────────────────
 export default function CartPage() {
   const { items, removeFromCart, setQty, clearCart, totalItems, totalPrice } = useCart();
+  const { invalidate: invalidateCatalog } = useProductCatalog();
   const navigate = useNavigate();
 
   const [zoom,       setZoom]       = useState(null);
@@ -456,6 +555,7 @@ export default function CartPage() {
 
   const handlePagoSuccess = () => {
     clearCart();
+    invalidateCatalog();
   };
 
   return (

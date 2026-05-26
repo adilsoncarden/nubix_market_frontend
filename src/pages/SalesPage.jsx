@@ -4,6 +4,7 @@ import { useSales } from "../features/sales/hooks/useSales";
 import { saleService } from "../features/sales/services/saleService";
 import VentaForm from "../features/sales/components/VentaForm";
 import Swal from "sweetalert2";
+import { useProductCatalog } from "../store/ProductCatalogContext";
 
 const SalesPage = () => {
     const {
@@ -13,6 +14,7 @@ const SalesPage = () => {
         handleRegisterCredit,
         loading,
     } = useSales();
+    const { invalidate: invalidateCatalog } = useProductCatalog();
     const [selectedSale, setSelectedSale] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -88,6 +90,7 @@ const SalesPage = () => {
         try {
             const newSale = await saleService.create(formData);
             setSales((prev) => [newSale, ...prev]);
+            invalidateCatalog();
             bsModal.current.hide();
 
             Toast.fire({
@@ -108,10 +111,10 @@ const SalesPage = () => {
     const getEstadoPedidoColor = (estado) => {
         const colors = {
             PENDIENTE: "badge bg-warning text-dark",
-            CONFIRMADO: "badge bg-info",
-            ENVIADO: "badge bg-primary",
+            EN_PROCESO: "badge bg-info",
+            LISTO_PARA_RECOJO: "badge bg-primary",
+            EN_CAMINO: "badge bg-primary",
             ENTREGADO: "badge bg-success",
-            CANCELADO: "badge bg-danger",
         };
         return colors[estado] || "badge bg-secondary";
     };
@@ -119,7 +122,9 @@ const SalesPage = () => {
     const getEstadoPagoColor = (estado) => {
         const colors = {
             PAGADO: "badge bg-success",
+            APROBADO: "badge bg-success",
             PENDIENTE: "badge bg-warning text-dark",
+            RECHAZADO: "badge bg-danger",
         };
         return colors[estado] || "badge bg-secondary";
     };
@@ -294,7 +299,11 @@ const SalesPage = () => {
                                             <td className="fw-bold">
                                                 #{sale.id}
                                             </td>
-                                            <td>{sale.cliente?.username}</td>
+                                            <td>
+                                                {sale.cliente?.username ||
+                                                    sale.nombreComprobante ||
+                                                    "Consumidor final"}
+                                            </td>
                                             <td>{sale.vendedor?.username}</td>
                                             <td>
                                                 {new Date(
@@ -331,8 +340,11 @@ const SalesPage = () => {
                                                 <small>
                                                     {sale.tipoEntrega}
                                                 </small>
-                                                {sale.tipoEntrega ===
-                                                    "RECOJO" && (
+                                                {(sale.tipoEntrega ===
+                                                    "FAST_LANE" ||
+                                                    sale.tipoEntrega ===
+                                                        "PRESENCIAL") &&
+                                                    sale.codigoRecojo && (
                                                     <div className="text-muted small">
                                                         Código:{" "}
                                                         {sale.codigoRecojo}
@@ -385,8 +397,10 @@ const SalesPage = () => {
                                                         <i className="bi bi-eye"></i>
                                                     </button>
 
-                                                    {sale.estadoPago ===
-                                                        "PENDIENTE" &&
+                                                    {(sale.estadoPago ===
+                                                        "PENDIENTE" ||
+                                                        sale.estadoPago ===
+                                                            "RECHAZADO") &&
                                                         sale.metodoPago ===
                                                             "CREDITO" && (
                                                             <button
@@ -446,17 +460,17 @@ const SalesPage = () => {
                                                         <option value="PENDIENTE">
                                                             PENDIENTE
                                                         </option>
-                                                        <option value="CONFIRMADO">
-                                                            CONFIRMADO
+                                                        <option value="EN_PROCESO">
+                                                            EN PROCESO
                                                         </option>
-                                                        <option value="ENVIADO">
-                                                            ENVIADO
+                                                        <option value="LISTO_PARA_RECOJO">
+                                                            LISTO PARA RECOJO
+                                                        </option>
+                                                        <option value="EN_CAMINO">
+                                                            EN CAMINO
                                                         </option>
                                                         <option value="ENTREGADO">
                                                             ENTREGADO
-                                                        </option>
-                                                        <option value="CANCELADO">
-                                                            CANCELADO
                                                         </option>
                                                     </select>
                                                 </div>
