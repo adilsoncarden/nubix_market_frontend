@@ -4,11 +4,14 @@ import {
     Route,
     Navigate,
     Outlet,
+    useLocation,
 } from "react-router-dom";
 
 import { AuthProvider } from "./store/AuthContext";
 import { CartProvider } from "./store/CartContext";
+import { FavoritesProvider } from "./store/FavoritesContext";
 import { ProductCatalogProvider } from "./store/ProductCatalogContext";
+import { setRedirectUrl } from "./utils/authUtils";
 
 import "./App.css";
 
@@ -18,6 +21,7 @@ import Footer from "./components/Footer";
 import MainContent from "./components/MainContent";
 import AdminLayout from "./components/AdminLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useAuth } from "./store/AuthContext";
 
 // ───────────────── PÁGINAS PÚBLICAS ─────────────────
 import Login from "./pages/Login";
@@ -25,6 +29,7 @@ import Register from "./pages/Register";
 import ShopPage from "./pages/ShopPage";
 import CartPage from "./pages/CartPage";
 import ProductDetail from "./pages/ProductDetail";
+import FavoritesPage from "./pages/FavoritesPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ResetPasswordManual from "./pages/ResetPasswordManual";
@@ -51,6 +56,18 @@ const PublicLayout = () => (
     </div>
 );
 
+const WebProtectedRoute = () => {
+    const { token } = useAuth();
+    const location = useLocation();
+
+    // ✅ Si no está autenticado, guardar URL destino y redirigir a login
+    if (!token) {
+        setRedirectUrl(location.pathname + location.search);
+        return <Navigate to="/login" replace />;
+    }
+    return <Outlet />;
+};
+
 // ───────────────── DASHBOARD ADMIN ─────────────────
 const AdminDashboard = () => (
     <div className="container-fluid p-4">
@@ -71,88 +88,111 @@ export default function App() {
             <AuthProvider>
                 <ProductCatalogProvider>
                     <CartProvider>
-                    <Routes>
-                        {/* ───────────── WEB PÚBLICA ───────────── */}
-                        <Route element={<PublicLayout />}>
-                            {/* HOME */}
-                            <Route index element={<MainContent />} />
+                        <FavoritesProvider>
+                            <Routes>
+                            {/* ───────────── WEB PÚBLICA ───────────── */}
+                            <Route element={<PublicLayout />}>
+                                {/* HOME */}
+                                <Route index element={<MainContent />} />
 
-                            {/* TIENDA */}
-                            <Route path="/producto/:id" element={<ProductDetail />} />
-                            <Route path="/shop" element={<ShopPage />} />
-                            <Route path="/cart" element={<CartPage />} />
-
-                            {/* AUTH */}
-                            <Route path="/login" element={<Login />} />
-                            <Route path="/register" element={<Register />} />
-
-                            {/* RECUPERAR CONTRASEÑA */}
-                            <Route
-                                path="/forgot-password"
-                                element={<ForgotPassword />}
-                            />
-
-                            <Route
-                                path="/reset-password/manual"
-                                element={<ResetPasswordManual />}
-                            />
-
-                            <Route
-                                path="/reset-password/:token"
-                                element={<ResetPassword />}
-                            />
-                        </Route>
-
-                        {/* ───────────── LOGIN ADMIN ───────────── */}
-                        <Route path="/admin-login" element={<AdminLogin />} />
-
-                        {/* ───────────── RUTAS PROTEGIDAS ADMIN ───────────── */}
-                        <Route
-                            element={
-                                <ProtectedRoute allowedRoles={["ADMIN"]} />
-                            }
-                        >
-                            <Route element={<AdminLayout />}>
+                                {/* TIENDA */}
                                 <Route
-                                    path="/admin/dashboard"
-                                    element={<AdminDashboard />}
+                                    path="/producto/:id"
+                                    element={<ProductDetail />}
+                                />
+                                <Route path="/shop" element={<ShopPage />} />
+                                <Route element={<WebProtectedRoute />}>
+                                    <Route
+                                        path="/cart"
+                                        element={<CartPage />}
+                                    />
+                                    <Route
+                                        path="/favorites"
+                                        element={<FavoritesPage />}
+                                    />
+                                </Route>
+
+                                {/* AUTH */}
+                                <Route path="/login" element={<Login />} />
+                                <Route
+                                    path="/register"
+                                    element={<Register />}
+                                />
+
+                                {/* RECUPERAR CONTRASEÑA */}
+                                <Route
+                                    path="/forgot-password"
+                                    element={<ForgotPassword />}
                                 />
 
                                 <Route
-                                    path="/admin/categorias"
-                                    element={<CategoriesPage />}
+                                    path="/reset-password/manual"
+                                    element={<ResetPasswordManual />}
                                 />
 
                                 <Route
-                                    path="/admin/productos"
-                                    element={<ProductsPage />}
-                                />
-
-                                <Route
-                                    path="/admin/usuarios/clientes"
-                                    element={<ClientsPage />}
-                                />
-
-                                <Route
-                                    path="/admin/usuarios/empleados"
-                                    element={<EmployeesPage />}
-                                />
-
-                                <Route
-                                    path="/admin/proveedores"
-                                    element={<SuppliersPage />}
-                                />
-
-                                <Route
-                                    path="/admin/ventas"
-                                    element={<SalesPage />}
+                                    path="/reset-password/:token"
+                                    element={<ResetPassword />}
                                 />
                             </Route>
-                        </Route>
 
-                        {/* ───────────── FALLBACK ───────────── */}
-                        <Route path="*" element={<Navigate to="/" replace />} />
-                    </Routes>
+                            {/* ───────────── LOGIN ADMIN ───────────── */}
+                            <Route
+                                path="/admin-login"
+                                element={<AdminLogin />}
+                            />
+
+                            {/* ───────────── RUTAS PROTEGIDAS ADMIN ───────────── */}
+                            <Route
+                                element={
+                                    <ProtectedRoute allowedRoles={["ADMIN"]} />
+                                }
+                            >
+                                <Route element={<AdminLayout />}>
+                                    <Route
+                                        path="/admin/dashboard"
+                                        element={<AdminDashboard />}
+                                    />
+
+                                    <Route
+                                        path="/admin/categorias"
+                                        element={<CategoriesPage />}
+                                    />
+
+                                    <Route
+                                        path="/admin/productos"
+                                        element={<ProductsPage />}
+                                    />
+
+                                    <Route
+                                        path="/admin/usuarios/clientes"
+                                        element={<ClientsPage />}
+                                    />
+
+                                    <Route
+                                        path="/admin/usuarios/empleados"
+                                        element={<EmployeesPage />}
+                                    />
+
+                                    <Route
+                                        path="/admin/proveedores"
+                                        element={<SuppliersPage />}
+                                    />
+
+                                    <Route
+                                        path="/admin/ventas"
+                                        element={<SalesPage />}
+                                    />
+                                </Route>
+                            </Route>
+
+                            {/* ───────────── FALLBACK ───────────── */}
+                            <Route
+                                path="*"
+                                element={<Navigate to="/" replace />}
+                            />
+                            </Routes>
+                        </FavoritesProvider>
                     </CartProvider>
                 </ProductCatalogProvider>
             </AuthProvider>

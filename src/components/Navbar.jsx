@@ -1,60 +1,60 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
+import { useAuth } from "../store/AuthContext";
+import { clearRedirectUrl } from "../utils/authUtils";
 import logoImage from "../assets/logo.png";
 import { CATEGORIAS_DATA } from "./MainContent";
 
 export default function Navbar() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { totalItems } = useCart();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { totalItems } = useCart();
+    const { token, user, logout } = useAuth();
 
-  const dropdownRef = useRef(null);
-  const userMenuRef = useRef(null);
+    const dropdownRef = useRef(null);
+    const userMenuRef = useRef(null);
 
-  const [username, setUsername] = useState(() => localStorage.getItem("username") || "");
-  const [scrolled, setScrolled] = useState(false);
-  const [catOpen, setCatOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+    const [scrolled, setScrolled] = useState(false);
+    const [catOpen, setCatOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [searchValue, setSearchValue] = useState("");
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 10);
-    const handleClickOutside = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setCatOpen(false);
+    useEffect(() => {
+        const handleScroll = () => setScrolled(window.scrollY > 10);
+        const handleClickOutside = (e) => {
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target))
+                setUserMenuOpen(false);
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+                setCatOpen(false);
+        };
+        window.addEventListener("scroll", handleScroll);
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
+
+    const handleLogout = () => {
+        clearRedirectUrl();
+        logout();
+        setUserMenuOpen(false);
+        navigate("/");
     };
-    window.addEventListener("scroll", handleScroll);
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("mousedown", handleClickOutside);
+
+    const iconMap = {
+        Gaseosas: "bi-cup-straw",
+        Frutas: "bi-apple",
+        Lácteos: "bi-droplet-half",
+        Snacks: "bi-bag-heart",
+        Abarrotes: "bi-box-seam",
+        Bebidas: "bi-cup-hot",
     };
-  }, []);
 
-  useEffect(() => { setUsername(localStorage.getItem("username") || ""); }, [location]);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    setUsername("");
-    setUserMenuOpen(false);
-    navigate("/");
-    window.location.reload();
-  };
-
-  const iconMap = {
-    "Gaseosas": "bi-cup-straw",
-    "Frutas": "bi-apple",
-    "Lácteos": "bi-droplet-half",
-    "Snacks": "bi-bag-heart",
-    "Abarrotes": "bi-box-seam",
-    "Bebidas": "bi-cup-hot"
-  };
-
-  return (
-    <>
-      <style>{`
+    return (
+        <>
+            <style>{`
         :root { --nubix-green: #006634; --text-dark: #1e293b; }
         .navbar-nubix { background-color: #ffffff !important; transition: all 0.3s ease; }
         .btn-categorias-clean { border: 1px solid transparent; padding: 6px 14px; border-radius: 10px; cursor: pointer; color: var(--text-dark); font-size: 0.85rem; font-weight: 500; transition: 0.2s; }
@@ -70,67 +70,176 @@ export default function Navbar() {
         .btn-logout-mini:hover { background: #fee2e2; }
       `}</style>
 
-      <nav className={`fixed-top w-100 navbar-nubix ${scrolled ? "shadow-sm" : "border-bottom"}`} style={{ zIndex: 1100 }}>
-        <div className="container py-2">
-          <div className="d-flex align-items-center justify-content-between">
-            <Link to="/"><img src={logoImage} alt="Logo" style={{ height: '36px' }} /></Link>
+            <nav
+                className={`fixed-top w-100 navbar-nubix ${scrolled ? "shadow-sm" : "border-bottom"}`}
+                style={{ zIndex: 1100 }}
+            >
+                <div className="container py-2">
+                    <div className="d-flex align-items-center justify-content-between">
+                        <Link to="/">
+                            <img
+                                src={logoImage}
+                                alt="Logo"
+                                style={{ height: "36px" }}
+                            />
+                        </Link>
 
-            <div className="d-none d-lg-block position-relative" ref={dropdownRef}>
-              <div className="btn-categorias-clean ms-3" onClick={() => setCatOpen(!catOpen)}>
-                <i className="bi bi-grid-3x3-gap-fill me-2" style={{ color: 'var(--nubix-green)' }}></i>CATEGORÍAS
-              </div>
-              {catOpen && (
-                <div className="position-absolute dropdown-menu-wow bg-white mt-2 p-2" style={{ minWidth: '220px' }}>
-                  {CATEGORIAS_DATA.map((cat, i) => (
-                    <Link key={i} to={`/shop?category=${cat.nombre}`} className="dropdown-item dropdown-item-custom" onClick={() => setCatOpen(false)}>
-                      <i className={`bi ${iconMap[cat.nombre] || 'bi-tag'}`}></i>{cat.nombre}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
+                        <div
+                            className="d-none d-lg-block position-relative"
+                            ref={dropdownRef}
+                        >
+                            <div
+                                className="btn-categorias-clean ms-3"
+                                onClick={() => setCatOpen(!catOpen)}
+                            >
+                                <i
+                                    className="bi bi-grid-3x3-gap-fill me-2"
+                                    style={{ color: "var(--nubix-green)" }}
+                                ></i>
+                                CATEGORÍAS
+                            </div>
+                            {catOpen && (
+                                <div
+                                    className="position-absolute dropdown-menu-wow bg-white mt-2 p-2"
+                                    style={{ minWidth: "220px" }}
+                                >
+                                    {CATEGORIAS_DATA.map((cat, i) => (
+                                        <Link
+                                            key={i}
+                                            to={`/shop?category=${cat.nombre}`}
+                                            className="dropdown-item dropdown-item-custom"
+                                            onClick={() => setCatOpen(false)}
+                                        >
+                                            <i
+                                                className={`bi ${iconMap[cat.nombre] || "bi-tag"}`}
+                                            ></i>
+                                            {cat.nombre}
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
-            <form className="flex-grow-1 mx-4 d-none d-md-block" style={{ maxWidth: '380px' }}>
-              <input type="text" className="form-control rounded-pill ps-4" placeholder="¿Qué buscas hoy?" value={searchValue} onChange={(e) => setSearchValue(e.target.value)} />
-            </form>
+                        <form
+                            className="flex-grow-1 mx-4 d-none d-md-block"
+                            style={{ maxWidth: "380px" }}
+                        >
+                            <input
+                                type="text"
+                                className="form-control rounded-pill ps-4"
+                                placeholder="¿Qué buscas hoy?"
+                                value={searchValue}
+                                onChange={(e) => setSearchValue(e.target.value)}
+                            />
+                        </form>
 
-            <div className="d-flex align-items-center gap-2">
-              {username ? (
-                <div className="position-relative" ref={userMenuRef}>
-                  <button className="btn d-flex align-items-center gap-2 border-0" onClick={() => setUserMenuOpen(!userMenuOpen)}>
-                    <div className="action-icon-btn"><i className="bi bi-person"></i></div>
-                    <div className="text-start d-none d-sm-block" style={{ lineHeight: '1.1' }}>
-                      <div style={{ fontSize: '0.6rem', color: '#64748b' }}>HOLA,</div>
-                      <div className="fw-bold" style={{ fontSize: '0.78rem', color: 'black' }}>{username.toUpperCase()}</div>
+                        <div className="d-flex align-items-center gap-2">
+                            {token ? (
+                                <div
+                                    className="position-relative"
+                                    ref={userMenuRef}
+                                >
+                                    <button
+                                        className="btn d-flex align-items-center gap-2 border-0"
+                                        onClick={() =>
+                                            setUserMenuOpen(!userMenuOpen)
+                                        }
+                                    >
+                                        <div className="action-icon-btn">
+                                            <i className="bi bi-person"></i>
+                                        </div>
+                                        <div
+                                            className="text-start d-none d-sm-block"
+                                            style={{ lineHeight: "1.1" }}
+                                        >
+                                            <div
+                                                style={{
+                                                    fontSize: "0.6rem",
+                                                    color: "#64748b",
+                                                }}
+                                            >
+                                                HOLA,
+                                            </div>
+                                            <div
+                                                className="fw-bold"
+                                                style={{
+                                                    fontSize: "0.78rem",
+                                                    color: "black",
+                                                }}
+                                            >
+                                                {user?.username?.toUpperCase() ||
+                                                    "USUARIO"}
+                                            </div>
+                                        </div>
+                                    </button>
+                                    {userMenuOpen && (
+                                        <div
+                                            className="position-absolute end-0 dropdown-menu-wow bg-white mt-2 p-2"
+                                            style={{ minWidth: "150px" }}
+                                        >
+                                            {user?.rol === "ADMIN" && (
+                                                <Link
+                                                    className="dropdown-item mb-2"
+                                                    to="/admin/dashboard"
+                                                >
+                                                    Panel Admin
+                                                </Link>
+                                            )}
+                                            <button
+                                                className="btn-logout-mini w-100"
+                                                onClick={handleLogout}
+                                            >
+                                                <i className="bi bi-box-arrow-left"></i>
+                                                Cerrar Sesión
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                <Link
+                                    to="/login"
+                                    className="text-decoration-none d-flex align-items-center gap-2"
+                                >
+                                    <div className="action-icon-btn">
+                                        <i className="bi bi-person"></i>
+                                    </div>
+                                    <div
+                                        className="fw-bold d-none d-sm-block"
+                                        style={{
+                                            fontSize: "0.78rem",
+                                            color: "black",
+                                        }}
+                                    >
+                                        INICIAR SESIÓN
+                                    </div>
+                                </Link>
+                            )}
+
+                            <Link
+                                to={token ? "/favorites" : "/login"}
+                                className="action-icon-btn text-decoration-none"
+                            >
+                                <i className="bi bi-heart"></i>
+                            </Link>
+                            <div className="action-icon-btn">
+                                <i className="bi bi-bell"></i>
+                            </div>
+                            <Link
+                                to={token ? "/cart" : "/login"}
+                                className="action-icon-btn text-decoration-none position-relative"
+                            >
+                                <i className="bi bi-cart3"></i>
+                                {totalItems > 0 && (
+                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle cart-badge-premium">
+                                        {totalItems}
+                                    </span>
+                                )}
+                            </Link>
+                        </div>
                     </div>
-                  </button>
-                  {userMenuOpen && (
-                    <div className="position-absolute end-0 dropdown-menu-wow bg-white mt-2 p-2" style={{ minWidth: '150px' }}>
-                      {localStorage.getItem("role") === "ADMIN" && <Link className="dropdown-item mb-2" to="/admin/dashboard">Panel Admin</Link>}
-                      <button className="btn-logout-mini w-100" onClick={handleLogout}>
-                        <i className="bi bi-box-arrow-left"></i>Cerrar Sesión
-                      </button>
-                    </div>
-                  )}
                 </div>
-              ) : (
-                <Link to="/login" className="text-decoration-none d-flex align-items-center gap-2">
-                  <div className="action-icon-btn"><i className="bi bi-person"></i></div>
-                  <div className="fw-bold d-none d-sm-block" style={{ fontSize: '0.78rem', color: 'black' }}>INICIAR SESIÓN</div>
-                </Link>
-              )}
-
-              <Link to="/favorites" className="action-icon-btn text-decoration-none"><i className="bi bi-heart"></i></Link>
-              <div className="action-icon-btn"><i className="bi bi-bell"></i></div>
-              <Link to="/cart" className="action-icon-btn text-decoration-none position-relative">
-                <i className="bi bi-cart3"></i>
-                {totalItems > 0 && <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle cart-badge-premium">{totalItems}</span>}
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
-      <div style={{ marginTop: '75px' }}></div>
-    </>
-  );
+            </nav>
+            <div style={{ marginTop: "75px" }}></div>
+        </>
+    );
 }

@@ -144,6 +144,10 @@ body {
 .btn-add-cart:hover { background: var(--green); color: var(--white); transform: scale(1.12); }
 .btn-add-cart.added { background: var(--green); color: var(--white); border-color: var(--green); transform: scale(1.15); }
 
+.btn-favorite { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid #e0e0e0; background: var(--white); color: #999; display: flex; align-items: center; justify-content: center; font-size: 1rem; padding: 0; transition: background var(--transition), color var(--transition), border-color var(--transition), transform var(--transition); flex-shrink: 0; z-index: 2; cursor: pointer; }
+.btn-favorite:hover { border-color: #ff6b9d; color: #ff6b9d; transform: scale(1.12); }
+.btn-favorite.favorited { background: #ff6b9d; color: var(--white); border-color: #ff6b9d; }
+
 /* ─── BANNER OFERTA ──────────────────────────────────────── */
 .offer-banner { position: relative; background: linear-gradient(135deg, #0d1b0f 0%, #1a3320 50%, #0d1b0f 100%); border-radius: var(--radius-card); padding: 3rem 3.5rem; overflow: hidden; color: var(--white); box-shadow: var(--shadow-lg); margin-bottom: 3rem; }
 .offer-deco { position: absolute; right: -2rem; top: 50%; transform: translateY(-50%); font-size: 18rem; line-height: 1; color: rgba(255,255,255,.04); pointer-events: none; }

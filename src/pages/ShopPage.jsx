@@ -1,7 +1,10 @@
 import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import { useCart } from "../store/CartContext";
+import { useFavorites } from "../store/FavoritesContext";
+import { useAuth } from "../store/AuthContext";
+import { setRedirectUrl } from "../utils/authUtils";
 
 const SORT_OPTIONS = [
     { value: "default", label: "Relevancia" },
@@ -12,7 +15,10 @@ const SORT_OPTIONS = [
 
 export default function ShopPage() {
     const [params, setParams] = useSearchParams();
+    const navigate = useNavigate();
     const { addToCart, items } = useCart();
+    const { toggleFavorite, isFavorite } = useFavorites();
+    const { token } = useAuth();
     const { products, categories, loading, error } = useShopProducts();
 
     const [search, setSearch] = useState("");
@@ -53,6 +59,19 @@ export default function ShopPage() {
         addToCart(product);
         setAdded(product.id);
         setTimeout(() => setAdded(null), 1200);
+    };
+
+    const handleToggleFavorite = (e, productoId) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!token) {
+            setRedirectUrl("/shop");
+            navigate("/login");
+            return;
+        }
+
+        toggleFavorite(productoId);
     };
 
     const inCart = (id) => items.find((i) => i.id === id)?.qty || 0;
@@ -172,6 +191,29 @@ export default function ShopPage() {
                                             {product.tag}
                                         </span>
                                     )}
+                                    <button
+                                        className={`btn-favorite${
+                                            isFavorite(product.id)
+                                                ? " favorited"
+                                                : ""
+                                        }`}
+                                        onClick={(e) =>
+                                            handleToggleFavorite(e, product.id)
+                                        }
+                                        title={
+                                            isFavorite(product.id)
+                                                ? "Remover de favoritos"
+                                                : "Agregar a favoritos"
+                                        }
+                                    >
+                                        <i
+                                            className={`bi ${
+                                                isFavorite(product.id)
+                                                    ? "bi-heart-fill"
+                                                    : "bi-heart"
+                                            }`}
+                                        ></i>
+                                    </button>
                                     {inCart(product.id) > 0 && (
                                         <span className="in-cart-badge">
                                             <i className="bi bi-cart-check"></i>{" "}

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { clientService } from "../../users/services/clientService";
-import { employeeService } from "../../users/services/employeeService";
 import { productService } from "../../products/services/productService";
+import { useAuth } from "../../../store/AuthContext";
 import Swal from "sweetalert2";
 
 const VentaForm = ({ onSave, loading }) => {
+    const { user } = useAuth();
+
     const [formData, setFormData] = useState({
         clienteId: "",
-        vendedorId: "",
         tipoComprobante: "TICKET",
         metodoPago: "EFECTIVO",
         tipoEntrega: "PRESENCIAL",
@@ -24,9 +25,9 @@ const VentaForm = ({ onSave, loading }) => {
     });
 
     const [clients, setClients] = useState([]);
-    const [employees, setEmployees] = useState([]);
     const [products, setProducts] = useState([]);
-    const [selectedProduct, setSelectedProduct] = useState("");
+    const [productQuery, setProductQuery] = useState("");
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedQuantity, setSelectedQuantity] = useState(1);
     const [loadingData, setLoadingData] = useState(false);
 
@@ -34,14 +35,11 @@ const VentaForm = ({ onSave, loading }) => {
         const loadData = async () => {
             setLoadingData(true);
             try {
-                const [clientsData, employeesData, productsData] =
-                    await Promise.all([
-                        clientService.getAll(),
-                        employeeService.getAll(),
-                        productService.getAll(),
-                    ]);
+                const [clientsData, productsData] = await Promise.all([
+                    clientService.getAll(),
+                    productService.getAll(),
+                ]);
                 setClients(clientsData);
-                setEmployees(employeesData);
                 setProducts(productsData);
             } catch (err) {
                 console.error("Error al cargar datos", err);
@@ -68,9 +66,7 @@ const VentaForm = ({ onSave, loading }) => {
             return;
         }
 
-        const product = products.find(
-            (p) => p.id === parseInt(selectedProduct),
-        );
+        const product = selectedProduct;
         if (!product) {
             Swal.fire("Error", "Producto no encontrado", "error");
             return;
@@ -87,7 +83,7 @@ const VentaForm = ({ onSave, loading }) => {
 
         // Verificar si el producto ya existe en detalles
         const existingDetail = formData.detalles.find(
-            (d) => d.productoId === parseInt(selectedProduct),
+            (d) => d.productoId === product.id,
         );
 
         if (existingDetail) {
@@ -96,7 +92,7 @@ const VentaForm = ({ onSave, loading }) => {
         }
 
         const newDetail = {
-            productoId: parseInt(selectedProduct),
+            productoId: product.id,
             productName: product.nombre,
             precio: product.precioVenta,
             cantidad: parseInt(selectedQuantity),
@@ -108,7 +104,8 @@ const VentaForm = ({ onSave, loading }) => {
             detalles: [...prev.detalles, newDetail],
         }));
 
-        setSelectedProduct("");
+        setSelectedProduct(null);
+        setProductQuery("");
         setSelectedQuantity(1);
     };
 
@@ -128,11 +125,6 @@ const VentaForm = ({ onSave, loading }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        if (!formData.vendedorId) {
-            Swal.fire("Validación", "Selecciona el vendedor", "warning");
-            return;
-        }
 
         if (
             formData.tipoComprobante === "BOLETA" &&
@@ -187,18 +179,8 @@ const VentaForm = ({ onSave, loading }) => {
             clienteId: formData.clienteId
                 ? parseInt(formData.clienteId)
                 : null,
-            vendedorId: parseInt(formData.vendedorId),
             tipoComprobante: formData.tipoComprobante,
             metodoPago: formData.metodoPago,
-            tipoEntrega: formData.tipoEntrega,
-            direccionEntrega:
-                formData.tipoEntrega === "DELIVERY"
-                    ? formData.direccionEntrega
-                    : null,
-            distrito:
-                formData.tipoEntrega === "DELIVERY" ? formData.distrito : null,
-            referencia:
-                formData.tipoEntrega === "DELIVERY" ? formData.referencia : null,
             nombreComprobante: formData.nombreComprobante || null,
             dni: formData.dni || null,
             ruc: formData.ruc || null,
@@ -215,9 +197,22 @@ const VentaForm = ({ onSave, loading }) => {
     };
 
     const total = calculateTotal();
-    const selectedProductData = products.find(
-        (p) => p.id === parseInt(selectedProduct),
-    );
+    const selectedProductData = selectedProduct;
+
+    const normalizedQuery = productQuery.trim().toLowerCase();
+    const filteredProducts =
+        normalizedQuery.length < 2
+            ? []
+            : products
+                  .filter((p) => {
+                      const nombre = String(p.nombre ?? "").toLowerCase();
+                      const codigo = String(p.codigo ?? "").toLowerCase();
+                      return (
+                          nombre.includes(normalizedQuery) ||
+                          codigo.includes(normalizedQuery)
+                      );
+                  })
+                  .slice(0, 8);
 
     return (
         <form onSubmit={handleSubmit} id="ventaForm">
@@ -263,21 +258,12 @@ const VentaForm = ({ onSave, loading }) => {
                 {/* Vendedor */}
                 <div className="col-md-6">
                     <label className="form-label fw-bold">Vendedor</label>
-                    <select
-                        name="vendedorId"
-                        className="form-select"
-                        value={formData.vendedorId}
-                        onChange={handleChange}
-                        required
-                        disabled={loadingData}
-                    >
-                        <option value="">Seleccionar...</option>
-                        {employees.map((employee) => (
-                            <option key={employee.id} value={employee.id}>
-                                {employee.username}
-                            </option>
-                        ))}
-                    </select>
+                    <input
+                        type="text"
+                        className="form-control"
+                        value={user?.username || "Cajero actual"}
+                        disabled
+                    />
                 </div>
 
                 {/* Método de Pago */}
@@ -298,22 +284,17 @@ const VentaForm = ({ onSave, loading }) => {
                     </select>
                 </div>
 
-                {/* Tipo de Entrega */}
+                {/* Tipo de Entrega (fijo presencial para cajero) */}
                 <div className="col-md-6">
                     <label className="form-label fw-bold">
                         Tipo de Entrega
                     </label>
-                    <select
-                        name="tipoEntrega"
-                        className="form-select"
-                        value={formData.tipoEntrega}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="PRESENCIAL">Recojo Presencial</option>
-                        <option value="DELIVERY">Delivery</option>
-                        <option value="FAST_LANE">Fast Lane</option>
-                    </select>
+                    <input
+                        type="text"
+                        className="form-control"
+                        value="Recojo Presencial"
+                        disabled
+                    />
                 </div>
 
                 {formData.tipoComprobante === "BOLETA" && (
@@ -402,45 +383,7 @@ const VentaForm = ({ onSave, loading }) => {
                     </>
                 )}
 
-                {/* Dirección de Entrega (solo si es DELIVERY) */}
-                {formData.tipoEntrega === "DELIVERY" && (
-                    <>
-                    <div className="col-md-12">
-                        <label className="form-label fw-bold">
-                            Dirección de Entrega
-                        </label>
-                        <input
-                            type="text"
-                            name="direccionEntrega"
-                            className="form-control"
-                            placeholder="Ingresa la dirección de entrega"
-                            value={formData.direccionEntrega}
-                            onChange={handleChange}
-                            required={formData.tipoEntrega === "DELIVERY"}
-                        />
-                    </div>
-                    <div className="col-md-6">
-                        <label className="form-label fw-bold">Distrito</label>
-                        <input
-                            type="text"
-                            name="distrito"
-                            className="form-control"
-                            value={formData.distrito}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    <div className="col-md-6">
-                        <label className="form-label fw-bold">Referencia</label>
-                        <input
-                            type="text"
-                            name="referencia"
-                            className="form-control"
-                            value={formData.referencia}
-                            onChange={handleChange}
-                        />
-                    </div>
-                    </>
-                )}
+                {/* Dirección de Entrega: no aplica para cajero presencial */}
 
                 {/* Separador */}
                 <div className="col-12">
@@ -450,19 +393,53 @@ const VentaForm = ({ onSave, loading }) => {
                 {/* Agregar Productos */}
                 <div className="col-md-6">
                     <label className="form-label fw-bold">Producto</label>
-                    <select
-                        className="form-select"
-                        value={selectedProduct}
-                        onChange={(e) => setSelectedProduct(e.target.value)}
-                        disabled={loadingData}
-                    >
-                        <option value="">Seleccionar...</option>
-                        {products.map((product) => (
-                            <option key={product.id} value={product.id}>
-                                {product.nombre} (Stock: {product.stock})
-                            </option>
-                        ))}
-                    </select>
+                    <div className="position-relative">
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={productQuery}
+                            onChange={(e) => {
+                                setProductQuery(e.target.value);
+                                setSelectedProduct(null);
+                            }}
+                            placeholder="Buscar por nombre o código (mín. 2 caracteres)"
+                            disabled={loadingData}
+                            autoComplete="off"
+                        />
+
+                        {filteredProducts.length > 0 && !selectedProduct && (
+                            <div
+                                className="list-group position-absolute w-100"
+                                style={{ zIndex: 20, maxHeight: 240, overflowY: "auto" }}
+                            >
+                                {filteredProducts.map((p) => (
+                                    <button
+                                        key={p.id}
+                                        type="button"
+                                        className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                        onClick={() => {
+                                            setSelectedProduct(p);
+                                            setProductQuery(
+                                                `${p.codigo ? `${p.codigo} - ` : ""}${p.nombre}`,
+                                            );
+                                        }}
+                                    >
+                                        <span className="me-2">
+                                            {p.codigo ? (
+                                                <span className="badge bg-secondary me-2">
+                                                    {p.codigo}
+                                                </span>
+                                            ) : null}
+                                            {p.nombre}
+                                        </span>
+                                        <span className="text-muted">
+                                            Stock: {p.stock}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="col-md-3">
@@ -478,6 +455,7 @@ const VentaForm = ({ onSave, loading }) => {
                         }
                         min="1"
                         max={selectedProductData?.stock || 1}
+                        disabled={!selectedProductData}
                     />
                 </div>
 

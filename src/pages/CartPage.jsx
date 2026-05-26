@@ -9,7 +9,7 @@ const generarPDF = async (orden) => {
   const { default: jsPDF } = await import("jspdf");
   const doc = new jsPDF();
 
-  const { tipo, numero, fecha, cliente, items, subtotal, delivery, total } = orden;
+  const { tipo, numero, fecha, cliente, items, subtotal, delivery, total, codigoRecojo } = orden;
 
   // COLORES DEL DISEÑO
   const VERDE_NUBIX = [34, 153, 84]; 
@@ -59,8 +59,17 @@ const generarPDF = async (orden) => {
   doc.setFont("helvetica", "bold");
   doc.text(numero, 195, 99, { align: "right" });
 
+  if (codigoRecojo) {
+    doc.setTextColor(...NEGRO_TEXTO);
+    doc.setFont("helvetica", "normal");
+    doc.text("CÓDIGO DE RECOJO:", 15, 107);
+    doc.setTextColor(...VERDE_NUBIX);
+    doc.setFont("helvetica", "bold");
+    doc.text(String(codigoRecojo), 195, 107, { align: "right" });
+  }
+
   // --- TABLA DE ARTÍCULOS ---
-  const tableY = 115;
+  const tableY = codigoRecojo ? 123 : 115;
   doc.setDrawColor(0);
   doc.setLineWidth(0.5);
   doc.line(15, tableY, 195, tableY); // Línea superior
@@ -153,7 +162,13 @@ const enviarEmailConfirmacion = async (orden) => {
     const res = await fetch(API_EMAIL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(orden),
+      body: JSON.stringify({
+        email: orden?.cliente?.email,
+        numero: orden?.numero,
+        tipo: orden?.tipo,
+        codigoRecojo: orden?.codigoRecojo,
+        total: orden?.total,
+      }),
     });
     return res.ok;
   } catch {
