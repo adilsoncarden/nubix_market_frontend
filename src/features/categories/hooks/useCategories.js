@@ -9,9 +9,15 @@ export const useCategories = () => {
     const fetchCategories = async () => {
         try {
             const data = await categoryService.getAll();
+            console.log("[Admin] Categorías cargadas:", data.length);
             setCategories(data);
         } catch (err) {
-            console.error("Error al cargar categorías", err);
+            console.error(
+                "[Admin] Error al cargar categorías:",
+                err.response?.status,
+                err.response?.data ?? err.message,
+            );
+            setCategories([]);
         }
     };
 

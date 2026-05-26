@@ -1,9 +1,10 @@
 import api from "../../../config/axios";
+import { unwrapApiList } from "../../../config/apiUtils";
 
 export const categoryService = {
     getAll: async () => {
         const response = await api.get("/admin/categorias");
-        return response.data;
+        return unwrapApiList(response.data);
     },
     create: async (categoryData) => {
         const response = await api.post(

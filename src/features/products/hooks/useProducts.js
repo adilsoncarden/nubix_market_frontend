@@ -1,19 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { productService } from "../services/productService";
+import { useProductCatalog } from "../../../store/ProductCatalogContext";
 import Swal from "sweetalert2";
 
 export const useProducts = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
+    const { invalidate: invalidateCatalog } = useProductCatalog();
 
-    const fetchProducts = async () => {
+    const fetchProducts = useCallback(async () => {
         try {
-            const data = await productService.getAll();
+            const data = await productService.getAll({ bustCache: true });
+            console.log("[Admin] Productos cargados:", data.length);
             setProducts(data);
         } catch (err) {
-            console.error("Error al cargar productos", err);
+            console.error(
+                "[Admin] Error al cargar productos:",
+                err.response?.status,
+                err.response?.data ?? err.message,
+            );
+            setProducts([]);
         }
-    };
+    }, []);
 
     const handleDelete = async (id) => {
       
@@ -24,6 +32,7 @@ export const useProducts = () => {
 
             try {
                 await productService.delete(id);
+                invalidateCatalog();
 
                 Swal.fire({
                     icon: "success",
@@ -45,7 +54,14 @@ export const useProducts = () => {
     useEffect(() => {
         setLoading(true);
         fetchProducts().finally(() => setLoading(false));
-    }, []);
+    }, [fetchProducts]);
 
-    return { products, loading, setProducts, fetchProducts, handleDelete };
+    return {
+        products,
+        loading,
+        setProducts,
+        fetchProducts,
+        handleDelete,
+        invalidateCatalog,
+    };
 };
