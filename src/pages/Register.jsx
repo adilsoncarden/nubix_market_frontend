@@ -128,15 +128,6 @@ const Register = () => {
                                         <input type="email" name="email" className="form-control border-0 py-2.5" placeholder="nombre@ejemplo.com" style={{ borderRadius: "16px", backgroundColor: "#F1F3F5", paddingLeft: "45px", height: "50px" }} value={formData.email} onChange={handleChange} required />
                                     </div>
                                 </div>
-
-                                <div className="mb-3">
-                                    <label className="form-label fw-medium text-dark ms-1 mb-1" style={{ fontSize: "0.9rem" }}>Número de teléfono</label>
-                                    <div className="position-relative d-flex align-items-center">
-                                        <i className="bi bi-telephone position-absolute ms-3" style={{ color: "#7E8B9A", fontSize: "1rem" }}></i>
-                                        <input type="text" name="phone" className="form-control border-0 py-2.5" placeholder="+34 000 000 000" style={{ borderRadius: "16px", backgroundColor: "#F1F3F5", paddingLeft: "45px", height: "50px" }} value={formData.phone} onChange={handleChange} />
-                                    </div>
-                                </div>
-
                                 <div className="mb-3">
                                     <label className="form-label fw-medium text-dark ms-1 mb-1" style={{ fontSize: "0.9rem" }}>Contraseña</label>
                                     <div className="position-relative d-flex align-items-center">
