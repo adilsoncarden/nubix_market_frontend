@@ -579,7 +579,7 @@ export default function CartPage() {
       {zoom && (
         <div className="img-zoom-overlay" onClick={() => setZoom(null)}>
           <div className="img-zoom-box" onClick={(e) => e.stopPropagation()}>
-            <img src={zoom.img} alt={zoom.name} />
+            <img src={zoom.img} alt={zoom.name} loading="lazy" />
             <p className="img-zoom-name">{zoom.name}</p>
             <button className="img-zoom-close" onClick={() => setZoom(null)}>
               <i className="bi bi-x-lg"></i>
@@ -624,7 +624,7 @@ export default function CartPage() {
                   title="Clic para ampliar"
                   onClick={() => setZoom(item)}
                 >
-                  <img src={item.img} alt={item.name} />
+                  <img src={item.img} alt={item.name} loading="lazy" />
                   <div className="cart-img-zoom-hint">
                     <i className="bi bi-zoom-in"></i>
                   </div>

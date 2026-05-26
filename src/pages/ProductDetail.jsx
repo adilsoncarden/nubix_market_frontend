@@ -98,7 +98,7 @@ const ProductDetail = () => {
               backgroundSize: "220%"
             }}
           >
-            <img src={producto.img} alt={producto.nombre} className="img-fluid w-100 h-100 p-4" style={{ objectFit: "contain", opacity: isZooming ? 0 : 1, transition: "opacity 0.15s ease" }} />
+            <img src={producto.img} alt={producto.nombre} loading="lazy" className="img-fluid w-100 h-100 p-4" style={{ objectFit: "contain", opacity: isZooming ? 0 : 1, transition: "opacity 0.15s ease" }} />
           </div>
         </div>
 

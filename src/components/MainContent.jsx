@@ -68,7 +68,7 @@ const ProductCard = ({ p }) => {
       <Link to={`/producto/${p.id}`} className="text-decoration-none">
         <div className="product-card card border-0 h-100 rounded-4 overflow-hidden shadow-sm" style={{ cursor: 'pointer' }}>
           {p.tag && <span className={`product-tag ${p.tagColor}`}>{p.tag}</span>}
-          <div className="product-img-wrap"><img src={p.img} alt={p.nombre} /></div>
+          <div className="product-img-wrap"><img src={p.img} alt={p.nombre} loading="lazy" /></div>
           <div className="card-body p-3 d-flex flex-column">
             <p className="product-cat mb-1">{p.cat}</p>
             <h6 className="product-name mb-2">{p.nombre}</h6>
@@ -87,7 +87,7 @@ const CategoryCard = ({ item }) => (
   <div className="col-4 col-md-2">
     <Link to={`/shop?category=${item.nombre}`} className="category-card text-decoration-none d-block text-center p-3 rounded-4 bg-white shadow-sm">
       <div className="cat-icon-wrap mx-auto mb-2" style={{ background: item.color, overflow: 'hidden' }}>
-        <img src={item.img} alt={item.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+        <img src={item.img} alt={item.nombre} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
       </div>
       <span className="cat-label" style={{ color: item.text, fontWeight: '600' }}>{item.nombre}</span>
     </Link>
@@ -319,7 +319,7 @@ const MainContent = () => {
           {SLIDES_FIXED.map((_, i) => (<button key={i} type="button" data-bs-target="#heroCarousel" data-bs-slide-to={i} className={i === 0 ? "active" : ""}></button>))}
         </div>
         <div className="carousel-inner hero-inner">
-          {SLIDES_FIXED.map((s, i) => (<div key={i} className={`carousel-item h-100 ${i === 0 ? "active" : ""}`}><Link to={s.to}><img src={s.img} className="hero-img d-block w-100 h-100" alt="slide" /></Link></div>))}
+          {SLIDES_FIXED.map((s, i) => (<div key={i} className={`carousel-item h-100 ${i === 0 ? "active" : ""}`}><Link to={s.to}><img src={s.img} className="hero-img d-block w-100 h-100" alt="slide" loading="lazy" /></Link></div>))}
         </div>
         <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon"></span></button>
         <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next"><span className="carousel-control-next-icon"></span></button>
@@ -365,14 +365,14 @@ const MainContent = () => {
           <div className="col-12">
             <div className="collage-main-card d-flex align-items-center p-5 shadow-lg overflow-hidden">
               <div className="row w-100 align-items-center">
-                <div className="col-md-6 text-center d-none d-md-block position-relative" style={{height: '300px'}}><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800" className="blob-frame" alt="Fresh" /></div>
+                <div className="col-md-6 text-center d-none d-md-block position-relative" style={{height: '300px'}}><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800" className="blob-frame" alt="Fresh" loading="lazy" /></div>
                 <div className="col-md-6"><h1 className="fw-black display-4 mb-3" style={{color: '#0d2b22'}}>Frutas y Verduras.<br/>Entrega Diaria.</h1><p className="text-muted fs-5 mb-4">La mejor calidad seleccionada para tu hogar.</p><Link to="/shop" className="btn btn-dark rounded-pill px-5 py-3 fw-bold">Comprar Ahora</Link></div>
               </div>
             </div>
           </div>
-          <div className="col-md-4"><div className="collage-sub-card bg-3d-green shadow-lg"><div className="text-3d-front text-white"><h4 className="fw-bold">10% DE AHORRO EN TU PRIMERA COMPRA</h4></div><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" className="blob-frame" alt="promo1" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="text-white-50 small">Regístrate hoy para tu primer pedido.</span><button className="btn-go-black"><i className="bi bi-chevron-right"></i></button></div></div></div>
-          <div className="col-md-4"><div className="collage-sub-card bg-3d-pink shadow-lg"><div className="text-3d-front" style={{color: '#880e4f'}}><h4 className="fw-bold">ENVÍO GRATIS POR COMPRAS MAYORES A 100 SOLES</h4></div><img src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600" className="blob-frame" alt="promo2" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="small" style={{color: '#880e4f'}}>Abastece tu despensa sin costo extra.</span><button className="btn-go-black"><i className="bi bi-chevron-right"></i></button></div></div></div>
-          <div className="col-md-4"><div className="collage-sub-card bg-3d-yellow shadow-lg"><div className="text-3d-front" style={{color: '#333'}}><h4 className="fw-bold">PRODUCTOS DE LA MEJOR CALIDAD</h4></div><img src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80" className="blob-frame" alt="Tienda Market" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="small" style={{color: '#333'}}>Lo mejor del mercado directo a tu mesa.</span><button className="btn-go-black text-white"><i className="bi bi-chevron-right"></i></button></div></div></div>
+          <div className="col-md-4"><div className="collage-sub-card bg-3d-green shadow-lg"><div className="text-3d-front text-white"><h4 className="fw-bold">10% DE AHORRO EN TU PRIMERA COMPRA</h4></div><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" className="blob-frame" alt="promo1" loading="lazy" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="text-white-50 small">Regístrate hoy para tu primer pedido.</span><button className="btn-go-black"><i className="bi bi-chevron-right"></i></button></div></div></div>
+          <div className="col-md-4"><div className="collage-sub-card bg-3d-pink shadow-lg"><div className="text-3d-front" style={{color: '#880e4f'}}><h4 className="fw-bold">ENVÍO GRATIS POR COMPRAS MAYORES A 100 SOLES</h4></div><img src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600" className="blob-frame" alt="promo2" loading="lazy" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="small" style={{color: '#880e4f'}}>Abastece tu despensa sin costo extra.</span><button className="btn-go-black"><i className="bi bi-chevron-right"></i></button></div></div></div>
+          <div className="col-md-4"><div className="collage-sub-card bg-3d-yellow shadow-lg"><div className="text-3d-front" style={{color: '#333'}}><h4 className="fw-bold">PRODUCTOS DE LA MEJOR CALIDAD</h4></div><img src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80" className="blob-frame" alt="Tienda Market" loading="lazy" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="small" style={{color: '#333'}}>Lo mejor del mercado directo a tu mesa.</span><button className="btn-go-black text-white"><i className="bi bi-chevron-right"></i></button></div></div></div>
         </div>
       </section>
 

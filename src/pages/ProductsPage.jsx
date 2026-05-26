@@ -343,6 +343,7 @@ const ProductsPage = () => {
                                                     <img
                                                         src={imageUrl}
                                                         alt={prod.nombre}
+                                                        loading="lazy"
                                                         className="rounded border"
                                                         style={{
                                                             width: "44px",
