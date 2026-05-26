@@ -1,24 +1,28 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 import { useAuth } from "../store/AuthContext";
 import { clearRedirectUrl } from "../utils/authUtils";
+import api from "../config/axios";
 import logoImage from "../assets/logo.png";
 import { CATEGORIAS_DATA } from "./MainContent";
 
 export default function Navbar() {
     const navigate = useNavigate();
-    const location = useLocation();
     const { totalItems } = useCart();
     const { token, user, logout } = useAuth();
 
     const dropdownRef = useRef(null);
     const userMenuRef = useRef(null);
+    const notifRef = useRef(null);
 
     const [scrolled, setScrolled] = useState(false);
     const [catOpen, setCatOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [notifOpen, setNotifOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -27,6 +31,8 @@ export default function Navbar() {
                 setUserMenuOpen(false);
             if (dropdownRef.current && !dropdownRef.current.contains(e.target))
                 setCatOpen(false);
+            if (notifRef.current && !notifRef.current.contains(e.target))
+                setNotifOpen(false);
         };
         window.addEventListener("scroll", handleScroll);
         document.addEventListener("mousedown", handleClickOutside);
@@ -35,6 +41,48 @@ export default function Navbar() {
             document.removeEventListener("mousedown", handleClickOutside);
         };
     }, []);
+
+    useEffect(() => {
+        if (!token) {
+            setNotifications([]);
+            setUnreadCount(0);
+            return;
+        }
+
+        let mounted = true;
+        const loadNotifications = async () => {
+            try {
+                const [listRes, countRes] = await Promise.all([
+                    api.get("/notificaciones"),
+                    api.get("/notificaciones/count-no-leidas"),
+                ]);
+                if (!mounted) return;
+                setNotifications(Array.isArray(listRes.data) ? listRes.data : []);
+                setUnreadCount(Number(countRes.data || 0));
+            } catch (e) {
+                // no-op
+            }
+        };
+
+        loadNotifications();
+        const interval = setInterval(loadNotifications, 15000);
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
+    }, [token]);
+
+    const marcarLeida = async (id) => {
+        try {
+            await api.put(`/notificaciones/${id}/leer`);
+            setNotifications((prev) =>
+                prev.map((n) => (n.id === id ? { ...n, leido: true } : n)),
+            );
+            setUnreadCount((prev) => Math.max(0, prev - 1));
+        } catch (e) {
+            // no-op
+        }
+    };
 
     const handleLogout = () => {
         clearRedirectUrl();
@@ -68,6 +116,10 @@ export default function Navbar() {
         .dropdown-item-custom i { margin-right: 12px; font-size: 1.1rem; width: 20px; }
         .btn-logout-mini { display: flex; align-items: center; gap: 8px; color: #dc3545; background: #fff5f5; border-radius: 8px; padding: 6px 12px; font-size: 0.75rem; font-weight: 600; border: none; transition: all 0.2s; }
         .btn-logout-mini:hover { background: #fee2e2; }
+        .notif-dropdown { width: 320px; max-height: 380px; overflow-y: auto; }
+        .notif-item { border-bottom: 1px solid #f1f5f9; padding: 10px 8px; }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; display: inline-block; }
       `}</style>
 
             <nav
@@ -221,9 +273,64 @@ export default function Navbar() {
                             >
                                 <i className="bi bi-heart"></i>
                             </Link>
-                            <div className="action-icon-btn">
-                                <i className="bi bi-bell"></i>
-                            </div>
+                            {token && (
+                                <div className="position-relative" ref={notifRef}>
+                                    <button
+                                        type="button"
+                                        className="action-icon-btn border-0 bg-transparent position-relative"
+                                        onClick={() => setNotifOpen((v) => !v)}
+                                        aria-label="Notificaciones"
+                                    >
+                                        <i className="bi bi-bell"></i>
+                                        {unreadCount > 0 && (
+                                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger">
+                                                {unreadCount > 9 ? "9+" : unreadCount}
+                                            </span>
+                                        )}
+                                    </button>
+                                    {notifOpen && (
+                                        <div className="position-absolute end-0 dropdown-menu-wow bg-white mt-2 notif-dropdown">
+                                            <div className="d-flex justify-content-between align-items-center px-2 pb-2">
+                                                <strong style={{ fontSize: "0.85rem" }}>Notificaciones</strong>
+                                                <span className="text-muted" style={{ fontSize: "0.75rem" }}>
+                                                    {notifications.length} recientes
+                                                </span>
+                                            </div>
+                                            {notifications.length === 0 ? (
+                                                <div className="text-muted px-2 py-2" style={{ fontSize: "0.8rem" }}>
+                                                    No tienes notificaciones.
+                                                </div>
+                                            ) : (
+                                                notifications.map((n) => (
+                                                    <div key={n.id} className="notif-item">
+                                                        <div className="d-flex align-items-start justify-content-between gap-2">
+                                                            <div style={{ fontSize: "0.8rem", color: "#0f172a" }}>
+                                                                <div className="d-flex align-items-center gap-2 mb-1">
+                                                                    {!n.leido && <span className="notif-unread-dot"></span>}
+                                                                    <strong className="text-capitalize">{n.tipo}</strong>
+                                                                </div>
+                                                                <div>{n.mensaje}</div>
+                                                                <small className="text-muted">
+                                                                    {new Date(n.fecha).toLocaleString("es-PE")}
+                                                                </small>
+                                                            </div>
+                                                            {!n.leido && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn btn-sm btn-outline-success"
+                                                                    onClick={() => marcarLeida(n.id)}
+                                                                >
+                                                                    Leer
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                             <Link
                                 to={token ? "/cart" : "/login"}
                                 className="action-icon-btn text-decoration-none position-relative"
