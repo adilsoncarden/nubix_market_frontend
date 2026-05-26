@@ -135,23 +135,20 @@ const VentaForm = ({ onSave, loading }) => {
         }
 
         if (
-            formData.tipoComprobante !== "TICKET" &&
-            !formData.clienteId
+            formData.tipoComprobante === "BOLETA" &&
+            !formData.clienteId &&
+            (!formData.dni || formData.dni.length !== 8)
         ) {
-            Swal.fire(
-                "Validación",
-                "Selecciona un cliente registrado o usa ticket",
-                "warning",
-            );
+            Swal.fire("Validación", "La boleta requiere DNI de 8 dígitos o cliente registrado", "warning");
             return;
         }
 
         if (
             formData.tipoComprobante === "BOLETA" &&
             !formData.clienteId &&
-            (!formData.dni || formData.dni.length !== 8)
+            !formData.nombreComprobante?.trim()
         ) {
-            Swal.fire("Validación", "La boleta requiere DNI de 8 dígitos", "warning");
+            Swal.fire("Validación", "La boleta requiere el nombre del cliente", "warning");
             return;
         }
 
@@ -160,6 +157,14 @@ const VentaForm = ({ onSave, loading }) => {
             (!formData.ruc || formData.ruc.length !== 11)
         ) {
             Swal.fire("Validación", "La factura requiere RUC de 11 dígitos", "warning");
+            return;
+        }
+
+        if (
+            formData.tipoComprobante === "FACTURA" &&
+            !formData.razonSocial?.trim()
+        ) {
+            Swal.fire("Validación", "La factura requiere razón social", "warning");
             return;
         }
 
@@ -237,16 +242,13 @@ const VentaForm = ({ onSave, loading }) => {
                 <div className="col-md-6">
                     <label className="form-label fw-bold">
                         Cliente{" "}
-                        {formData.tipoComprobante === "TICKET" && (
-                            <small className="text-muted">(opcional)</small>
-                        )}
+                        <small className="text-muted">(opcional)</small>
                     </label>
                     <select
                         name="clienteId"
                         className="form-select"
                         value={formData.clienteId}
                         onChange={handleChange}
-                        required={formData.tipoComprobante !== "TICKET"}
                         disabled={loadingData}
                     >
                         <option value="">Seleccionar...</option>
