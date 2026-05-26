@@ -1,370 +1,136 @@
+
 import { useState, useEffect, useRef } from "react";
-import {
-    Link,
-    useLocation,
-    useNavigate,
-    useSearchParams,
-} from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 import logoImage from "../assets/logo.png";
 import { CATEGORIAS_DATA } from "./MainContent";
 
-const Navbar = () => {
-    const colorFondo = "#27ae60";
-    const textoColor = "#ffffff";
-    const navigate = useNavigate();
-    const { totalItems } = useCart();
-    const dropdownRef = useRef(null);
-    const userMenuRef = useRef(null);
-    const location = useLocation();
+export default function Navbar() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { totalItems } = useCart();
 
-    const [username, setUsername] = useState(
-        () => localStorage.getItem("username") || "",
-    );
-    const [scrolled, setScrolled] = useState(false);
-    const [catOpen, setCatOpen] = useState(false);
-    const [userMenuOpen, setUserMenuOpen] = useState(false);
-    const [searchValue, setSearchValue] = useState("");
+  const dropdownRef = useRef(null);
+  const userMenuRef = useRef(null);
 
-    useEffect(() => {
-        const handleScroll = () => setScrolled(window.scrollY > 10);
-        const handleClickOutside = (event) => {
-            if (
-                userMenuRef.current &&
-                !userMenuRef.current.contains(event.target)
-            ) {
-                setUserMenuOpen(false);
-            }
-            if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target)
-            ) {
-                setCatOpen(false);
-            }
-        };
-        const handleStorage = () => {
-            setUsername(localStorage.getItem("username") || "");
-        };
+  const [username, setUsername] = useState(() => localStorage.getItem("username") || "");
+  const [scrolled, setScrolled] = useState(false);
+  const [catOpen, setCatOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
-        window.addEventListener("scroll", handleScroll);
-        document.addEventListener("mousedown", handleClickOutside);
-        window.addEventListener("storage", handleStorage);
-        window.addEventListener("localStorageChanged", handleStorage);
-
-        return () => {
-            window.removeEventListener("scroll", handleScroll);
-            document.removeEventListener("mousedown", handleClickOutside);
-            window.removeEventListener("storage", handleStorage);
-            window.removeEventListener("localStorageChanged", handleStorage);
-        };
-    }, []);
-
-    useEffect(() => {
-        setUsername(localStorage.getItem("username") || "");
-    }, [location]);
-
-    const handleSearch = (e) => {
-        e.preventDefault();
-        if (searchValue.trim()) {
-            navigate(`/shop?search=${searchValue.trim()}`);
-        }
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    const handleClickOutside = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setCatOpen(false);
     };
-
-    const handleLogout = () => {
-        localStorage.removeItem("username");
-        localStorage.removeItem("token");
-        localStorage.removeItem("role");
-        setUsername("");
-        setUserMenuOpen(false);
-        navigate("/");
-        window.location.reload();
+    window.addEventListener("scroll", handleScroll);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, []);
 
-    const getMejorIcono = (nombre) => {
-        const n = nombre.toLowerCase();
-        if (n.includes("gaseosa") || n.includes("bebida"))
-            return "bi-cup-straw";
-        if (n.includes("fruta") || n.includes("verdura")) return "bi-apple";
-        if (n.includes("lácteo") || n.includes("leche")) return "bi-droplet";
-        if (n.includes("snack") || n.includes("piqueo")) return "bi-egg-fried";
-        if (n.includes("abarrote")) return "bi-box-seam";
-        if (n.includes("limpieza")) return "bi-stars";
-        if (n.includes("cuidado")) return "bi-heart-pulse";
-        return "bi-tag";
-    };
+  useEffect(() => { setUsername(localStorage.getItem("username") || ""); }, [location]);
 
-    const navItemStyle = {
-        fontSize: "0.75rem",
-        fontWeight: "700",
-        letterSpacing: "0.5px",
-        color: "#1a1a1a",
-        textDecoration: "none",
-    };
+  const handleLogout = () => {
+    localStorage.clear();
+    setUsername("");
+    setUserMenuOpen(false);
+    navigate("/");
+    window.location.reload();
+  };
 
-    return (
-        <>
-            <nav
-                className={`fixed-top w-100 bg-white ${
-                    scrolled ? "shadow-sm" : "border-bottom"
-                }`}
-                style={{ transition: "0.3s ease", zIndex: 1100 }}
-            >
-                <div className="container">
-                    <div className="d-flex align-items-center justify-content-between py-3">
-                        {/* 1. LOGO */}
-                        <div className="me-4">
-                            <Link to="/">
-                                <img
-                                    src={logoImage}
-                                    alt="Logo"
-                                    style={{ height: "38px", width: "auto" }}
-                                />
-                            </Link>
-                        </div>
+  const iconMap = {
+    "Gaseosas": "bi-cup-straw",
+    "Frutas": "bi-apple",
+    "Lácteos": "bi-droplet-half",
+    "Snacks": "bi-bag-heart",
+    "Abarrotes": "bi-box-seam",
+    "Bebidas": "bi-cup-hot"
+  };
 
-                        {/* 2. CATEGORÍAS */}
-                        <div
-                            className="d-none d-lg-flex align-items-center gap-4"
-                            ref={dropdownRef}
-                        >
-                            <div className="position-relative">
-                                <span
-                                    className="d-flex align-items-center gap-1 cursor-pointer"
-                                    style={{
-                                        ...navItemStyle,
-                                        cursor: "pointer",
-                                    }}
-                                    onClick={() => setCatOpen(!catOpen)}
-                                >
-                                    CATEGORÍAS{" "}
-                                    <i
-                                        className={`bi bi-chevron-${
-                                            catOpen ? "up" : "down"
-                                        }`}
-                                        style={{ fontSize: "0.6rem" }}
-                                    ></i>
-                                </span>
+  return (
+    <>
+      <style>{`
+        :root { --nubix-green: #006634; --text-dark: #1e293b; }
+        .navbar-nubix { background-color: #ffffff !important; transition: all 0.3s ease; }
+        .btn-categorias-clean { border: 1px solid transparent; padding: 6px 14px; border-radius: 10px; cursor: pointer; color: var(--text-dark); font-size: 0.85rem; font-weight: 500; transition: 0.2s; }
+        .btn-categorias-clean:hover { background: #f8fafc; border-color: #e2e8f0; }
+        .action-icon-btn { color: var(--text-dark); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; }
+        .action-icon-btn:hover { background-color: #f1f5f9; color: var(--nubix-green); }
+        .cart-badge-premium { background-color: var(--nubix-green) !important; font-size: 0.65rem !important; min-width: 18px; height: 18px; border: 2px solid #fff; }
+        .dropdown-menu-wow { border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 16px; padding: 8px; }
+        .dropdown-item-custom { display: flex; align-items: center; padding: 10px 15px !important; color: #334155 !important; font-weight: 500; transition: all 0.2s ease; border-radius: 8px; }
+        .dropdown-item-custom:hover { background-color: #f0fdf4 !important; color: var(--nubix-green) !important; }
+        .dropdown-item-custom i { margin-right: 12px; font-size: 1.1rem; width: 20px; }
+        .btn-logout-mini { display: flex; align-items: center; gap: 8px; color: #dc3545; background: #fff5f5; border-radius: 8px; padding: 6px 12px; font-size: 0.75rem; font-weight: 600; border: none; transition: all 0.2s; }
+        .btn-logout-mini:hover { background: #fee2e2; }
+      `}</style>
 
-                                {catOpen && (
-                                    <div
-                                        className="position-absolute top-100 start-0 bg-white shadow-lg rounded-3 py-2 mt-3 border-0"
-                                        style={{
-                                            zIndex: 1200,
-                                            minWidth: "220px",
-                                        }}
-                                    >
-                                        {CATEGORIAS_DATA.map((cat, idx) => (
-                                            <Link
-                                                key={idx}
-                                                to={`/shop?category=${cat.nombre}`}
-                                                className="dropdown-item py-2 px-3 d-flex align-items-center rounded-2 mx-2"
-                                                style={{
-                                                    width: "auto",
-                                                    fontSize: "0.85rem",
-                                                }}
-                                                onClick={() =>
-                                                    setCatOpen(false)
-                                                }
-                                            >
-                                                <i
-                                                    className={`bi ${getMejorIcono(
-                                                        cat.nombre,
-                                                    )} me-3`}
-                                                    style={{
-                                                        fontSize: "1.2rem",
-                                                        color: "#198754",
-                                                        minWidth: "25px",
-                                                    }}
-                                                ></i>
+      <nav className={`fixed-top w-100 navbar-nubix ${scrolled ? "shadow-sm" : "border-bottom"}`} style={{ zIndex: 1100 }}>
+        <div className="container py-2">
+          <div className="d-flex align-items-center justify-content-between">
+            <Link to="/"><img src={logoImage} alt="Logo" style={{ height: '36px' }} /></Link>
 
-                                                <span
-                                                    style={{
-                                                        fontWeight: "500",
-                                                    }}
-                                                >
-                                                    {cat.nombre}
-                                                </span>
-                                            </Link>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* 3. BUSCADOR */}
-                        <div
-                            className="flex-grow-1 mx-4 d-none d-md-block"
-                            style={{ maxWidth: "380px" }}
-                        >
-                            <form
-                                className="position-relative"
-                                onSubmit={handleSearch}
-                            >
-                                <i
-                                    className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
-                                    style={{ fontSize: "0.8rem" }}
-                                ></i>
-
-                                <input
-                                    type="text"
-                                    className="form-control border-0 rounded-pill ps-5"
-                                    placeholder="¿Qué estás buscando hoy?"
-                                    style={{
-                                        backgroundColor: "#f1f3f5",
-                                        fontSize: "0.85rem",
-                                        height: "40px",
-                                    }}
-                                    value={searchValue}
-                                    onChange={(e) =>
-                                        setSearchValue(e.target.value)
-                                    }
-                                />
-                            </form>
-                        </div>
-
-                        {/* 4. ACCIONES */}
-                        <div className="d-flex align-items-center gap-4">
-                            {username ? (
-                                <div
-                                    className="position-relative"
-                                    ref={userMenuRef}
-                                >
-                                    <button
-                                        className="btn btn-link text-dark text-decoration-none p-0 d-flex align-items-center gap-2 border-0"
-                                        onClick={() =>
-                                            setUserMenuOpen(!userMenuOpen)
-                                        }
-                                    >
-                                        <i className="bi bi-person fs-4"></i>
-
-                                        {/* USERNAME VISIBLE */}
-                                        <div
-                                            className="d-flex flex-column text-start"
-                                            style={{
-                                                lineHeight: "1.1",
-                                                minWidth: "90px",
-                                            }}
-                                        >
-                                            <span
-                                                className="text-muted"
-                                                style={{
-                                                    fontSize: "0.65rem",
-                                                }}
-                                            >
-                                                HOLA,
-                                            </span>
-
-                                            <span
-                                                className="fw-bold d-flex align-items-center gap-1"
-                                                style={{
-                                                    fontSize: "0.78rem",
-                                                    color: "#1a1a1a",
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                {username}
-
-                                                <i
-                                                    className={`bi bi-chevron-${
-                                                        userMenuOpen
-                                                            ? "up"
-                                                            : "down"
-                                                    }`}
-                                                    style={{
-                                                        fontSize: "0.6rem",
-                                                    }}
-                                                ></i>
-                                            </span>
-                                        </div>
-                                    </button>
-
-                                    {/* Menú desplegable */}
-                                    {userMenuOpen && (
-                                        <div
-                                            className="position-absolute end-0 bg-white shadow-lg border-0 mt-3 p-2 rounded-3"
-                                            style={{
-                                                zIndex: 1200,
-                                                minWidth: "180px",
-                                                top: "100%",
-                                            }}
-                                        >
-                                            {localStorage.getItem("role") ===
-                                                "ADMIN" && (
-                                                <Link
-                                                    className="dropdown-item rounded-2 py-2 fw-bold text-primary"
-                                                    to="/admin/dashboard"
-                                                    onClick={() =>
-                                                        setUserMenuOpen(false)
-                                                    }
-                                                >
-                                                    Panel Admin
-                                                </Link>
-                                            )}
-
-                                            <button
-                                                className="dropdown-item rounded-2 py-2 text-danger"
-                                                onClick={handleLogout}
-                                            >
-                                                Cerrar Sesión
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <Link
-                                    to="/login"
-                                    className="text-dark text-decoration-none d-flex align-items-center gap-2"
-                                >
-                                    <i className="bi bi-person fs-4"></i>
-
-                                    <div
-                                        className="text-start d-none d-xl-block"
-                                        style={{ lineHeight: "1.1" }}
-                                    >
-                                        <div
-                                            className="fw-bold"
-                                            style={{ fontSize: "0.75rem" }}
-                                        >
-                                            INICIAR SESIÓN
-                                        </div>
-                                    </div>
-                                </Link>
-                            )}
-
-                            <Link
-                                to="/cart"
-                                className="text-dark text-decoration-none d-flex align-items-center gap-2 position-relative"
-                            >
-                                <i className="bi bi-cart3 fs-4"></i>
-
-                                {totalItems > 0 && (
-                                    <span
-                                        className="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-success"
-                                        style={{
-                                            fontSize: "0.6rem",
-                                            padding: "0.35em 0.5em",
-                                            marginTop: "2px",
-                                        }}
-                                    >
-                                        {totalItems}
-                                    </span>
-                                )}
-
-                                <span
-                                    className="d-none d-xl-inline fw-bold"
-                                    style={{ fontSize: "0.75rem" }}
-                                >
-                                    CARRITO
-                                </span>
-                            </Link>
-                        </div>
-                    </div>
+            <div className="d-none d-lg-block position-relative" ref={dropdownRef}>
+              <div className="btn-categorias-clean ms-3" onClick={() => setCatOpen(!catOpen)}>
+                <i className="bi bi-grid-3x3-gap-fill me-2" style={{ color: 'var(--nubix-green)' }}></i>CATEGORÍAS
+              </div>
+              {catOpen && (
+                <div className="position-absolute dropdown-menu-wow bg-white mt-2 p-2" style={{ minWidth: '220px' }}>
+                  {CATEGORIAS_DATA.map((cat, i) => (
+                    <Link key={i} to={`/shop?category=${cat.nombre}`} className="dropdown-item dropdown-item-custom" onClick={() => setCatOpen(false)}>
+                      <i className={`bi ${iconMap[cat.nombre] || 'bi-tag'}`}></i>{cat.nombre}
+                    </Link>
+                  ))}
                 </div>
-            </nav>
+              )}
+            </div>
 
-            <div style={{ marginTop: scrolled ? "75px" : "82px" }}></div>
-        </>
-    );
-};
+            <form className="flex-grow-1 mx-4 d-none d-md-block" style={{ maxWidth: '380px' }}>
+              <input type="text" className="form-control rounded-pill ps-4" placeholder="¿Qué buscas hoy?" value={searchValue} onChange={(e) => setSearchValue(e.target.value)} />
+            </form>
 
-export default Navbar;
+            <div className="d-flex align-items-center gap-2">
+              {username ? (
+                <div className="position-relative" ref={userMenuRef}>
+                  <button className="btn d-flex align-items-center gap-2 border-0" onClick={() => setUserMenuOpen(!userMenuOpen)}>
+                    <div className="action-icon-btn"><i className="bi bi-person"></i></div>
+                    <div className="text-start d-none d-sm-block" style={{ lineHeight: '1.1' }}>
+                      <div style={{ fontSize: '0.6rem', color: '#64748b' }}>HOLA,</div>
+                      <div className="fw-bold" style={{ fontSize: '0.78rem', color: 'black' }}>{username.toUpperCase()}</div>
+                    </div>
+                  </button>
+                  {userMenuOpen && (
+                    <div className="position-absolute end-0 dropdown-menu-wow bg-white mt-2 p-2" style={{ minWidth: '150px' }}>
+                      {localStorage.getItem("role") === "ADMIN" && <Link className="dropdown-item mb-2" to="/admin/dashboard">Panel Admin</Link>}
+                      <button className="btn-logout-mini w-100" onClick={handleLogout}>
+                        <i className="bi bi-box-arrow-left"></i>Cerrar Sesión
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link to="/login" className="text-decoration-none d-flex align-items-center gap-2">
+                  <div className="action-icon-btn"><i className="bi bi-person"></i></div>
+                  <div className="fw-bold d-none d-sm-block" style={{ fontSize: '0.78rem', color: 'black' }}>INICIAR SESIÓN</div>
+                </Link>
+              )}
+
+              <Link to="/favorites" className="action-icon-btn text-decoration-none"><i className="bi bi-heart"></i></Link>
+              <div className="action-icon-btn"><i className="bi bi-bell"></i></div>
+              <Link to="/cart" className="action-icon-btn text-decoration-none position-relative">
+                <i className="bi bi-cart3"></i>
+                {totalItems > 0 && <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle cart-badge-premium">{totalItems}</span>}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div style={{ marginTop: '75px' }}></div>
+    </>
+  );
+}
