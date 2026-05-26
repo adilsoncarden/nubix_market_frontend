@@ -332,6 +332,49 @@ const AdminLayout = () => {
                             .table-custom thead { background-color: var(--bs-tertiary-bg); }
                             .badge-critical { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
                             [data-bs-theme="dark"] .badge-critical { background-color: rgba(153, 27, 27, 0.25); color: #fca5a5; border-color: #991b1b; }
+                            .admin-shell[data-bs-theme="dark"] .bg-white,
+                            .admin-shell[data-bs-theme="dark"] .card.border-0.shadow-sm {
+                                background-color: var(--bs-body-bg) !important;
+                                color: var(--bs-body-color);
+                            }
+                            .admin-shell[data-bs-theme="dark"] .bg-light,
+                            .admin-shell[data-bs-theme="dark"] .table-light,
+                            .admin-shell[data-bs-theme="dark"] thead.bg-light {
+                                background-color: var(--bs-tertiary-bg) !important;
+                                color: var(--bs-body-color) !important;
+                            }
+                            .admin-shell[data-bs-theme="dark"] .text-dark {
+                                color: var(--bs-body-color) !important;
+                            }
+                            .admin-shell[data-bs-theme="dark"] .form-control.bg-light,
+                            .admin-shell[data-bs-theme="dark"] .form-select.bg-light,
+                            .admin-shell[data-bs-theme="dark"] .input-group-text.bg-light {
+                                background-color: var(--bs-secondary-bg) !important;
+                                color: var(--bs-body-color) !important;
+                                border-color: var(--bs-border-color) !important;
+                            }
+                            .admin-shell[data-bs-theme="dark"] .page-link.text-dark.bg-light {
+                                background-color: var(--bs-secondary-bg) !important;
+                                color: var(--bs-body-color) !important;
+                            }
+                            .admin-shell[data-bs-theme="dark"] .badge.bg-light,
+                            .admin-shell[data-bs-theme="dark"] .badge.bg-white {
+                                background-color: var(--bs-secondary-bg) !important;
+                                color: var(--bs-body-color) !important;
+                                border-color: var(--bs-border-color) !important;
+                            }
+                            .admin-shell[data-bs-theme="dark"] .table {
+                                --bs-table-bg: transparent;
+                                --bs-table-color: var(--bs-body-color);
+                                --bs-table-hover-bg: var(--bs-tertiary-bg);
+                            }
+                            [data-bs-theme="dark"] .modal-content {
+                                background-color: var(--bs-body-bg);
+                                color: var(--bs-body-color);
+                            }
+                            [data-bs-theme="dark"] .modal-header.bg-success {
+                                border-bottom-color: rgba(255, 255, 255, 0.15);
+                            }
                         `}</style>
 
                         {isDashboardHome ? (

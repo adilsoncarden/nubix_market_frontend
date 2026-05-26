@@ -9,6 +9,10 @@ export const ThemeProvider = ({ children }) => {
 
     useEffect(() => {
         localStorage.setItem("nubix-theme", theme);
+        document.documentElement.setAttribute("data-bs-theme", theme);
+        return () => {
+            document.documentElement.removeAttribute("data-bs-theme");
+        };
     }, [theme]);
 
     const toggleTheme = () => {

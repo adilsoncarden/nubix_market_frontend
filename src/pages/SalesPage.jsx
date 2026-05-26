@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Modal } from "bootstrap";
 import { useSales } from "../features/sales/hooks/useSales";
-import { saleService } from "../features/sales/services/saleService";
+import { saleService, formatSaleDateTime, getSaleClientLabel } from "../features/sales/services/saleService";
 import VentaForm from "../features/sales/components/VentaForm";
 import Swal from "sweetalert2";
 import { useProductCatalog } from "../store/ProductCatalogContext";
@@ -299,17 +299,9 @@ const SalesPage = () => {
                                             <td className="fw-bold">
                                                 #{sale.id}
                                             </td>
-                                            <td>
-                                                {sale.cliente?.username ||
-                                                    sale.nombreComprobante ||
-                                                    "Consumidor final"}
-                                            </td>
-                                            <td>{sale.vendedor?.username}</td>
-                                            <td>
-                                                {new Date(
-                                                    sale.fecha,
-                                                ).toLocaleDateString("es-PE")}
-                                            </td>
+                                            <td>{getSaleClientLabel(sale)}</td>
+                                            <td>{sale.vendedor?.username || "-"}</td>
+                                            <td>{formatSaleDateTime(sale)}</td>
                                             <td className="fw-bold text-success">
                                                 S/ {sale.total.toFixed(2)}
                                             </td>
@@ -340,10 +332,7 @@ const SalesPage = () => {
                                                 <small>
                                                     {sale.tipoEntrega}
                                                 </small>
-                                                {(sale.tipoEntrega ===
-                                                    "FAST_LANE" ||
-                                                    sale.tipoEntrega ===
-                                                        "PRESENCIAL") &&
+                                                {sale.tipoEntrega === "FAST_LANE" &&
                                                     sale.codigoRecojo && (
                                                     <div className="text-muted small">
                                                         Código:{" "}
@@ -366,23 +355,32 @@ const SalesPage = () => {
                                                         className="btn btn-outline-info"
                                                         title="Ver detalles"
                                                         onClick={() => {
+                                                            const clienteLabel =
+                                                                getSaleClientLabel(
+                                                                    sale,
+                                                                );
+                                                            const fechaLabel =
+                                                                formatSaleDateTime(
+                                                                    sale,
+                                                                );
                                                             Swal.fire({
                                                                 title: `Venta #${sale.id}`,
                                                                 html: `
                                                                     <div class="text-start">
-                                                                        <p><strong>Cliente:</strong> ${sale.cliente?.username}</p>
-                                                                        <p><strong>Vendedor:</strong> ${sale.vendedor?.username}</p>
+                                                                        <p><strong>Cliente:</strong> ${clienteLabel}</p>
+                                                                        <p><strong>Vendedor:</strong> ${sale.vendedor?.username || "-"}</p>
+                                                                        <p><strong>Fecha:</strong> ${fechaLabel}</p>
                                                                         <p><strong>Total:</strong> S/ ${sale.total.toFixed(2)}</p>
                                                                         <p><strong>Estado:</strong> ${sale.estadoPedido}</p>
                                                                         <hr>
                                                                         <strong>Detalles:</strong>
                                                                         <ul>
-                                                                            ${sale.detalles
+                                                                            ${(sale.detalles || [])
                                                                                 .map(
                                                                                     (
                                                                                         d,
                                                                                     ) =>
-                                                                                        `<li>${d.producto?.nombre} x${d.cantidad} = S/ ${d.subtotal.toFixed(2)}</li>`,
+                                                                                        `<li>${d.producto?.nombre || "Producto"} x${d.cantidad} = S/ ${Number(d.subtotal || 0).toFixed(2)}</li>`,
                                                                                 )
                                                                                 .join(
                                                                                     "",
