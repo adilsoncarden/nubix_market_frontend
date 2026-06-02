@@ -12,6 +12,7 @@ export function mapProductoToShopItem(producto) {
         name: producto.nombre ?? "",
         category: producto.categoriaNombre ?? "",
         price: Number(producto.precioVenta) || 0,
+        descripcion: producto.descripcion ?? "",
         unit: "und",
         stock: producto.stock ?? 0,
         codigo: producto.codigo ?? "",

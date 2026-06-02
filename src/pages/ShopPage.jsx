@@ -1,7 +1,10 @@
 import { useState, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import { useCart } from "../store/CartContext";
+import { useFavorites } from "../store/FavoritesContext";
+import { useAuth } from "../store/AuthContext";
+import { setRedirectUrl } from "../utils/authUtils";
 
 const SORT_OPTIONS = [
     { value: "default", label: "Relevancia" },
@@ -10,19 +13,26 @@ const SORT_OPTIONS = [
     { value: "name-asc", label: "Nombre A-Z" },
 ];
 
+const PAGE_SIZE = 12;
+
 export default function ShopPage() {
     const [params, setParams] = useSearchParams();
+    const navigate = useNavigate();
     const { addToCart, items } = useCart();
+    const { toggleFavorite, isFavorite } = useFavorites();
+    const { token } = useAuth();
     const { products, categories, loading, error } = useShopProducts();
 
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("default");
     const [added, setAdded] = useState(null);
+    const [page, setPage] = useState(1);
 
     const activeCat = params.get("category") || "Todos";
     const activeTag = params.get("tag") || "";
 
     const setCat = (cat) => {
+        setPage(1);
         const p = new URLSearchParams();
         if (cat !== "Todos") p.set("category", cat);
         setParams(p);
@@ -49,10 +59,28 @@ export default function ShopPage() {
         }
     }, [products, activeCat, activeTag, search, sort]);
 
-    const handleAdd = (product) => {
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    const handleAdd = (e, product) => {
+        e.preventDefault();
+        e.stopPropagation();
         addToCart(product);
         setAdded(product.id);
         setTimeout(() => setAdded(null), 1200);
+    };
+
+    const handleToggleFavorite = (e, productoId) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!token) {
+            setRedirectUrl("/shop");
+            navigate("/login");
+            return;
+        }
+
+        toggleFavorite(productoId);
     };
 
     const inCart = (id) => items.find((i) => i.id === id)?.qty || 0;
@@ -160,9 +188,13 @@ export default function ShopPage() {
                         </div>
                     ) : (
                         <div className="shop-grid">
-                            {filtered.map((product) => (
-                                <div
+                            {paginated.map((product) => (
+                                <Link
                                     key={product.id}
+                                    to={`/producto/${product.id}`}
+                                    className="text-decoration-none text-dark"
+                                >
+                                <div
                                     className="product-card rounded-3 overflow-hidden position-relative"
                                 >
                                     {product.tag && (
@@ -172,6 +204,29 @@ export default function ShopPage() {
                                             {product.tag}
                                         </span>
                                     )}
+                                    <button
+                                        className={`btn-favorite${
+                                            isFavorite(product.id)
+                                                ? " favorited"
+                                                : ""
+                                        }`}
+                                        onClick={(e) =>
+                                            handleToggleFavorite(e, product.id)
+                                        }
+                                        title={
+                                            isFavorite(product.id)
+                                                ? "Remover de favoritos"
+                                                : "Agregar a favoritos"
+                                        }
+                                    >
+                                        <i
+                                            className={`bi ${
+                                                isFavorite(product.id)
+                                                    ? "bi-heart-fill"
+                                                    : "bi-heart"
+                                            }`}
+                                        ></i>
+                                    </button>
                                     {inCart(product.id) > 0 && (
                                         <span className="in-cart-badge">
                                             <i className="bi bi-cart-check"></i>{" "}
@@ -204,7 +259,7 @@ export default function ShopPage() {
                                             </div>
                                             <button
                                                 className={`btn-add-cart${added === product.id ? " added" : ""}`}
-                                                onClick={() => handleAdd(product)}
+                                                onClick={(e) => handleAdd(e, product)}
                                                 title="Agregar al carrito"
                                                 disabled={product.stock <= 0}
                                             >
@@ -215,8 +270,27 @@ export default function ShopPage() {
                                         </div>
                                     </div>
                                 </div>
+                                </Link>
                             ))}
                         </div>
+                    )}
+
+                    {!loading && filtered.length > PAGE_SIZE && (
+                        <nav className="mt-4">
+                            <ul className="pagination justify-content-center">
+                                <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
+                                    <button type="button" className="page-link" onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
+                                </li>
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+                                    <li key={n} className={`page-item ${page === n ? "active" : ""}`}>
+                                        <button type="button" className="page-link" onClick={() => setPage(n)}>{n}</button>
+                                    </li>
+                                ))}
+                                <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
+                                    <button type="button" className="page-link" onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Siguiente</button>
+                                </li>
+                            </ul>
+                        </nav>
                     )}
                 </main>
             </div>

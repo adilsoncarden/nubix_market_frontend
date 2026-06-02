@@ -1,4 +1,5 @@
 import axios from "axios";
+import { clearAuthData } from "../utils/authUtils";
 
 const api = axios.create({
     baseURL:
@@ -27,6 +28,13 @@ api.interceptors.response.use(
             `[API] ${error.config?.method?.toUpperCase() ?? "?"} ${url} → ${status ?? "network"}:`,
             message,
         );
+        if (status === 401 && !url?.includes("/auth/")) {
+            clearAuthData();
+            if (!window.location.pathname.includes("/login")) {
+                const isAdmin = window.location.pathname.startsWith("/admin");
+                window.location.href = isAdmin ? "/admin-login" : "/login";
+            }
+        }
         return Promise.reject(error);
     },
 );

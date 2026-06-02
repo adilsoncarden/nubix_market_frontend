@@ -5,7 +5,14 @@ import {
     updateSupplier,
     deleteSupplier,
 } from "../services/supplierService";
-import Swal from "sweetalert2";
+import { confirmDelete, Toast } from "../../../utils/swalConfig";
+
+const toPayload = (supplier) => ({
+    ruc: supplier.ruc,
+    nombre: supplier.nombre,
+    telefono: supplier.telefono,
+    email: supplier.email,
+});
 
 export const useSuppliers = () => {
     const [suppliers, setSuppliers] = useState([]);
@@ -17,79 +24,75 @@ export const useSuppliers = () => {
             const data = await getSuppliers();
             setSuppliers(data);
         } catch (error) {
-            Swal.fire(
-                "Error",
-                "No se pudieron cargar los proveedores",
-                "error",
-            );
+            Toast.fire({
+                icon: "error",
+                title: "No se pudieron cargar los proveedores",
+            });
         } finally {
             setLoading(false);
         }
     };
 
-    const saveSupplier = async (supplier) => {
+    const saveSupplier = async (supplier, id) => {
+        const payload = toPayload(supplier);
         try {
-            if (supplier.id) {
-                await updateSupplier(supplier.id, supplier);
-                Swal.fire({
+            if (id) {
+                await updateSupplier(id, payload);
+                Toast.fire({
                     icon: "success",
-                    title: "¡Actualizado!",
-                    text: "El proveedor ha sido actualizado correctamente.",
-                    timer: 2000,
-                    showConfirmButton: false,
+                    title: "Proveedor actualizado",
                 });
             } else {
-                await createSupplier(supplier);
-                Swal.fire({
+                await createSupplier(payload);
+                Toast.fire({
                     icon: "success",
-                    title: "¡Creado!",
-                    text: "El proveedor ha sido registrado con éxito.",
-                    timer: 2000,
-                    showConfirmButton: false,
+                    title: "Proveedor registrado",
                 });
             }
             await refreshSuppliers();
             return true;
         } catch (error) {
-            Swal.fire(
-                "Error",
-                "Hubo un problema al procesar la solicitud",
-                "error",
-            );
+            const msg =
+                error.response?.data?.message ||
+                (typeof error.response?.data === "string"
+                    ? error.response.data
+                    : null) ||
+                error.message ||
+                "Hubo un problema al procesar la solicitud";
+            Toast.fire({ icon: "error", title: msg });
             return false;
         }
     };
 
     const removeSupplier = async (id) => {
+        const result = await confirmDelete(
+            "¿Eliminar proveedor?",
+            "Esta acción no se puede revertir.",
+        );
 
-        const original =  [...suppliers];
+        if (!result.isConfirmed) {
+            return false;
+        }
 
-        // ELIMINACIÓN OPTIMISTA:   
+        const original = [...suppliers];
         setSuppliers((prev) => prev.filter((s) => s.id !== id));
 
         try {
             await deleteSupplier(id);
-
-            Swal.fire({
+            Toast.fire({
                 icon: "success",
                 title: "Proveedor eliminado",
-                timer: 1500,
-                showConfirmButton: false,
             });
-
-            } catch (error) {
-
-                // RESTAURAR SI FALLA
-                setSuppliers(original);
-
-                Swal.fire(
-                    "Error",
-                    "No se puedo eliminar el Proveedor.",
-                    "error",
-                );
-            }
+            return true;
+        } catch (error) {
+            setSuppliers(original);
+            Toast.fire({
+                icon: "error",
+                title: "No se pudo eliminar el proveedor",
+            });
+            return false;
         }
-    
+    };
 
     return {
         suppliers,

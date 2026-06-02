@@ -21,6 +21,6 @@ export const categoryService = {
         return response.data;
     },
     delete: async (id) => {
-        await api.delete(`/admin/categorias/${id}`);
+        await api.delete(`/admin/categorias/${id}/delete`);
     },
 };

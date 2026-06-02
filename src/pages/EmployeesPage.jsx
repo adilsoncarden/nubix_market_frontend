@@ -117,20 +117,18 @@ const EmployeesPage = () => {
     };
 
     return (
-        <div className="container-fluid p-4" style={{ backgroundColor: '#f9fafb', minHeight: '100vh', fontSize: '0.9rem' }}>
-            
-            {/* CABECERA PROFESIONAL */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="admin-page" style={{ fontSize: '0.9rem' }}>
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
-                    <h2 className="fw-bold mb-0" style={{ letterSpacing: '-0.03em', color: '#111827' }}>
-                        Nubix Market <span style={{ color: '#10b981' }}>/</span> Personal
+                    <h2 className="admin-page-title fw-bold mb-0">
+                        Nubix Market <span className="admin-accent-slash">/</span> Personal
                     </h2>
                     <p className="text-muted small mb-0">Gestión de roles y accesos internos</p>
                 </div>
                 <button 
-                    className="btn btn-success shadow-sm px-4 fw-bold d-flex align-items-center" 
+                    className="btn btn-success shadow-sm px-4 fw-bold d-flex align-items-center admin-btn-primary" 
                     onClick={() => openModal()} 
-                    style={{ borderRadius: '10px', backgroundColor: "#10b981", border: "none", height: '40px' }}
+                    style={{ height: '40px' }}
                 >
                     <i className="bi bi-person-plus-fill me-2 fs-5"></i> Registrar Trabajador
                 </button>
@@ -152,7 +150,7 @@ const EmployeesPage = () => {
                     </div>
                 </div>
                 <div className="col-md-9">
-                    <div className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3" style={{ borderRadius: '12px', height: '100%' }}>
+                    <div className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card" style={{ borderRadius: '12px', height: '100%' }}>
                         <i className="bi bi-search text-muted me-3"></i>
                         <input 
                             type="text" 
@@ -213,8 +211,8 @@ const EmployeesPage = () => {
 
                 {/* PAGINACIÓN */}
                 {!loading && totalPages > 1 && (
-                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
-                        <div className="text-muted small">
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
+                        <div className="text-muted small admin-pagination-info">
                             Mostrando <b>{indexOfFirstItem + 1}</b> a <b>{Math.min(indexOfLastItem, filteredEmployees.length)}</b> de {filteredEmployees.length}
                         </div>
                         <nav>
@@ -283,7 +281,7 @@ const EmployeesPage = () => {
                             </div>
                             <div className="modal-footer border-0 p-4 pt-0 gap-2">
                                 <button type="button" className="btn btn-light px-4 fw-bold text-secondary" style={{ borderRadius: '10px' }} onClick={() => bsModal.current.hide()}>Cancelar</button>
-                                <button type="submit" className="btn btn-success px-4 fw-bold shadow-sm" style={{ backgroundColor: '#10b981', border: 'none', borderRadius: '10px', height: '42px' }}>
+                                <button type="submit" className="btn btn-success px-4 fw-bold shadow-sm admin-btn-primary" style={{ height: '42px' }}>
                                     <i className="bi bi-cloud-arrow-up me-2"></i> {formData.id ? "Guardar Cambios" : "Completar Registro"}
                                 </button>
                             </div>
@@ -292,36 +290,6 @@ const EmployeesPage = () => {
                 </div>
             </div>
 
-            <style>{`
-                .text-emerald-600 { color: #10b981 !important; }
-                .bg-emerald-100 { background-color: #d1fae5 !important; }
-                .extra-small { font-size: 0.7rem; letter-spacing: 0.05em; }
-
-                /* Badges de Rol */
-                .role-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 4px 10px; border-radius: 6px; }
-                .role-admin { background-color: #fef2f2; color: #ef4444; border: 1px solid #fee2e2; }
-                .role-emp { background-color: #ecfdf5; color: #10b981; border: 1px solid #d1fae5; }
-
-                /* Tabla y Acciones */
-                .table td { padding-top: 0.6rem !important; padding-bottom: 0.6rem !important; }
-                .btn-table-action { border: none; background: none; padding: 6px; border-radius: 8px; transition: 0.2s; font-size: 1.15rem; }
-                .btn-table-action.edit { color: #10b981; }
-                .btn-table-action.edit:hover { background-color: #ecfdf5; transform: scale(1.1); }
-                .btn-table-action.delete { color: #ef4444; }
-                .btn-table-action.delete:hover { background-color: #fef2f2; transform: scale(1.1); }
-
-                /* Paginación */
-                .active-page { background-color: #10b981 !important; color: white !important; }
-                .page-link:hover:not(.active-page) { background-color: #ecfdf5 !important; color: #10b981 !important; }
-
-                /* Modal UI */
-                .modal-emp-custom input:focus, .modal-emp-custom select:focus {
-                    background-color: #fff !important;
-                    border: 1px solid #10b981 !important;
-                    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.1) !important;
-                }
-                .modal.show { background-color: rgba(17, 24, 39, 0.5) !important; }
-            `}</style>
         </div>
     );
 };

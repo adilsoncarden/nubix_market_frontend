@@ -1,6 +1,6 @@
-// src/pages/Register.jsx
 import React, { useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { authService } from "../features/auth/services/authService";
 import logo from "../assets/logo.png.png"; 
 
 const Register = () => {
@@ -26,7 +26,7 @@ const Register = () => {
             hasUpperCase: /[A-Z]/.test(pwd),
             hasLowerCase: /[a-z]/.test(pwd),
             hasNumber: /\d/.test(pwd),
-            hasSpecialChar: /[@$!%?&._#-]/.test(pwd),
+            hasSpecialChar: /[@$!%*?&._#-]/.test(pwd),
         };
     }, [formData.password]);
 
@@ -47,22 +47,13 @@ const Register = () => {
         setAlertType("");
 
         try {
-            const response = await fetch("http://localhost:8080/api/auth/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    username: formData.username.trim(),
-                    email: formData.email.trim(),
-                    phone: formData.phone.trim(),
-                    password: formData.password,
-                }),
+            const data = await authService.register({
+                username: formData.username.trim(),
+                email: formData.email.trim(),
+                password: formData.password,
             });
 
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
+            if (!data.success) {
                 setAlertType("danger");
                 setAlertMessage(data.message || "Error al registrar el usuario");
                 return;
@@ -142,7 +133,7 @@ const Register = () => {
                                         <div className="mt-3 p-3 rounded" style={{ backgroundColor: "#f8f9fa", border: "1px solid #dee2e6" }}>
                                             <small className="text-muted d-block mb-2 fw-bold">Requisitos de contraseña:</small>
                                             <div className="d-flex flex-column gap-2">
-                                                {[{check: passwordRequirements.minLength, text: "Al menos 8 caracteres"}, {check: passwordRequirements.hasUpperCase, text: "Una letra mayúscula (A-Z)"}, {check: passwordRequirements.hasLowerCase, text: "Una letra minúscula (a-z)"}, {check: passwordRequirements.hasNumber, text: "Un número (0-9)"}, {check: passwordRequirements.hasSpecialChar, text: "Un carácter especial (@$!%?&._#-)"}].map((req, idx) => (
+                                                {[{check: passwordRequirements.minLength, text: "Al menos 8 caracteres"}, {check: passwordRequirements.hasUpperCase, text: "Una letra mayúscula (A-Z)"}, {check: passwordRequirements.hasLowerCase, text: "Una letra minúscula (a-z)"}, {check: passwordRequirements.hasNumber, text: "Un número (0-9)"}, {check: passwordRequirements.hasSpecialChar, text: "Un carácter especial (@$!%*?&._#-)"}].map((req, idx) => (
                                                     <div className="d-flex align-items-center" key={idx}>
                                                         <i className={`bi ${req.check ? "bi-check-circle-fill" : "bi-circle"} me-2`} style={{ color: req.check ? "#28a745" : "#ccc", fontSize: "0.9rem" }}></i>
                                                         <small style={{ color: req.check ? "#28a745" : "#6c757d" }}>{req.text}</small>

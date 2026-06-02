@@ -1,5 +1,6 @@
 import api from "../../../config/axios";
 import { unwrapApiList } from "../../../config/apiUtils";
+import { mapProductPayload } from "../../../utils/productPayload";
 
 const API_ORIGIN = (
     import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
@@ -11,18 +12,21 @@ export const getProductImageUrl = (imagen) => {
     return `${API_ORIGIN}/uploads/${imagen.archivo}`;
 };
 
-/** Solo query param; evita headers custom que rompen CORS preflight. */
 const noCacheConfig = (bustCache) =>
     bustCache ? { params: { _: Date.now() } } : {};
 
 export const productService = {
-    /** Mismo ProductoResponse que admin; endpoint público de tienda. */
     getCatalog: async ({ bustCache = false } = {}) => {
         const response = await api.get(
             "/catalogo/productos",
             noCacheConfig(bustCache),
         );
         return unwrapApiList(response.data);
+    },
+
+    getCatalogById: async (id) => {
+        const response = await api.get(`/catalogo/productos/${id}`);
+        return response.data;
     },
 
     getCatalogCategories: async ({ bustCache = false } = {}) => {
@@ -42,20 +46,23 @@ export const productService = {
     },
 
     create: async (productData) => {
-        const response = await api.post("/admin/productos/create", productData);
+        const response = await api.post(
+            "/admin/productos/create",
+            mapProductPayload(productData),
+        );
         return response.data;
     },
 
     update: async (id, productData) => {
         const response = await api.put(
-            `/admin/productos/update/${id}`,
-            productData,
+            `/admin/productos/${id}/update`,
+            mapProductPayload(productData),
         );
         return response.data;
     },
 
     delete: async (id) => {
-        await api.delete(`/admin/productos/${id}`);
+        await api.delete(`/admin/productos/${id}/delete`);
     },
 
     uploadProductImage: async (productoId, file) => {
@@ -64,11 +71,7 @@ export const productService = {
         const response = await api.post(
             `/admin/productos/${productoId}/imagen`,
             formData,
-            {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            },
+            { headers: { "Content-Type": "multipart/form-data" } },
         );
         return response.data;
     },

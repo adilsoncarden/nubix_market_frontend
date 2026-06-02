@@ -8,8 +8,10 @@ import {
 } from "../features/products/services/productService";
 import ProductForm from "../features/products/components/ProductForm";
 import ProductImageField from "../features/products/components/ProductImageField";
-import Swal from "sweetalert2";
 import { useProductCatalog } from "../store/ProductCatalogContext";
+import { reportService } from "../features/reports/services/reportService";
+import { Toast, confirmDelete } from "../utils/swalConfig";
+import Swal from "sweetalert2";
 
 const ProductsPage = () => {
     const { products, setProducts, handleDelete, loading } = useProducts();
@@ -18,28 +20,28 @@ const ProductsPage = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [filterCategory, setFilterCategory] = useState("");
+    const [exportFilters, setExportFilters] = useState({
+        categoriaId: "",
+        stockBajo: false,
+        precioMin: "",
+        precioMax: "",
+    });
     const [pendingImageFile, setPendingImageFile] = useState(null);
     const [formkey, setFormKey] = useState(Date.now());
 
-    const Toast = Swal.mixin({
-        toast: true,
-        position: "bottom-end",
-        showConfirmButton: false,
-        timer: 2500,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.onmouseenter = Swal.stopTimer;
-            toast.onmouseleave = Swal.resumeTimer;
-        },
-    });
-
     const filteredProducts = useMemo(() => {
-        return products.filter(
-            (prod) =>
+        return products.filter((prod) => {
+            const matchSearch =
                 prod.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                prod.codigo?.toLowerCase().includes(searchTerm.toLowerCase()),
-        );
-    }, [products, searchTerm]);
+                prod.codigo?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchCat =
+                !filterCategory ||
+                prod.categoriaNombre === filterCategory ||
+                String(prod.categoriaId) === filterCategory;
+            return matchSearch && matchCat;
+        });
+    }, [products, searchTerm, filterCategory]);
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -138,27 +140,18 @@ const ProductsPage = () => {
             bsModal.current.hide();
         } catch (err) {
             console.error(err);
-            Toast.fire({
-                icon: "error",
-                title: "Error al guardar el producto",
-            });
+            const msg =
+                err.response?.data?.message ||
+                err.message ||
+                "Error al guardar el producto";
+            Toast.fire({ icon: "error", title: msg });
         } finally {
             setSaving(false);
         }
     };
 
-    const confirmDelete = (id) => {
-        Swal.fire({
-            title: "¿Eliminar producto?",
-            text: "Esta acción no se puede revertir.",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#10b981",
-            cancelButtonColor: "#ef4444",
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-            reverseButtons: true,
-        }).then(async (result) => {
+    const confirmDeleteProduct = (id) => {
+        confirmDelete("¿Eliminar producto?").then(async (result) => {
             if (result.isConfirmed) {
                 try {
                     await handleDelete(id);
@@ -174,34 +167,67 @@ const ProductsPage = () => {
     };
 
     return (
-        <div
-            className="container-fluid animate__animated animate__fadeIn p-4"
-            style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}
-        >
+        <div className="admin-page animate__animated animate__fadeIn">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
-                    <h2
-                        className="fw-bold mb-1"
-                        style={{ letterSpacing: "-0.03em", color: "#111827" }}
-                    >
-                        Nubix Market <span style={{ color: "#10b981" }}>/</span>{" "}
+                    <h2 className="admin-page-title fw-bold mb-1">
+                        Nubix Market <span className="admin-accent-slash">/</span>{" "}
                         Productos
                     </h2>
                     <p className="text-muted small mb-0">
                         Control de inventario y activos del sistema
                     </p>
                 </div>
-                <button
-                    className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center"
-                    onClick={() => openModal()}
-                    style={{
-                        backgroundColor: "#10b981",
-                        border: "none",
-                        borderRadius: "10px",
-                    }}
+                <div className="d-flex flex-wrap gap-2 admin-page-header-actions">
+                    <button
+                        type="button"
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
+                        onClick={() =>
+                            Swal.fire({
+                                title: "Exportar productos",
+                                html: `
+                                  <div class="text-start">
+                                    <label class="form-label small">Categoría</label>
+                                    <select id="exp-cat" class="form-select mb-2">
+                                      <option value="">Todas</option>
+                                      ${categories.map((c) => `<option value="${c.id}">${c.nombre}</option>`).join("")}
+                                    </select>
+                                    <div class="form-check mb-2">
+                                      <input class="form-check-input" type="checkbox" id="exp-stock">
+                                      <label class="form-check-label">Solo stock bajo (&lt;10)</label>
+                                    </div>
+                                    <label class="form-label small">Precio mín.</label>
+                                    <input type="number" id="exp-min" class="form-control mb-2" step="0.01">
+                                    <label class="form-label small">Precio máx.</label>
+                                    <input type="number" id="exp-max" class="form-control" step="0.01">
+                                  </div>`,
+                                showCancelButton: true,
+                                confirmButtonText: "Descargar",
+                                confirmButtonColor: "#10b981",
+                                preConfirm: () => ({
+                                    categoriaId: document.getElementById("exp-cat").value || undefined,
+                                    stockBajo: document.getElementById("exp-stock").checked,
+                                    precioMin: document.getElementById("exp-min").value,
+                                    precioMax: document.getElementById("exp-max").value,
+                                }),
+                            }).then((r) => {
+                                if (r.isConfirmed) {
+                                    reportService.exportProducts(r.value).catch(() =>
+                                        Toast.fire({ icon: "error", title: "Error al exportar" }),
+                                    );
+                                }
+                            })
+                        }
+                    >
+                        <i className="bi bi-file-earmark-excel me-2"></i> Excel
+                    </button>
+                    <button
+                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center admin-btn-primary"
+                        onClick={() => openModal()}
                 >
                     <i className="bi bi-box-seam-fill me-2"></i> Nuevo Producto
-                </button>
+                    </button>
+                </div>
             </div>
 
             <div className="row g-4 mb-4">
@@ -253,7 +279,7 @@ const ProductsPage = () => {
                 </div>
                 <div className="col-md-6">
                     <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3"
+                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
                         style={{ borderRadius: "15px", height: "100%" }}
                     >
                         <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
@@ -265,8 +291,27 @@ const ProductsPage = () => {
                             className="form-control border-0 shadow-none bg-transparent"
                             placeholder="Buscar por nombre o código..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setCurrentPage(1);
+                            }}
                         />
+                        <select
+                            className="form-select border-0 bg-transparent ms-2"
+                            style={{ maxWidth: "200px" }}
+                            value={filterCategory}
+                            onChange={(e) => {
+                                setFilterCategory(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <option value="">Todas las categorías</option>
+                            {categories.map((c) => (
+                                <option key={c.id} value={c.nombre}>
+                                    {c.nombre}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </div>
@@ -343,6 +388,7 @@ const ProductsPage = () => {
                                                     <img
                                                         src={imageUrl}
                                                         alt={prod.nombre}
+                                                        loading="lazy"
                                                         className="rounded border"
                                                         style={{
                                                             width: "44px",
@@ -409,7 +455,7 @@ const ProductsPage = () => {
                                                 <button
                                                     className="btn-action btn-delete"
                                                     onClick={() =>
-                                                        confirmDelete(prod.id)
+                                                        confirmDeleteProduct(prod.id)
                                                     }
                                                     title="Eliminar"
                                                 >
@@ -435,8 +481,8 @@ const ProductsPage = () => {
                 </div>
 
                 {totalPages > 1 && (
-                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
-                        <div className="text-muted small">
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
+                        <div className="text-muted small admin-pagination-info">
                             Página{" "}
                             <span className="fw-bold">{currentPage}</span> de{" "}
                             {totalPages}
@@ -542,13 +588,8 @@ const ProductsPage = () => {
                                 <button
                                     type="submit"
                                     form="productForm"
-                                    className="btn btn-success px-5 fw-bold shadow-sm"
+                                    className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary"
                                     disabled={saving}
-                                    style={{
-                                        borderRadius: "10px",
-                                        backgroundColor: "#10b981",
-                                        border: "none",
-                                    }}
                                 >
                                     {saving ? (
                                         <span className="spinner-border spinner-border-sm me-2"></span>
@@ -565,24 +606,6 @@ const ProductsPage = () => {
                 </div>
             </div>
 
-            <style>{`
-                .text-emerald-600 { color: #10b981 !important; }
-                .bg-emerald-100 { background-color: #d1fae5 !important; }
-                .fw-black { font-weight: 900; color: #111827; }
-                .modal.show { backdrop-filter: none !important; background-color: rgba(17, 24, 39, 0.6) !important; }
-                .btn-action {
-                    border: none; background: transparent; padding: 6px 10px;
-                    border-radius: 8px; transition: all 0.2s;
-                    font-size: 1.15rem;
-                }
-                .btn-edit { color: #10b981; }
-                .btn-edit:hover { background-color: #ecfdf5; transform: scale(1.15); }
-                .btn-delete { color: #ef4444; }
-                .btn-delete:hover { background-color: #fef2f2; transform: scale(1.15); }
-                .active-pagination { background-color: #10b981 !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
-                .page-link:hover:not(.active-pagination) { background-color: #ecfdf5 !important; color: #10b981 !important; }
-                input#product_global_search::placeholder { color: #9ca3af; font-size: 0.9rem; }
-            `}</style>
         </div>
     );
 };
