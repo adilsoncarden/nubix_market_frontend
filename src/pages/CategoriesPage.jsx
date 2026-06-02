@@ -3,7 +3,7 @@ import { Modal } from "bootstrap";
 import { useCategories } from "../features/categories/hooks/useCategories";
 import { categoryService } from "../features/categories/services/categoryService";
 import CategoryForm from "../features/categories/components/CategoryForm";
-import Swal from "sweetalert2";
+import { Toast } from "../utils/swalConfig";
 import { reportService } from "../features/reports/services/reportService";
 
 const CategoriesPage = () => {
@@ -12,19 +12,6 @@ const CategoriesPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-
-    // --- CONFIGURACIÓN DE SWEETALERT (TOAST) ---
-    const Toast = Swal.mixin({
-        toast: true,
-        position: "bottom-end",
-        showConfirmButton: false,
-        timer: 2500,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.onmouseenter = Swal.stopTimer;
-            toast.onmouseleave = Swal.resumeTimer;
-        },
-    });
 
     // --- FILTRADO POR NOMBRE Y DESCRIPCIÓN ---
     const filteredCategories = useMemo(() => {
@@ -134,9 +121,12 @@ const CategoriesPage = () => {
                     <button
                         type="button"
                         className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
-                        onClick={() => reportService.exportCategories().catch(() =>
-                            Swal.fire("Error", "No se pudo exportar categorías", "error"),
-                        )}
+                        onClick={() =>                             reportService.exportCategories().catch(() =>
+                                Toast.fire({
+                                    icon: "error",
+                                    title: "No se pudo exportar categorías",
+                                }),
+                            )}
                     >
                         <i className="bi bi-file-earmark-excel me-2"></i> Excel
                     </button>

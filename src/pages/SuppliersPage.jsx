@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Modal } from "bootstrap";
 import { useSuppliers } from "../features/suppliers/hooks/useSuppliers";
 import SupplierForm from "../features/suppliers/components/SupplierForm";
-import Swal from "sweetalert2";
 import { reportService } from "../features/reports/services/reportService";
 import { Toast } from "../utils/swalConfig";
 
@@ -18,16 +17,8 @@ const SuppliersPage = () => {
     const [selectedSupplier, setSelectedSupplier] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [formkey, setFormKey] = useState(Date.now()); 
+    const [formkey, setFormKey] = useState(Date.now());
     const itemsPerPage = 10;
-
-    const Toast = Swal.mixin({
-        toast: true,
-        position: "bottom-end",
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true,
-    });
 
     useEffect(() => {
         refreshSuppliers();
@@ -78,32 +69,14 @@ const SuppliersPage = () => {
     };
 
     const handleSave = async (data) => {
-        const success = await saveSupplier(data);
+        const success = await saveSupplier(data, selectedSupplier?.id);
         if (success) {
             bsModal.current.hide();
-            Toast.fire({
-                icon: "success",
-                title: selectedSupplier ? "Actualizado" : "Registrado",
-            });
         }
     };
 
     const handleDelete = (id) => {
-        Swal.fire({
-            title: "¿Eliminar proveedor?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#10b981",
-            cancelButtonColor: "#ef4444",
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                const success = await removeSupplier(id);
-                if (success)
-                    Toast.fire({ icon: "success", title: "Eliminado" });
-            }
-        });
+        removeSupplier(id);
     };
 
     return (

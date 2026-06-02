@@ -12,12 +12,12 @@ export const Toast = Swal.mixin({
     },
 });
 
+/** Confirmación modal centrada (comportamiento por defecto de SweetAlert2). */
 export const confirmDelete = (title, text = "Esta acción no se puede revertir.") =>
     Swal.fire({
         title,
         text,
         icon: "warning",
-        position: "bottom-end",
         showCancelButton: true,
         confirmButtonColor: "#10b981",
         cancelButtonColor: "#ef4444",
