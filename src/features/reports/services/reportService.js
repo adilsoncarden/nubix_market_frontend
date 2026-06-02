@@ -44,9 +44,21 @@ export const reportService = {
         downloadBlob(response.data, "proveedores.xlsx");
     },
 
-    exportSales: async (desde, hasta) => {
+    exportSales: async ({
+        desde,
+        hasta,
+        tipoEntrega,
+        clienteId,
+        estadoPedido,
+        estadoPago,
+    } = {}) => {
+        const params = { desde, hasta };
+        if (tipoEntrega) params.tipoEntrega = tipoEntrega;
+        if (clienteId) params.clienteId = Number(clienteId);
+        if (estadoPedido) params.estadoPedido = estadoPedido;
+        if (estadoPago) params.estadoPago = estadoPago;
         const response = await api.get("/admin/reportes/ventas", {
-            params: { desde, hasta },
+            params,
             responseType: "blob",
         });
         downloadBlob(response.data, `ventas_${desde}_${hasta}.xlsx`);

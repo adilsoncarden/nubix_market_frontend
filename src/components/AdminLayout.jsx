@@ -13,11 +13,13 @@ import {
     computeDashboardMetrics,
     normalizeList,
 } from "../features/dashboard/utils/dashboardMetrics";
+import "../styles/admin.css";
 
 const AdminLayout = () => {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme();
     const location = useLocation();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [now, setNow] = useState(() => new Date());
     const [dashboardLoading, setDashboardLoading] = useState(true);
     const [rawData, setRawData] = useState({
@@ -37,6 +39,10 @@ const AdminLayout = () => {
         const timer = setInterval(() => setNow(new Date()), 1000);
         return () => clearInterval(timer);
     }, []);
+
+    useEffect(() => {
+        setSidebarOpen(false);
+    }, [location.pathname]);
 
     useEffect(() => {
         if (!isDashboardHome) return;
@@ -240,16 +246,33 @@ const AdminLayout = () => {
             className="d-flex vh-100 overflow-hidden bg-body-secondary admin-shell"
             data-bs-theme={theme}
         >
-            <Sidebar />
+            <button
+                type="button"
+                className={`admin-sidebar-backdrop ${sidebarOpen ? "is-visible" : ""}`}
+                aria-label="Cerrar menú"
+                onClick={() => setSidebarOpen(false)}
+            />
+            <Sidebar
+                isOpen={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
+            />
 
-            <div className="flex-grow-1 d-flex flex-column overflow-hidden">
-                <header className="navbar border-bottom px-4 py-3 bg-body shadow-sm sticky-top">
-                    <div className="container-fluid p-0 d-flex align-items-center flex-wrap gap-3">
+            <div className="flex-grow-1 d-flex flex-column overflow-hidden min-w-0">
+                <header className="navbar border-bottom px-4 py-3 bg-body shadow-sm sticky-top admin-topbar">
+                    <div className="container-fluid p-0 d-flex align-items-center flex-wrap gap-2 gap-md-3">
+                        <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-sm admin-menu-toggle me-1"
+                            onClick={() => setSidebarOpen(true)}
+                            aria-label="Abrir menú"
+                        >
+                            <i className="bi bi-list fs-5"></i>
+                        </button>
                         <h5 className="m-0 fw-bold text-secondary">
                             Dashboard Operativo
                         </h5>
 
-                        <div className="d-flex align-items-center flex-wrap gap-3 ms-md-3">
+                        <div className="d-flex align-items-center flex-wrap gap-3 ms-md-3 admin-topbar-stats">
                             <div className="small">
                                 <div
                                     className="fw-bold"
@@ -301,9 +324,9 @@ const AdminLayout = () => {
                                 ></i>
                                 {theme === "light" ? "Oscuro" : "Claro"}
                             </button>
-                            <span className="fw-bold small text-muted">
+                            <span className="fw-bold small text-muted admin-session-label">
                                 Sesión:{" "}
-                                <span style={{ color: "#198754" }}>
+                                <span className="text-emerald-600">
                                     {user?.username}
                                 </span>
                             </span>
@@ -322,60 +345,7 @@ const AdminLayout = () => {
                 </header>
 
                 <main className="p-4 flex-grow-1 overflow-auto">
-                    <div className="container-fluid">
-                        <style>{`
-                            .card-dashboard { border-radius: 18px; border: none; background: var(--bs-body-bg); }
-                            .icon-box { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
-                            .stat-value { font-size: 1.75rem; font-weight: 800; color: var(--bs-body-color); }
-                            .chart-title { font-size: 0.85rem; font-weight: 700; color: var(--bs-secondary-color); text-transform: uppercase; letter-spacing: 0.5px; }
-                            .table-custom thead { background-color: var(--bs-tertiary-bg); }
-                            .badge-critical { background-color: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
-                            [data-bs-theme="dark"] .badge-critical { background-color: rgba(153, 27, 27, 0.25); color: #fca5a5; border-color: #991b1b; }
-                            .admin-shell[data-bs-theme="dark"] .bg-white,
-                            .admin-shell[data-bs-theme="dark"] .card.border-0.shadow-sm {
-                                background-color: var(--bs-body-bg) !important;
-                                color: var(--bs-body-color);
-                            }
-                            .admin-shell[data-bs-theme="dark"] .bg-light,
-                            .admin-shell[data-bs-theme="dark"] .table-light,
-                            .admin-shell[data-bs-theme="dark"] thead.bg-light {
-                                background-color: var(--bs-tertiary-bg) !important;
-                                color: var(--bs-body-color) !important;
-                            }
-                            .admin-shell[data-bs-theme="dark"] .text-dark {
-                                color: var(--bs-body-color) !important;
-                            }
-                            .admin-shell[data-bs-theme="dark"] .form-control.bg-light,
-                            .admin-shell[data-bs-theme="dark"] .form-select.bg-light,
-                            .admin-shell[data-bs-theme="dark"] .input-group-text.bg-light {
-                                background-color: var(--bs-secondary-bg) !important;
-                                color: var(--bs-body-color) !important;
-                                border-color: var(--bs-border-color) !important;
-                            }
-                            .admin-shell[data-bs-theme="dark"] .page-link.text-dark.bg-light {
-                                background-color: var(--bs-secondary-bg) !important;
-                                color: var(--bs-body-color) !important;
-                            }
-                            .admin-shell[data-bs-theme="dark"] .badge.bg-light,
-                            .admin-shell[data-bs-theme="dark"] .badge.bg-white {
-                                background-color: var(--bs-secondary-bg) !important;
-                                color: var(--bs-body-color) !important;
-                                border-color: var(--bs-border-color) !important;
-                            }
-                            .admin-shell[data-bs-theme="dark"] .table {
-                                --bs-table-bg: transparent;
-                                --bs-table-color: var(--bs-body-color);
-                                --bs-table-hover-bg: var(--bs-tertiary-bg);
-                            }
-                            [data-bs-theme="dark"] .modal-content {
-                                background-color: var(--bs-body-bg);
-                                color: var(--bs-body-color);
-                            }
-                            [data-bs-theme="dark"] .modal-header.bg-success {
-                                border-bottom-color: rgba(255, 255, 255, 0.15);
-                            }
-                        `}</style>
-
+                    <div className="container-fluid px-0">
                         {isDashboardHome ? (
                             <div className="animate__animated animate__fadeIn">
                                 <div className="row g-4 mb-4">

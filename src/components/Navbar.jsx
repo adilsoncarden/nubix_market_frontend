@@ -173,7 +173,7 @@ export default function Navbar() {
                         </div>
 
                         <form
-                            className="flex-grow-1 mx-4 d-none d-md-block"
+                            className="flex-grow-1 mx-md-4 nubix-nav-search"
                             style={{ maxWidth: "380px" }}
                         >
                             <input

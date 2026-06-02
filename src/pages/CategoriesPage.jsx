@@ -99,25 +99,18 @@ const CategoriesPage = () => {
     };
 
     return (
-        <div
-            className="container-fluid animate__animated animate__fadeIn p-4"
-            style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}
-        >
-            {/* HEADER */}
+        <div className="admin-page animate__animated animate__fadeIn">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
-                    <h2
-                        className="fw-bold mb-1"
-                        style={{ letterSpacing: "-0.03em", color: "#111827" }}
-                    >
-                        Nubix Market <span style={{ color: "#10b981" }}>/</span>{" "}
+                    <h2 className="admin-page-title fw-bold mb-1">
+                        Nubix Market <span className="admin-accent-slash">/</span>{" "}
                         Categorías
                     </h2>
                     <p className="text-muted small mb-0">
                         Gestión de taxonomía y organización de productos
                     </p>
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex flex-wrap gap-2 admin-page-header-actions">
                     <button
                         type="button"
                         className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
@@ -131,13 +124,8 @@ const CategoriesPage = () => {
                         <i className="bi bi-file-earmark-excel me-2"></i> Excel
                     </button>
                     <button
-                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center"
+                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center admin-btn-primary"
                         onClick={() => openModal()}
-                    style={{
-                        backgroundColor: "#10b981",
-                        border: "none",
-                        borderRadius: "10px",
-                    }}
                 >
                     <i className="bi bi-plus-lg me-2"></i> Nueva Categoría
                     </button>
@@ -171,7 +159,7 @@ const CategoriesPage = () => {
                 </div>
                 <div className="col-md-9">
                     <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3"
+                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
                         style={{ borderRadius: "15px", height: "100%" }}
                     >
                         <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
@@ -284,8 +272,8 @@ const CategoriesPage = () => {
 
                 {/* PAGINACIÓN VERDE */}
                 {totalPages > 1 && (
-                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
-                        <div className="text-muted small">
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
+                        <div className="text-muted small admin-pagination-info">
                             Mostrando{" "}
                             <span className="fw-bold">
                                 {indexOfFirstItem + 1}
@@ -389,13 +377,8 @@ const CategoriesPage = () => {
                                 <button
                                     type="submit"
                                     form="categoryForm"
-                                    className="btn btn-success px-4 fw-bold shadow-sm"
+                                    className="btn btn-success px-4 fw-bold shadow-sm admin-btn-primary"
                                     disabled={saving}
-                                    style={{
-                                        borderRadius: "10px",
-                                        backgroundColor: "#10b981",
-                                        border: "none",
-                                    }}
                                 >
                                     {saving ? (
                                         <span className="spinner-border spinner-border-sm me-2"></span>
@@ -412,36 +395,6 @@ const CategoriesPage = () => {
                 </div>
             </div>
 
-            <style>{`
-                /* Estilos de Marca */
-                .text-emerald-600 { color: #10b981 !important; }
-                .bg-emerald-100 { background-color: #d1fae5 !important; }
-                .bg-emerald-600 { background-color: #10b981 !important; }
-
-                /* Reset de Modal (Sin Blur) */
-                .modal.show { backdrop-filter: none !important; background-color: rgba(17, 24, 39, 0.6) !important; }
-
-                /* Botones de Accion Verdes */
-                .btn-action {
-                    border: none; background: transparent; padding: 6px 10px;
-                    border-radius: 8px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                    font-size: 1.15rem;
-                }
-                .btn-edit { color: #10b981; }
-                .btn-edit:hover { background-color: #ecfdf5; transform: scale(1.15); }
-                .btn-delete { color: #ef4444; }
-                .btn-delete:hover { background-color: #fef2f2; transform: scale(1.15); }
-
-                /* Paginación Activa */
-                .active-pagination { background-color: #10b981 !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
-                .page-link:hover:not(.active-pagination) { background-color: #ecfdf5 !important; color: #10b981 !important; }
-                
-                /* Input de Búsqueda */
-                .form-control:focus { border-color: #10b981; box-shadow: none; }
-
-                /* Animación suave para filas */
-                tr { transition: background-color 0.15s; }
-            `}</style>
         </div>
     );
 };

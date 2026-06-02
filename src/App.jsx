@@ -22,6 +22,7 @@ import Footer from "./components/Footer";
 import MainContent from "./components/MainContent";
 import AdminLayout from "./components/AdminLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import Chatbot from "./components/Chatbot/Chatbot";
 import { useAuth } from "./store/AuthContext";
 
 // ───────────────── PÁGINAS PÚBLICAS ─────────────────
@@ -92,6 +93,7 @@ export default function App() {
                 <ProductCatalogProvider>
                     <CartProvider>
                         <FavoritesProvider>
+                            <Chatbot />
                             <Routes>
                             {/* ───────────── WEB PÚBLICA ───────────── */}
                             <Route element={<PublicLayout />}>

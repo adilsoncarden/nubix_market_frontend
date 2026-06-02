@@ -3,10 +3,11 @@ import { useAuth } from "../store/AuthContext";
 import { useState } from "react";
 import logo from "../assets/logo.png";
 
-const SidebarItem = ({ to, icon, label, active, isSubItem = false }) => (
+const SidebarItem = ({ to, icon, label, active, isSubItem = false, onNavigate }) => (
     <li className="nav-item">
         <Link
             to={to}
+            onClick={onNavigate}
             className={`nav-link d-flex align-items-center px-3 py-2 mb-1 rounded-3 transition-all ${
                 active
                     ? "active-link shadow-sm text-white"
@@ -20,12 +21,16 @@ const SidebarItem = ({ to, icon, label, active, isSubItem = false }) => (
     </li>
 );
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen = false, onClose }) => {
     const location = useLocation();
     const { logout, user } = useAuth();
     const [isUsersOpen, setIsUsersOpen] = useState(
         location.pathname.includes("/admin/usuarios"),
     );
+
+    const handleNavigate = () => {
+        onClose?.();
+    };
 
     const menuItems = [
         {
@@ -57,27 +62,16 @@ const Sidebar = () => {
 
     return (
         <aside
-            className="d-flex flex-column bg-body vh-100 border-end shadow-sm"
-            style={{ width: "280px" }}
+            className={`admin-sidebar d-flex flex-column bg-body vh-100 border-end shadow-sm ${isOpen ? "is-open" : ""}`}
         >
-            <style>{`
-                .active-link { background-color: #10b981 !important; }
-                .text-emerald-600 { color: #10b981 !important; }
-                .hover-bg:hover { background-color: #f0fdf4; color: #10b981 !important; }
-                .transition-all { transition: all 0.2s ease-in-out; }
-                .fs-7 { font-size: 0.8rem; }
-                .dropdown-btn:hover { background-color: #f8f9fa; }
-                .avatar-border { border: 2px solid #10b981; padding: 2px; }
-            `}</style>
-
-            {/* Logo / Brand Centrar el logo */}
-            <div className="p-4 mb-2 border-bottom d-flex justify-content-center height">
+            <div className="p-3 mb-1 border-bottom d-flex align-items-center justify-content-between">
                 <Link
                     to="/admin/dashboard"
-                    className="d-flex align-items-center text-decoration-none"
+                    className="d-flex align-items-center text-decoration-none mx-auto"
+                    onClick={handleNavigate}
                 >
                     <div
-                        className="me-2 d-flex align-items-center justify-content-center"
+                        className="admin-sidebar-logo d-flex align-items-center justify-content-center"
                         style={{ width: "100px", height: "100px" }}
                     >
                         <img
@@ -87,13 +81,17 @@ const Sidebar = () => {
                             style={{ maxHeight: "100%", objectFit: "contain" }}
                         />
                     </div>
-                    {/* <span className="fs-4 fw-bold tracking-tight text-dark">
-                        Nubix<span className="text-muted fw-light">Market</span>
-                    </span> */}
                 </Link>
+                <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary admin-sidebar-close ms-2"
+                    aria-label="Cerrar menú"
+                    onClick={onClose}
+                >
+                    <i className="bi bi-x-lg"></i>
+                </button>
             </div>
 
-            {/* Navigation */}
             <div className="px-3 flex-grow-1 overflow-auto">
                 <p
                     className="text-uppercase text-muted fw-bold mb-2 ps-3"
@@ -109,6 +107,7 @@ const Sidebar = () => {
                             icon={item.icon}
                             label={item.label}
                             active={location.pathname === item.path}
+                            onNavigate={handleNavigate}
                         />
                     ))}
 
@@ -145,6 +144,7 @@ const Sidebar = () => {
                                         "/admin/usuarios/clientes"
                                     }
                                     isSubItem
+                                    onNavigate={handleNavigate}
                                 />
                                 <SidebarItem
                                     to="/admin/usuarios/empleados"
@@ -155,6 +155,7 @@ const Sidebar = () => {
                                         "/admin/usuarios/empleados"
                                     }
                                     isSubItem
+                                    onNavigate={handleNavigate}
                                 />
                             </ul>
                         </div>
@@ -162,24 +163,21 @@ const Sidebar = () => {
                 </ul>
             </div>
 
-            {/* User Profile Section */}
             <div className="p-3 mt-auto border-top bg-body-secondary">
                 <div className="d-flex align-items-center p-2 rounded-4 bg-body shadow-sm border mb-3">
                     <div className="flex-shrink-0">
-                        <div className="avatar-border rounded-circle">
-                            <div
-                                className="bg-emerald-100 rounded-circle d-flex align-items-center justify-content-center"
-                                style={{
-                                    width: "40px",
-                                    height: "40px",
-                                    backgroundColor: "#ecfdf5",
-                                }}
-                            >
-                                <span className="text-emerald-700 fw-bold">
-                                    {user?.username?.charAt(0).toUpperCase() ||
-                                        "A"}
-                                </span>
-                            </div>
+                        <div
+                            className="rounded-circle d-flex align-items-center justify-content-center border border-success border-2"
+                            style={{
+                                width: "40px",
+                                height: "40px",
+                                backgroundColor: "var(--admin-accent-soft, #ecfdf5)",
+                            }}
+                        >
+                            <span className="text-emerald-600 fw-bold">
+                                {user?.username?.charAt(0).toUpperCase() ||
+                                    "A"}
+                            </span>
                         </div>
                     </div>
                     <div className="flex-grow-1 ms-3 min-w-0">
@@ -187,7 +185,7 @@ const Sidebar = () => {
                             className="mb-0 text-body fw-bold text-truncate"
                             style={{ fontSize: "0.9rem" }}
                         >
-                            {user ? user.username : "Adilson"}
+                            {user ? user.username : "Admin"}
                         </p>
                         <p
                             className="mb-0 text-muted text-uppercase fw-semibold"
@@ -200,7 +198,7 @@ const Sidebar = () => {
 
                 <button
                     onClick={logout}
-                    className="btn btn-outline-danger w-100 border-0 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3 hover-danger transition-all font-bold"
+                    className="btn btn-outline-danger w-100 border-0 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3"
                 >
                     <i className="bi bi-box-arrow-right"></i>
                     <span className="fw-bold small">Cerrar Sesión</span>

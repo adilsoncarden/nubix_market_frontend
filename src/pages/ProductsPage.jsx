@@ -167,24 +167,18 @@ const ProductsPage = () => {
     };
 
     return (
-        <div
-            className="container-fluid animate__animated animate__fadeIn p-4"
-            style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}
-        >
+        <div className="admin-page animate__animated animate__fadeIn">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
-                    <h2
-                        className="fw-bold mb-1"
-                        style={{ letterSpacing: "-0.03em", color: "#111827" }}
-                    >
-                        Nubix Market <span style={{ color: "#10b981" }}>/</span>{" "}
+                    <h2 className="admin-page-title fw-bold mb-1">
+                        Nubix Market <span className="admin-accent-slash">/</span>{" "}
                         Productos
                     </h2>
                     <p className="text-muted small mb-0">
                         Control de inventario y activos del sistema
                     </p>
                 </div>
-                <div className="d-flex gap-2">
+                <div className="d-flex flex-wrap gap-2 admin-page-header-actions">
                     <button
                         type="button"
                         className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
@@ -228,13 +222,8 @@ const ProductsPage = () => {
                         <i className="bi bi-file-earmark-excel me-2"></i> Excel
                     </button>
                     <button
-                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center"
+                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center admin-btn-primary"
                         onClick={() => openModal()}
-                    style={{
-                        backgroundColor: "#10b981",
-                        border: "none",
-                        borderRadius: "10px",
-                    }}
                 >
                     <i className="bi bi-box-seam-fill me-2"></i> Nuevo Producto
                     </button>
@@ -290,7 +279,7 @@ const ProductsPage = () => {
                 </div>
                 <div className="col-md-6">
                     <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3"
+                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
                         style={{ borderRadius: "15px", height: "100%" }}
                     >
                         <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
@@ -492,8 +481,8 @@ const ProductsPage = () => {
                 </div>
 
                 {totalPages > 1 && (
-                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
-                        <div className="text-muted small">
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
+                        <div className="text-muted small admin-pagination-info">
                             Página{" "}
                             <span className="fw-bold">{currentPage}</span> de{" "}
                             {totalPages}
@@ -599,13 +588,8 @@ const ProductsPage = () => {
                                 <button
                                     type="submit"
                                     form="productForm"
-                                    className="btn btn-success px-5 fw-bold shadow-sm"
+                                    className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary"
                                     disabled={saving}
-                                    style={{
-                                        borderRadius: "10px",
-                                        backgroundColor: "#10b981",
-                                        border: "none",
-                                    }}
                                 >
                                     {saving ? (
                                         <span className="spinner-border spinner-border-sm me-2"></span>
@@ -622,24 +606,6 @@ const ProductsPage = () => {
                 </div>
             </div>
 
-            <style>{`
-                .text-emerald-600 { color: #10b981 !important; }
-                .bg-emerald-100 { background-color: #d1fae5 !important; }
-                .fw-black { font-weight: 900; color: #111827; }
-                .modal.show { backdrop-filter: none !important; background-color: rgba(17, 24, 39, 0.6) !important; }
-                .btn-action {
-                    border: none; background: transparent; padding: 6px 10px;
-                    border-radius: 8px; transition: all 0.2s;
-                    font-size: 1.15rem;
-                }
-                .btn-edit { color: #10b981; }
-                .btn-edit:hover { background-color: #ecfdf5; transform: scale(1.15); }
-                .btn-delete { color: #ef4444; }
-                .btn-delete:hover { background-color: #fef2f2; transform: scale(1.15); }
-                .active-pagination { background-color: #10b981 !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
-                .page-link:hover:not(.active-pagination) { background-color: #ecfdf5 !important; color: #10b981 !important; }
-                input#product_global_search::placeholder { color: #9ca3af; font-size: 0.9rem; }
-            `}</style>
         </div>
     );
 };

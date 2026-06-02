@@ -87,22 +87,11 @@ const ClientsPage = () => {
     };
 
     return (
-        <div
-            className="container-fluid p-4"
-            style={{
-                backgroundColor: "#f9fafb",
-                minHeight: "100vh",
-                fontSize: "0.9rem",
-            }}
-        >
-            {/* CABECERA */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="admin-page" style={{ fontSize: "0.9rem" }}>
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
-                    <h2
-                        className="fw-bold mb-1"
-                        style={{ letterSpacing: "-0.03em", color: "#111827" }}
-                    >
-                        Nubix Market <span style={{ color: "#10b981" }}>/</span>{" "}
+                    <h2 className="admin-page-title fw-bold mb-1">
+                        Nubix Market <span className="admin-accent-slash">/</span>{" "}
                         Clientes
                     </h2>
                     <p className="text-muted small mb-0">
@@ -245,8 +234,8 @@ const ClientsPage = () => {
 
                 {/* PAGINACIÓN */}
                 {!loading && totalPages > 1 && (
-                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
-                        <div className="text-muted small">
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
+                        <div className="text-muted small admin-pagination-info">
                             Mostrando <b>{indexOfFirstItem + 1}</b> a{" "}
                             <b>
                                 {Math.min(
@@ -390,12 +379,7 @@ const ClientsPage = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="btn btn-success px-4 fw-bold shadow-sm"
-                                    style={{
-                                        borderRadius: "10px",
-                                        backgroundColor: "#10b981",
-                                        border: "none",
-                                    }}
+                                    className="btn btn-success px-4 fw-bold shadow-sm admin-btn-primary"
                                 >
                                     Guardar Cambios
                                 </button>
@@ -405,38 +389,6 @@ const ClientsPage = () => {
                 </div>
             </div>
 
-            <style>{`
-                .text-emerald-600 { color: #10b981 !important; }
-                .bg-emerald-100 { background-color: #d1fae5 !important; }
-                .extra-small { font-size: 0.7rem; letter-spacing: 0.05em; }
-
-                /* Badge del Rol */
-                .badge-role {
-                    font-size: 10px; font-weight: 700; text-transform: uppercase;
-                    color: #059669; background-color: #ecfdf5;
-                    padding: 4px 10px; border-radius: 6px; border: 1px solid #d1fae5;
-                }
-
-                /* Acciones Tabla */
-                .btn-table-action {
-                    border: none; background: none; padding: 6px;
-                    border-radius: 8px; transition: 0.2s; font-size: 1.15rem;
-                }
-                .btn-table-action.edit { color: #10b981; }
-                .btn-table-action.edit:hover { background-color: #ecfdf5; transform: scale(1.1); }
-
-                /* Paginación */
-                .active-page { background-color: #10b981 !important; color: white !important; }
-                .page-link:hover:not(.active-page) { background-color: #ecfdf5 !important; color: #10b981 !important; }
-
-                /* Inputs Modal */
-                .modal-client-custom input:focus {
-                    background-color: #fff !important;
-                    border: 1px solid #10b981 !important;
-                    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15) !important;
-                }
-                .modal.show { background-color: rgba(17, 24, 39, 0.5) !important; }
-            `}</style>
         </div>
     );
 };

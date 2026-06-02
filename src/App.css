@@ -645,3 +645,120 @@ body {
   .modal-pago { border-radius: 16px 16px 0 0; margin-top: auto; max-height: 95vh; }
   .modal-overlay { align-items: flex-end; padding: 0; }
 }
+
+/* ─── Web pública: modo oscuro (navbar y dropdowns) ─────── */
+[data-bs-theme="dark"] .navbar-nubix {
+  background-color: #1e293b !important;
+  border-bottom-color: #334155 !important;
+}
+
+[data-bs-theme="dark"] .btn-categorias-clean {
+  color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .btn-categorias-clean:hover {
+  background: #334155;
+  border-color: #475569;
+}
+
+[data-bs-theme="dark"] .action-icon-btn {
+  color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .action-icon-btn:hover {
+  background-color: #334155;
+  color: #34d399;
+}
+
+[data-bs-theme="dark"] .dropdown-menu-wow {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item-custom {
+  color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item-custom:hover {
+  background-color: #14532d !important;
+  color: #34d399 !important;
+}
+
+[data-bs-theme="dark"] .notif-item {
+  border-bottom-color: #334155;
+}
+
+[data-bs-theme="dark"] .notif-dropdown strong,
+[data-bs-theme="dark"] .notif-dropdown div[style*="0f172a"] {
+  color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .form-control.rounded-pill {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+/* ─── Web pública: responsive extra ─────────────────────── */
+@media (max-width: 767.98px) {
+  .nubix-navbar .container,
+  .navbar-nubix .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .search-bar {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .product-grid,
+  .shop-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cart-layout,
+  .shop-layout {
+    gap: 1rem;
+  }
+}
+
+.nubix-nav-search {
+  min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .navbar-nubix .container > .d-flex {
+    flex-wrap: wrap;
+  }
+
+  .nubix-nav-search {
+    order: 3;
+    width: 100%;
+    max-width: 100% !important;
+    margin: 0.35rem 0 0 !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .navbar-nubix .container .d-flex {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .btn-hero-cta,
+  .btn-cart-cta,
+  .btn-offer-cta {
+    width: 100%;
+    text-align: center;
+  }
+
+  .login-page-wrapper .card {
+    margin: 0.5rem;
+  }
+
+  .login-page-wrapper .form-control,
+  .login-page-wrapper .btn {
+    width: 100%;
+  }
+}
