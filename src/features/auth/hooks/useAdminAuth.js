@@ -25,10 +25,11 @@ export const useAdminAuth = () => {
                 setError(data.message || "Error de autenticación");
             }
         } catch (err) {
-            setError(
-                err.response?.data?.message ||
-                    "Error al conectar con el servidor",
-            );
+            if (!err.response) {
+                setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+            } else {
+                setError(err.response?.data?.message || "Credenciales incorrectas");
+            }
         } finally {
             setLoading(false);
         }

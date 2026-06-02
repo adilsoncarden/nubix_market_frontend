@@ -219,7 +219,7 @@ function ModalPago({ items, onClose, onSuccess }) {
         [items, tipoEntrega],
     );
     const { subtotalBase, igv, subtotalConIgv, delivery, total } = totals;
-    const [metodoPago, setMetodoPago] = useState("YAPE");
+    const [metodoPago, setMetodoPago] = useState("EFECTIVO");
     const [step, setStep] = useState("form");
     const [loading, setLoading] = useState(false);
     const [emailOk, setEmailOk] = useState(null);
@@ -350,7 +350,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                 Tipo de entrega
                             </label>
                             <select
-                                className="form-select"
+                                className="form-select pago-select"
                                 value={tipoEntrega}
                                 onChange={(e) => setTipoEntrega(e.target.value)}
                             >
@@ -395,12 +395,12 @@ function ModalPago({ items, onClose, onSuccess }) {
                                 Método de pago
                             </label>
                             <select
-                                className="form-select"
+                                className="form-select pago-select"
                                 value={metodoPago}
                                 onChange={(e) => setMetodoPago(e.target.value)}
                             >
-                                <option value="YAPE">Yape</option>
                                 <option value="EFECTIVO">Efectivo</option>
+                                <option value="YAPE">Yape</option>
                                 <option value="TRANSFERENCIA">
                                     Transferencia
                                 </option>

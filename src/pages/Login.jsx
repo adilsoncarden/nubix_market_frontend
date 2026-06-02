@@ -55,9 +55,15 @@ const Login = () => {
             }, 1200);
         } catch (error) {
             setAlertType("danger");
-            setAlertMessage(
-                "No se pudo conectar con el servidor. Intenta de nuevo.",
-            );
+            if (error.response?.data?.message) {
+                setAlertMessage(error.response.data.message);
+            } else if (!error.response) {
+                setAlertMessage(
+                    "No se pudo conectar con el servidor. Intenta de nuevo.",
+                );
+            } else {
+                setAlertMessage("Credenciales incorrectas");
+            }
             console.error("Login error:", error);
         }
     };

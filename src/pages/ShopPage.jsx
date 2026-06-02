@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import { useCart } from "../store/CartContext";
@@ -61,6 +61,19 @@ export default function ShopPage() {
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const rangeFrom =
+        filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+    const rangeTo = Math.min(page * PAGE_SIZE, filtered.length);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, sort, activeCat, activeTag]);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     const handleAdd = (e, product) => {
         e.preventDefault();
@@ -159,7 +172,9 @@ export default function ShopPage() {
                         <span className="results-count">
                             {loading
                                 ? "Cargando..."
-                                : `${filtered.length} productos`}
+                                : filtered.length === 0
+                                  ? "0 productos"
+                                  : `Mostrando ${rangeFrom}-${rangeTo} de ${filtered.length} productos`}
                         </span>
                         {activeCat !== "Todos" && (
                             <span className="results-cat">— {activeCat}</span>
