@@ -18,7 +18,7 @@ const ROLE_LABELS = {
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 const Chatbot = () => {
-    const { token, user } = useAuth();
+    const { webToken, webUser, adminToken } = useAuth();
     const location = useLocation();
     const [open, setOpen] = useState(false);
     const [input, setInput] = useState("");
@@ -28,11 +28,12 @@ const Chatbot = () => {
 
     const context = useMemo(
         () => ({
-            token,
-            user,
+            webToken,
+            webUser,
+            adminToken,
             pathname: location.pathname,
         }),
-        [token, user, location.pathname],
+        [webToken, webUser, adminToken, location.pathname],
     );
 
     const role = useMemo(() => resolveUserRole(context), [context]);

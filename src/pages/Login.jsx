@@ -13,7 +13,7 @@ const Login = () => {
     const [alertType, setAlertType] = useState("");
     const [isHovered, setIsHovered] = useState(false);
     const navigate = useNavigate();
-    const { login } = useAuth();
+    const { loginWeb } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -33,7 +33,7 @@ const Login = () => {
             }
 
             // ✅ Usar el contexto para guardar el token
-            login(
+            loginWeb(
                 {
                     username: data.username,
                     rol: data.rol,
@@ -55,9 +55,15 @@ const Login = () => {
             }, 1200);
         } catch (error) {
             setAlertType("danger");
-            setAlertMessage(
-                "No se pudo conectar con el servidor. Intenta de nuevo.",
-            );
+            if (error.response?.data?.message) {
+                setAlertMessage(error.response.data.message);
+            } else if (!error.response) {
+                setAlertMessage(
+                    "No se pudo conectar con el servidor. Intenta de nuevo.",
+                );
+            } else {
+                setAlertMessage("Credenciales incorrectas");
+            }
             console.error("Login error:", error);
         }
     };

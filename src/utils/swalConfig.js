@@ -33,5 +33,8 @@ export const alertLoginRequired = () =>
         text: "Debes iniciar sesión para agregar productos al carrito.",
         confirmButtonText: "Ir a login",
         confirmButtonColor: "#10b981",
-        position: "bottom-end",
+        showCancelButton: true,
+        cancelButtonText: "Cancelar",
+        cancelButtonColor: "#6b7280",
+        reverseButtons: true,
     });

@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { calcOrderTotals } from "../../../utils/pricing";
 import { clientService } from "../../users/services/clientService";
 import { productService } from "../../products/services/productService";
 import { useAuth } from "../../../store/AuthContext";
 import Swal from "sweetalert2";
 
 const VentaForm = ({ onSave, loading }) => {
-    const { user } = useAuth();
+    const { adminSessionUser } = useAuth();
+    const user = adminSessionUser;
 
     const [formData, setFormData] = useState({
         clienteId: "",
@@ -116,12 +118,13 @@ const VentaForm = ({ onSave, loading }) => {
         }));
     };
 
-    const calculateTotal = () => {
-        return formData.detalles.reduce(
-            (sum, detail) => sum + detail.subtotal,
-            0,
-        );
-    };
+    const orderTotals = useMemo(() => {
+        const lineItems = formData.detalles.map((d) => ({
+            priceBase: d.precio,
+            qty: d.cantidad,
+        }));
+        return calcOrderTotals(lineItems, formData.tipoEntrega || "PRESENCIAL");
+    }, [formData.detalles, formData.tipoEntrega]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -196,7 +199,7 @@ const VentaForm = ({ onSave, loading }) => {
         onSave(dataToSend);
     };
 
-    const total = calculateTotal();
+    const { subtotalBase, igv, delivery, total } = orderTotals;
     const selectedProductData = selectedProduct;
 
     const normalizedQuery = productQuery.trim().toLowerCase();
@@ -512,9 +515,32 @@ const VentaForm = ({ onSave, loading }) => {
                                     ))}
                                 </tbody>
                                 <tfoot>
+                                    <tr className="table-light">
+                                        <td colSpan="3" className="text-end">
+                                            Subtotal (sin IGV)
+                                        </td>
+                                        <td>S/ {subtotalBase.toFixed(2)}</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr className="table-light">
+                                        <td colSpan="3" className="text-end">
+                                            IGV (13%)
+                                        </td>
+                                        <td>S/ {igv.toFixed(2)}</td>
+                                        <td></td>
+                                    </tr>
+                                    {delivery > 0 && (
+                                        <tr className="table-light">
+                                            <td colSpan="3" className="text-end">
+                                                Envío
+                                            </td>
+                                            <td>S/ {delivery.toFixed(2)}</td>
+                                            <td></td>
+                                        </tr>
+                                    )}
                                     <tr className="table-light fw-bold">
                                         <td colSpan="3" className="text-end">
-                                            TOTAL:
+                                            TOTAL
                                         </td>
                                         <td className="text-success">
                                             S/ {total.toFixed(2)}

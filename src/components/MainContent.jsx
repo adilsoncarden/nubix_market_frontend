@@ -64,7 +64,7 @@ const ProductCard = ({ p }) => {
             <h6 className="product-name mb-2">{p.name || p.nombre}</h6>
             <div className="mt-auto d-flex justify-content-between align-items-center">
               <span className="product-price">S/ {(p.price ?? p.precio).toFixed(2)}</span>
-              <button className="btn-add-cart" onClick={(e) => { e.preventDefault(); addToCart({ id: p.id, name: p.name || p.nombre, price: p.price ?? p.precio, img: p.img }); }}><i className="bi bi-cart-plus"></i></button>
+              <button className="btn-add-cart" onClick={(e) => { e.preventDefault(); addToCart({ id: p.id, name: p.name || p.nombre, category: p.category, priceBase: p.priceBase, price: p.price ?? p.precio, stock: p.stock, unit: p.unit || "und", img: p.img }); }}><i className="bi bi-cart-plus"></i></button>
             </div>
           </div>
         </div>
