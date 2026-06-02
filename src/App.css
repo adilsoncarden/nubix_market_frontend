@@ -19,6 +19,58 @@
   --transition:   .3s ease;
 }
 
+[data-bs-theme="dark"] {
+  --green:        #22c55e;
+  --green-dark:   #16a34a;
+  --green-light:  #14532d;
+  --text-dark:    #f1f5f9;
+  --text-muted:   #94a3b8;
+  --bg:           #0f172a;
+  --white:        #1e293b;
+  --shadow-sm:    0 2px 12px rgba(0,0,0,.35);
+  --shadow-md:    0 8px 28px rgba(0,0,0,.45);
+}
+
+[data-bs-theme="dark"] body {
+  background: var(--bg);
+  color: var(--text-dark);
+}
+
+[data-bs-theme="dark"] .nubix-navbar {
+  background: #1e293b;
+  border-bottom-color: #334155;
+}
+
+[data-bs-theme="dark"] .product-card,
+[data-bs-theme="dark"] .card,
+[data-bs-theme="dark"] .shop-sidebar,
+[data-bs-theme="dark"] .modal-content {
+  background-color: var(--white) !important;
+  color: var(--text-dark);
+  border-color: #334155 !important;
+}
+
+[data-bs-theme="dark"] .text-dark {
+  color: var(--text-dark) !important;
+}
+
+[data-bs-theme="dark"] .bg-light,
+[data-bs-theme="dark"] .table-light {
+  background-color: #334155 !important;
+  color: var(--text-dark);
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: #1e293b;
+  border-color: #475569;
+  color: var(--text-dark);
+}
+
+[data-bs-theme="dark"] .breadcrumb-item a {
+  color: #94a3b8 !important;
+}
+
 /* ─── Base ───────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
 

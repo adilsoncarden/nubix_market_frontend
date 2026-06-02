@@ -41,7 +41,15 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
-    if (loading) return null;
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center min-vh-100">
+                <div className="spinner-border text-success" role="status">
+                    <span className="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <AuthContext.Provider

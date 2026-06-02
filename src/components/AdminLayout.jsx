@@ -39,6 +39,8 @@ const AdminLayout = () => {
     }, []);
 
     useEffect(() => {
+        if (!isDashboardHome) return;
+
         let cancelled = false;
 
         const fetchDashboardData = async () => {
@@ -75,12 +77,9 @@ const AdminLayout = () => {
         return () => {
             cancelled = true;
         };
-    }, []);
+    }, [isDashboardHome]);
 
-    const metrics = useMemo(
-        () => computeDashboardMetrics(rawData),
-        [rawData],
-    );
+    const metrics = useMemo(() => computeDashboardMetrics(rawData), [rawData]);
 
     const chartTheme = useMemo(
         () => ({
@@ -541,7 +540,8 @@ const AdminLayout = () => {
                                                                     inventario...
                                                                 </td>
                                                             </tr>
-                                                        ) : metrics.criticalStock
+                                                        ) : metrics
+                                                              .criticalStock
                                                               .length === 0 ? (
                                                             <tr>
                                                                 <td

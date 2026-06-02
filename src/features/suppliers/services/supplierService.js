@@ -26,6 +26,6 @@ export const updateSupplier = async (id, supplierData) => {
 
 // Eliminar proveedor
 export const deleteSupplier = async (id) => {
-    const response = await clienteAxios.delete(`/admin/proveedores/${id}`);
+    const response = await clienteAxios.delete(`/admin/proveedores/${id}/delete`);
     return response.data;
 };

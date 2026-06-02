@@ -5,6 +5,7 @@ import { saleService, formatSaleDateTime, getSaleClientLabel } from "../features
 import VentaForm from "../features/sales/components/VentaForm";
 import Swal from "sweetalert2";
 import { useProductCatalog } from "../store/ProductCatalogContext";
+import { reportService } from "../features/reports/services/reportService";
 
 const SalesPage = () => {
     const {
@@ -140,6 +141,20 @@ const SalesPage = () => {
                     </h2>
                 </div>
                 <div className="col-md-4 d-flex gap-2 justify-content-end">
+                    <button
+                        type="button"
+                        onClick={() => {
+                            const hasta = new Date().toISOString().slice(0, 10);
+                            const desde = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+                            reportService.exportSales(desde, hasta).catch(() =>
+                                Swal.fire("Error", "No se pudo exportar ventas", "error"),
+                            );
+                        }}
+                        className="btn btn-outline-success fw-bold"
+                        disabled={loading}
+                    >
+                        <i className="bi bi-file-earmark-excel me-2"></i>Excel
+                    </button>
                     <button
                         onClick={openModal}
                         className="btn btn-success fw-bold"
@@ -481,9 +496,8 @@ const SalesPage = () => {
                     ) : (
                         <div className="text-center p-5">
                             <i
-                                className="bi bi-inbox"
+                                className="bi bi-inbox text-muted"
                                 style={{ fontSize: "3rem" }}
-                                className="text-muted"
                             ></i>
                             <p className="text-muted mt-3">
                                 No hay ventas para mostrar

@@ -3,6 +3,8 @@ import { Modal } from "bootstrap";
 import { useSuppliers } from "../features/suppliers/hooks/useSuppliers";
 import SupplierForm from "../features/suppliers/components/SupplierForm";
 import Swal from "sweetalert2";
+import { reportService } from "../features/reports/services/reportService";
+import { Toast } from "../utils/swalConfig";
 
 const SuppliersPage = () => {
     const {
@@ -114,7 +116,7 @@ const SuppliersPage = () => {
             }}
         >
             {/* HEADER */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
+            <div className="d-flex justify-content-between align-items-center mb-4 gap-2">
                 <div>
                     <h2
                         className="fw-bold mb-0"
@@ -127,9 +129,21 @@ const SuppliersPage = () => {
                         Gestión de contactos comerciales y RUC
                     </p>
                 </div>
-                <button
-                    className="btn btn-success shadow-sm px-4 fw-bold"
-                    onClick={() => handleOpenModal()}
+                <div className="d-flex gap-2">
+                    <button
+                        type="button"
+                        className="btn btn-outline-success shadow-sm px-3 fw-bold"
+                        onClick={() =>
+                            reportService.exportSuppliers().catch(() =>
+                                Toast.fire({ icon: "error", title: "Error al exportar" }),
+                            )
+                        }
+                    >
+                        <i className="bi bi-file-earmark-excel me-2"></i> Excel
+                    </button>
+                    <button
+                        className="btn btn-success shadow-sm px-4 fw-bold"
+                        onClick={() => handleOpenModal()}
                     style={{
                         backgroundColor: "#10b981",
                         border: "none",
@@ -139,7 +153,8 @@ const SuppliersPage = () => {
                 >
                     <i className="bi bi-person-plus-fill me-2"></i> Nuevo
                     Proveedor
-                </button>
+                    </button>
+                </div>
             </div>
 
             {/* BUSCADOR Y MÉTRICA */}

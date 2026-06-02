@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 
 import { AuthProvider } from "./store/AuthContext";
-import { ThemeProvider } from "./store/ThemeContext";
+import { ThemeProvider, useTheme } from "./store/ThemeContext";
 import { CartProvider } from "./store/CartContext";
 import { FavoritesProvider } from "./store/FavoritesContext";
 import { ProductCatalogProvider } from "./store/ProductCatalogContext";
@@ -45,17 +45,18 @@ import SuppliersPage from "./pages/SuppliersPage";
 import SalesPage from "./pages/SalesPage";
 
 // ───────────────── LAYOUT PÚBLICO ─────────────────
-const PublicLayout = () => (
-    <div className="d-flex flex-column min-vh-100">
-        <Navbar />
-
-        <main className="flex-grow-1">
-            <Outlet />
-        </main>
-
-        <Footer />
-    </div>
-);
+const PublicLayout = () => {
+    const { theme } = useTheme();
+    return (
+        <div className="d-flex flex-column min-vh-100" data-bs-theme={theme}>
+            <Navbar />
+            <main className="flex-grow-1">
+                <Outlet />
+            </main>
+            <Footer />
+        </div>
+    );
+};
 
 const WebProtectedRoute = () => {
     const { token } = useAuth();
@@ -86,6 +87,7 @@ const AdminDashboard = () => (
 export default function App() {
     return (
         <BrowserRouter>
+            <ThemeProvider>
             <AuthProvider>
                 <ProductCatalogProvider>
                     <CartProvider>
@@ -203,6 +205,7 @@ export default function App() {
                     </CartProvider>
                 </ProductCatalogProvider>
             </AuthProvider>
+            </ThemeProvider>
         </BrowserRouter>
     );
 }

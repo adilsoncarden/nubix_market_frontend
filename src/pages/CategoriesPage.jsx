@@ -4,6 +4,7 @@ import { useCategories } from "../features/categories/hooks/useCategories";
 import { categoryService } from "../features/categories/services/categoryService";
 import CategoryForm from "../features/categories/components/CategoryForm";
 import Swal from "sweetalert2";
+import { reportService } from "../features/reports/services/reportService";
 
 const CategoriesPage = () => {
     const { categories, loading, handleDelete, setCategories } =
@@ -129,9 +130,19 @@ const CategoriesPage = () => {
                         Gestión de taxonomía y organización de productos
                     </p>
                 </div>
-                <button
-                    className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center"
-                    onClick={() => openModal()}
+                <div className="d-flex gap-2">
+                    <button
+                        type="button"
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
+                        onClick={() => reportService.exportCategories().catch(() =>
+                            Swal.fire("Error", "No se pudo exportar categorías", "error"),
+                        )}
+                    >
+                        <i className="bi bi-file-earmark-excel me-2"></i> Excel
+                    </button>
+                    <button
+                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center"
+                        onClick={() => openModal()}
                     style={{
                         backgroundColor: "#10b981",
                         border: "none",
@@ -139,7 +150,8 @@ const CategoriesPage = () => {
                     }}
                 >
                     <i className="bi bi-plus-lg me-2"></i> Nueva Categoría
-                </button>
+                    </button>
+                </div>
             </div>
 
             {/* MÉTRICAS Y BUSCADOR MEJORADO */}
@@ -202,6 +214,9 @@ const CategoriesPage = () => {
                                 <th className="py-3 text-secondary small fw-bold text-center">
                                     CATEGORÍA
                                 </th>
+                                <th className="py-3 text-secondary small fw-bold">
+                                    DESCRIPCIÓN
+                                </th>
                                 <th className="text-end px-4 py-3 text-secondary small fw-bold">
                                     ACCIONES
                                 </th>
@@ -211,7 +226,7 @@ const CategoriesPage = () => {
                             {loading ? (
                                 <tr>
                                     <td
-                                        colSpan="4"
+                                        colSpan="5"
                                         className="text-center py-5"
                                     >
                                         <div
@@ -237,7 +252,10 @@ const CategoriesPage = () => {
                                         <td className="text-center">
                                             <span className="fw-bold text-dark">
                                                 {cat.nombre}
-                                            </span> 
+                                            </span>
+                                        </td>
+                                        <td className="text-muted small">
+                                            {cat.descripcion || "—"}
                                         </td>
                                         <td className="text-end px-4">
                                             <button
@@ -262,7 +280,7 @@ const CategoriesPage = () => {
                             ) : (
                                 <tr>
                                     <td
-                                        colSpan="4"
+                                        colSpan="5"
                                         className="text-center py-5 text-muted"
                                     >
                                         No se encontraron coincidencias para "

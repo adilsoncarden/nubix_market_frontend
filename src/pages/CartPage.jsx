@@ -3,6 +3,7 @@ import { useCart } from "../store/CartContext";
 import { useNavigate } from "react-router-dom";
 import { saleService } from "../features/sales/services/saleService";
 import { useProductCatalog } from "../store/ProductCatalogContext";
+import api from "../config/axios";
 
 // ─── Utilidad PDF (DISEÑO RENOVADO SEGÚN TU IMAGEN) ───────────────────────────
 const generarPDF = async (orden) => {
@@ -155,22 +156,16 @@ const generarPDF = async (orden) => {
 };
 
 // ─── Envío de email al backend ────────────────────────────────────────────────
-const API_EMAIL = "http://localhost:8080/api/email/confirmacion";
-
 const enviarEmailConfirmacion = async (orden) => {
   try {
-    const res = await fetch(API_EMAIL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: orden?.cliente?.email,
-        numero: orden?.numero,
-        tipo: orden?.tipo,
-        codigoRecojo: orden?.codigoRecojo,
-        total: orden?.total,
-      }),
+    const res = await api.post("/email/confirmacion", {
+      email: orden?.cliente?.email,
+      numero: orden?.numero,
+      tipo: orden?.tipo,
+      codigoRecojo: orden?.codigoRecojo,
+      total: orden?.total,
     });
-    return res.ok;
+    return res.status === 200;
   } catch {
     return false;
   }

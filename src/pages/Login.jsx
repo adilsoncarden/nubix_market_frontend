@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { getRedirectUrl, clearRedirectUrl } from "../utils/authUtils";
+import { authService } from "../features/auth/services/authService";
 import logo from "../assets/logo.png.png";
 
 const Login = () => {
@@ -20,23 +21,12 @@ const Login = () => {
         setAlertType("");
 
         try {
-            const response = await fetch(
-                "http://localhost:8080/api/auth/login",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        email: email.trim(),
-                        password,
-                    }),
-                },
-            );
+            const data = await authService.login({
+                email: email.trim(),
+                password,
+            });
 
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
+            if (!data.success) {
                 setAlertType("danger");
                 setAlertMessage(data.message || "Credenciales incorrectas");
                 return;

@@ -11,6 +11,8 @@ import api from "../config/axios";
 import { productService } from "../features/products/services/productService";
 import { getProductImageUrl } from "../features/products/services/productService";
 import { mapProductosToShopItems } from "../features/products/utils/mapProducto";
+import { alertLoginRequired } from "../utils/swalConfig";
+import { setRedirectUrl } from "../utils/authUtils";
 
 const CartContext = createContext(null);
 const KEY = "nubix_cart";
@@ -80,16 +82,10 @@ function reducer(state, { type, product, id, qty, synced, items }) {
 export function CartProvider({ children }) {
     const { version } = useProductCatalog();
     const { token } = useAuth();
-    const [items, dispatch] = useReducer(reducer, [], () => {
-        try {
-            return JSON.parse(localStorage.getItem(KEY)) || [];
-        } catch {
-            return [];
-        }
-    });
+    const [items, dispatch] = useReducer(reducer, [], () => []);
 
     const syncCartWithCatalog = useCallback(async () => {
-        if (items.length === 0) return;
+        if (!token || items.length === 0) return;
         try {
             const data = await productService.getCatalog({ bustCache: true });
             const synced = mapProductosToShopItems(data);
@@ -97,7 +93,7 @@ export function CartProvider({ children }) {
         } catch (err) {
             console.error("Error sincronizando carrito con catálogo", err);
         }
-    }, [items.length]);
+    }, [items.length, token]);
 
     const loadServerCart = useCallback(async () => {
         const res = await api.get("/carrito");
@@ -105,8 +101,17 @@ export function CartProvider({ children }) {
     }, []);
 
     useEffect(() => {
-        localStorage.setItem(KEY, JSON.stringify(items));
-    }, [items]);
+        if (token) {
+            localStorage.setItem(KEY, JSON.stringify(items));
+        }
+    }, [items, token]);
+
+    useEffect(() => {
+        if (!token) {
+            dispatch({ type: "CLEAR" });
+            localStorage.removeItem(KEY);
+        }
+    }, [token]);
 
     useEffect(() => {
         if (version > 0) {
@@ -118,6 +123,14 @@ export function CartProvider({ children }) {
         const migrateIfNeeded = async () => {
             if (!token) return;
             try {
+                const serverRes = await api.get("/carrito");
+                const serverItems = mapCarritoToItems(serverRes.data);
+                if (serverItems.length > 0) {
+                    dispatch({ type: "SET_ALL", items: serverItems });
+                    localStorage.removeItem(KEY);
+                    return;
+                }
+
                 const local = (() => {
                     try {
                         return JSON.parse(localStorage.getItem(KEY)) || [];
@@ -150,39 +163,56 @@ export function CartProvider({ children }) {
         migrateIfNeeded();
     }, [token, loadServerCart]);
 
-    const totalItems = items.reduce((s, i) => s + i.qty, 0);
-    const totalPrice = items.reduce((s, i) => s + i.price * i.qty, 0);
+    const totalItems = token
+        ? items.reduce((s, i) => s + i.qty, 0)
+        : 0;
+    const totalPrice = token
+        ? items.reduce((s, i) => s + i.price * i.qty, 0)
+        : 0;
+
+    const requireLoginForCart = async () => {
+        setRedirectUrl(window.location.pathname + window.location.search);
+        const result = await alertLoginRequired();
+        if (result.isConfirmed) {
+            window.location.href = "/login";
+        }
+        return false;
+    };
 
     return (
         <CartContext.Provider
             value={{
-                items,
+                items: token ? items : [],
                 totalItems,
                 totalPrice,
                 addToCart: async (p) => {
-                    if (!token) return dispatch({ type: "ADD", product: p });
+                    if (!token) return requireLoginForCart();
                     const res = await api.post("/carrito/items", {
                         productoId: p.id,
                         cantidad: 1,
                     });
                     dispatch({ type: "SET_ALL", items: mapCarritoToItems(res.data) });
+                    return true;
                 },
                 removeFromCart: async (id) => {
-                    if (!token) return dispatch({ type: "REMOVE", id });
+                    if (!token) return requireLoginForCart();
                     const res = await api.delete(`/carrito/items/${id}`);
                     dispatch({ type: "SET_ALL", items: mapCarritoToItems(res.data) });
+                    return true;
                 },
                 setQty: async (id, qty) => {
-                    if (!token) return dispatch({ type: "SET_QTY", id, qty });
+                    if (!token) return requireLoginForCart();
                     const res = await api.put(`/carrito/items/${id}`, null, {
                         params: { cantidad: qty },
                     });
                     dispatch({ type: "SET_ALL", items: mapCarritoToItems(res.data) });
+                    return true;
                 },
                 clearCart: async () => {
-                    if (!token) return dispatch({ type: "CLEAR" });
+                    if (!token) return false;
                     await api.delete("/carrito");
                     dispatch({ type: "CLEAR" });
+                    return true;
                 },
             }}
         >

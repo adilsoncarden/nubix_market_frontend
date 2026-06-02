@@ -336,7 +336,7 @@ export default function Navbar() {
                                 className="action-icon-btn text-decoration-none position-relative"
                             >
                                 <i className="bi bi-cart3"></i>
-                                {totalItems > 0 && (
+                                {token && totalItems > 0 && (
                                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle cart-badge-premium">
                                         {totalItems}
                                     </span>
