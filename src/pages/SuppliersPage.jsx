@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef, useMemo } from "react";
 import { Modal } from "bootstrap";
 import { useSuppliers } from "../features/suppliers/hooks/useSuppliers";
 import SupplierForm from "../features/suppliers/components/SupplierForm";
-import Swal from "sweetalert2";
+import { reportService } from "../features/reports/services/reportService";
+import { Toast } from "../utils/swalConfig";
 
 const SuppliersPage = () => {
     const {
@@ -16,16 +17,9 @@ const SuppliersPage = () => {
     const [selectedSupplier, setSelectedSupplier] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [formkey, setFormKey] = useState(Date.now()); 
+    const [saving, setSaving] = useState(false);
+    const [formkey, setFormKey] = useState(Date.now());
     const itemsPerPage = 10;
-
-    const Toast = Swal.mixin({
-        toast: true,
-        position: "bottom-end",
-        showConfirmButton: false,
-        timer: 2000,
-        timerProgressBar: true,
-    });
 
     useEffect(() => {
         refreshSuppliers();
@@ -76,70 +70,54 @@ const SuppliersPage = () => {
     };
 
     const handleSave = async (data) => {
-        const success = await saveSupplier(data);
-        if (success) {
-            bsModal.current.hide();
-            Toast.fire({
-                icon: "success",
-                title: selectedSupplier ? "Actualizado" : "Registrado",
-            });
+        setSaving(true);
+        try {
+            const success = await saveSupplier(data, selectedSupplier?.id);
+            if (success) {
+                bsModal.current.hide();
+            }
+        } finally {
+            setSaving(false);
         }
     };
 
     const handleDelete = (id) => {
-        Swal.fire({
-            title: "¿Eliminar proveedor?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#10b981",
-            cancelButtonColor: "#ef4444",
-            confirmButtonText: "Sí, eliminar",
-            cancelButtonText: "Cancelar",
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                const success = await removeSupplier(id);
-                if (success)
-                    Toast.fire({ icon: "success", title: "Eliminado" });
-            }
-        });
+        removeSupplier(id);
     };
 
     return (
-        <div
-            className="container-fluid p-4"
-            style={{
-                backgroundColor: "#f9fafb",
-                minHeight: "100vh",
-                fontSize: "0.9rem",
-            }}
-        >
-            {/* HEADER */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
+        <div className="admin-page" style={{ fontSize: "0.9rem" }}>
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
                 <div>
-                    <h2
-                        className="fw-bold mb-0"
-                        style={{ letterSpacing: "-0.03em", color: "#111827" }}
-                    >
-                        Nubix Market <span style={{ color: "#10b981" }}>/</span>{" "}
+                    <h2 className="admin-page-title fw-bold mb-0">
+                        Nubix Market <span className="admin-accent-slash">/</span>{" "}
                         Proveedores
                     </h2>
                     <p className="text-muted small mb-0">
                         Gestión de contactos comerciales y RUC
                     </p>
                 </div>
-                <button
-                    className="btn btn-success shadow-sm px-4 fw-bold"
-                    onClick={() => handleOpenModal()}
-                    style={{
-                        backgroundColor: "#10b981",
-                        border: "none",
-                        borderRadius: "8px",
-                        fontSize: "0.85rem",
-                    }}
+                <div className="d-flex flex-wrap gap-2 admin-page-header-actions">
+                    <button
+                        type="button"
+                        className="btn btn-outline-success shadow-sm px-3 fw-bold"
+                        onClick={() =>
+                            reportService.exportSuppliers().catch(() =>
+                                Toast.fire({ icon: "error", title: "Error al exportar" }),
+                            )
+                        }
+                    >
+                        <i className="bi bi-file-earmark-excel me-2"></i> Excel
+                    </button>
+                    <button
+                        className="btn btn-success shadow-sm px-4 fw-bold admin-btn-primary"
+                        onClick={() => handleOpenModal()}
+                        style={{ fontSize: "0.85rem" }}
                 >
                     <i className="bi bi-person-plus-fill me-2"></i> Nuevo
                     Proveedor
-                </button>
+                    </button>
+                </div>
             </div>
 
             {/* BUSCADOR Y MÉTRICA */}
@@ -315,8 +293,8 @@ const SuppliersPage = () => {
 
                 {/* PAGINACIÓN ESTILO image_2adcbc.png */}
                 {!loading && totalPages > 1 && (
-                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
-                        <div className="text-muted small">
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
+                        <div className="text-muted small admin-pagination-info">
                             Mostrando <b>{indexOfFirstItem + 1}</b> a{" "}
                             <b>
                                 {Math.min(
@@ -397,6 +375,7 @@ const SuppliersPage = () => {
                                 type="button"
                                 className="btn-close shadow-none"
                                 onClick={() => bsModal.current.hide()}
+                                disabled={saving}
                             ></button>
                         </div>
                         <div className="modal-body p-4">
@@ -404,40 +383,40 @@ const SuppliersPage = () => {
                                 key={formkey}
                                 supplier={selectedSupplier}
                                 onSave={handleSave}
+                                loading={saving}
                             />
+
+                            <div className="d-flex justify-content-end gap-2 mt-4">
+                                <button
+                                    type="button"
+                                    className="btn btn-light fw-bold text-secondary px-4 border"
+                                    onClick={() => bsModal.current.hide()}
+                                    disabled={saving}
+                                    style={{ borderRadius: "10px" }}
+                                >
+                                    Cerrar
+                                </button>
+                                <button
+                                    type="submit"
+                                    form="supplierForm"
+                                    className="btn btn-success px-4 fw-bold shadow-sm admin-btn-primary"
+                                    disabled={saving}
+                                >
+                                    {saving ? (
+                                        <span className="spinner-border spinner-border-sm me-2"></span>
+                                    ) : (
+                                        <i className="bi bi-save2-fill me-2"></i>
+                                    )}
+                                    {saving
+                                        ? "Guardando..."
+                                        : "Confirmar Datos"}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <style>{`
-                .text-emerald-600 { color: #10b981 !important; }
-                .bg-emerald-100 { background-color: #d1fae5 !important; }
-                .table td { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
-
-                .btn-table-action { border: none; background: none; padding: 4px 8px; font-size: 1.1rem; border-radius: 6px; transition: 0.2s; }
-                .btn-table-action.edit { color: #10b981; }
-                .btn-table-action.edit:hover { background-color: #ecfdf5; }
-                .btn-table-action.delete { color: #ef4444; }
-                .btn-table-action.delete:hover { background-color: #fef2f2; }
-
-                /* Paginación Activa */
-                .active-page { background-color: #10b981 !important; color: white !important; }
-                .page-link:focus { box-shadow: none; }
-                .page-link { font-size: 0.8rem; }
-
-                /* Estilos Modal Identidad */
-                .modal-custom-identity input:focus, .modal-custom-identity select:focus {
-                    border-color: #10b981 !important;
-                    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.15) !important;
-                }
-                .modal-custom-identity button[type="submit"] {
-                    background-color: #10b981 !important;
-                    border: none !important;
-                    border-radius: 8px !important;
-                }
-                .modal.show { background-color: rgba(0,0,0,0.5) !important; }
-            `}</style>
         </div>
     );
 };

@@ -11,7 +11,11 @@ export const useSales = () => {
             const data = await saleService.getAll();
             setSales(data);
         } catch (err) {
-            console.error("Error al cargar ventas", err);
+            console.error(
+                "[Admin] Error al cargar ventas:",
+                err.response?.status,
+                err.response?.data ?? err.message,
+            );
         }
     };
 
@@ -50,7 +54,9 @@ export const useSales = () => {
             await saleService.registerCredit(id);
             setSales((prev) =>
                 prev.map((sale) =>
-                    sale.id === id ? { ...sale, estadoPago: "PAGADO" } : sale,
+                    sale.id === id
+                        ? { ...sale, estadoPago: "APROBADO" }
+                        : sale,
                 ),
             );
 

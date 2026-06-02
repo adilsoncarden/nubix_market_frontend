@@ -3,7 +3,8 @@ import { Modal } from "bootstrap";
 import { useCategories } from "../features/categories/hooks/useCategories";
 import { categoryService } from "../features/categories/services/categoryService";
 import CategoryForm from "../features/categories/components/CategoryForm";
-import Swal from "sweetalert2";
+import { Toast } from "../utils/swalConfig";
+import { reportService } from "../features/reports/services/reportService";
 
 const CategoriesPage = () => {
     const { categories, loading, handleDelete, setCategories } =
@@ -11,19 +12,6 @@ const CategoriesPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-
-    // --- CONFIGURACIÓN DE SWEETALERT (TOAST) ---
-    const Toast = Swal.mixin({
-        toast: true,
-        position: "bottom-end",
-        showConfirmButton: false,
-        timer: 2500,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-            toast.onmouseenter = Swal.stopTimer;
-            toast.onmouseleave = Swal.resumeTimer;
-        },
-    });
 
     // --- FILTRADO POR NOMBRE Y DESCRIPCIÓN ---
     const filteredCategories = useMemo(() => {
@@ -111,35 +99,37 @@ const CategoriesPage = () => {
     };
 
     return (
-        <div
-            className="container-fluid animate__animated animate__fadeIn p-4"
-            style={{ backgroundColor: "#f9fafb", minHeight: "100vh" }}
-        >
-            {/* HEADER */}
+        <div className="admin-page animate__animated animate__fadeIn">
             <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
-                    <h2
-                        className="fw-bold mb-1"
-                        style={{ letterSpacing: "-0.03em", color: "#111827" }}
-                    >
-                        Nubix Market <span style={{ color: "#10b981" }}>/</span>{" "}
+                    <h2 className="admin-page-title fw-bold mb-1">
+                        Nubix Market <span className="admin-accent-slash">/</span>{" "}
                         Categorías
                     </h2>
                     <p className="text-muted small mb-0">
                         Gestión de taxonomía y organización de productos
                     </p>
                 </div>
-                <button
-                    className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center"
-                    onClick={() => openModal()}
-                    style={{
-                        backgroundColor: "#10b981",
-                        border: "none",
-                        borderRadius: "10px",
-                    }}
+                <div className="d-flex flex-wrap gap-2 admin-page-header-actions">
+                    <button
+                        type="button"
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
+                        onClick={() =>                             reportService.exportCategories().catch(() =>
+                                Toast.fire({
+                                    icon: "error",
+                                    title: "No se pudo exportar categorías",
+                                }),
+                            )}
+                    >
+                        <i className="bi bi-file-earmark-excel me-2"></i> Excel
+                    </button>
+                    <button
+                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center admin-btn-primary"
+                        onClick={() => openModal()}
                 >
                     <i className="bi bi-plus-lg me-2"></i> Nueva Categoría
-                </button>
+                    </button>
+                </div>
             </div>
 
             {/* MÉTRICAS Y BUSCADOR MEJORADO */}
@@ -169,7 +159,7 @@ const CategoriesPage = () => {
                 </div>
                 <div className="col-md-9">
                     <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3"
+                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
                         style={{ borderRadius: "15px", height: "100%" }}
                     >
                         <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
@@ -202,6 +192,9 @@ const CategoriesPage = () => {
                                 <th className="py-3 text-secondary small fw-bold text-center">
                                     CATEGORÍA
                                 </th>
+                                <th className="py-3 text-secondary small fw-bold">
+                                    DESCRIPCIÓN
+                                </th>
                                 <th className="text-end px-4 py-3 text-secondary small fw-bold">
                                     ACCIONES
                                 </th>
@@ -211,7 +204,7 @@ const CategoriesPage = () => {
                             {loading ? (
                                 <tr>
                                     <td
-                                        colSpan="4"
+                                        colSpan="5"
                                         className="text-center py-5"
                                     >
                                         <div
@@ -237,7 +230,10 @@ const CategoriesPage = () => {
                                         <td className="text-center">
                                             <span className="fw-bold text-dark">
                                                 {cat.nombre}
-                                            </span> 
+                                            </span>
+                                        </td>
+                                        <td className="text-muted small">
+                                            {cat.descripcion || "—"}
                                         </td>
                                         <td className="text-end px-4">
                                             <button
@@ -262,7 +258,7 @@ const CategoriesPage = () => {
                             ) : (
                                 <tr>
                                     <td
-                                        colSpan="4"
+                                        colSpan="5"
                                         className="text-center py-5 text-muted"
                                     >
                                         No se encontraron coincidencias para "
@@ -276,8 +272,8 @@ const CategoriesPage = () => {
 
                 {/* PAGINACIÓN VERDE */}
                 {totalPages > 1 && (
-                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-white">
-                        <div className="text-muted small">
+                    <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
+                        <div className="text-muted small admin-pagination-info">
                             Mostrando{" "}
                             <span className="fw-bold">
                                 {indexOfFirstItem + 1}
@@ -381,13 +377,8 @@ const CategoriesPage = () => {
                                 <button
                                     type="submit"
                                     form="categoryForm"
-                                    className="btn btn-success px-4 fw-bold shadow-sm"
+                                    className="btn btn-success px-4 fw-bold shadow-sm admin-btn-primary"
                                     disabled={saving}
-                                    style={{
-                                        borderRadius: "10px",
-                                        backgroundColor: "#10b981",
-                                        border: "none",
-                                    }}
                                 >
                                     {saving ? (
                                         <span className="spinner-border spinner-border-sm me-2"></span>
@@ -404,36 +395,6 @@ const CategoriesPage = () => {
                 </div>
             </div>
 
-            <style>{`
-                /* Estilos de Marca */
-                .text-emerald-600 { color: #10b981 !important; }
-                .bg-emerald-100 { background-color: #d1fae5 !important; }
-                .bg-emerald-600 { background-color: #10b981 !important; }
-
-                /* Reset de Modal (Sin Blur) */
-                .modal.show { backdrop-filter: none !important; background-color: rgba(17, 24, 39, 0.6) !important; }
-
-                /* Botones de Accion Verdes */
-                .btn-action {
-                    border: none; background: transparent; padding: 6px 10px;
-                    border-radius: 8px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                    font-size: 1.15rem;
-                }
-                .btn-edit { color: #10b981; }
-                .btn-edit:hover { background-color: #ecfdf5; transform: scale(1.15); }
-                .btn-delete { color: #ef4444; }
-                .btn-delete:hover { background-color: #fef2f2; transform: scale(1.15); }
-
-                /* Paginación Activa */
-                .active-pagination { background-color: #10b981 !important; color: white !important; box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4); }
-                .page-link:hover:not(.active-pagination) { background-color: #ecfdf5 !important; color: #10b981 !important; }
-                
-                /* Input de Búsqueda */
-                .form-control:focus { border-color: #10b981; box-shadow: none; }
-
-                /* Animación suave para filas */
-                tr { transition: background-color 0.15s; }
-            `}</style>
         </div>
     );
 };

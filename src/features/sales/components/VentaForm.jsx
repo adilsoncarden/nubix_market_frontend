@@ -1,23 +1,33 @@
 import React, { useState, useEffect } from "react";
 import { clientService } from "../../users/services/clientService";
-import { employeeService } from "../../users/services/employeeService";
 import { productService } from "../../products/services/productService";
+import { useAuth } from "../../../store/AuthContext";
 import Swal from "sweetalert2";
 
 const VentaForm = ({ onSave, loading }) => {
+    const { user } = useAuth();
+
     const [formData, setFormData] = useState({
         clienteId: "",
-        vendedorId: "",
+        tipoComprobante: "TICKET",
         metodoPago: "EFECTIVO",
         tipoEntrega: "PRESENCIAL",
         direccionEntrega: "",
+        distrito: "",
+        referencia: "",
+        nombreComprobante: "",
+        dni: "",
+        ruc: "",
+        razonSocial: "",
+        emailComprobante: "",
+        direccionFiscal: "",
         detalles: [],
     });
 
     const [clients, setClients] = useState([]);
-    const [employees, setEmployees] = useState([]);
     const [products, setProducts] = useState([]);
-    const [selectedProduct, setSelectedProduct] = useState("");
+    const [productQuery, setProductQuery] = useState("");
+    const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedQuantity, setSelectedQuantity] = useState(1);
     const [loadingData, setLoadingData] = useState(false);
 
@@ -25,14 +35,11 @@ const VentaForm = ({ onSave, loading }) => {
         const loadData = async () => {
             setLoadingData(true);
             try {
-                const [clientsData, employeesData, productsData] =
-                    await Promise.all([
-                        clientService.getAll(),
-                        employeeService.getAll(),
-                        productService.getAll(),
-                    ]);
+                const [clientsData, productsData] = await Promise.all([
+                    clientService.getAll(),
+                    productService.getAll(),
+                ]);
                 setClients(clientsData);
-                setEmployees(employeesData);
                 setProducts(productsData);
             } catch (err) {
                 console.error("Error al cargar datos", err);
@@ -59,9 +66,7 @@ const VentaForm = ({ onSave, loading }) => {
             return;
         }
 
-        const product = products.find(
-            (p) => p.id === parseInt(selectedProduct),
-        );
+        const product = selectedProduct;
         if (!product) {
             Swal.fire("Error", "Producto no encontrado", "error");
             return;
@@ -78,7 +83,7 @@ const VentaForm = ({ onSave, loading }) => {
 
         // Verificar si el producto ya existe en detalles
         const existingDetail = formData.detalles.find(
-            (d) => d.productoId === parseInt(selectedProduct),
+            (d) => d.productoId === product.id,
         );
 
         if (existingDetail) {
@@ -87,7 +92,7 @@ const VentaForm = ({ onSave, loading }) => {
         }
 
         const newDetail = {
-            productoId: parseInt(selectedProduct),
+            productoId: product.id,
             productName: product.nombre,
             precio: product.precioVenta,
             cantidad: parseInt(selectedQuantity),
@@ -99,7 +104,8 @@ const VentaForm = ({ onSave, loading }) => {
             detalles: [...prev.detalles, newDetail],
         }));
 
-        setSelectedProduct("");
+        setSelectedProduct(null);
+        setProductQuery("");
         setSelectedQuantity(1);
     };
 
@@ -120,8 +126,37 @@ const VentaForm = ({ onSave, loading }) => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
-        if (!formData.clienteId || !formData.vendedorId) {
-            Swal.fire("Validación", "Selecciona cliente y vendedor", "warning");
+        if (
+            formData.tipoComprobante === "BOLETA" &&
+            !formData.clienteId &&
+            (!formData.dni || formData.dni.length !== 8)
+        ) {
+            Swal.fire("Validación", "La boleta requiere DNI de 8 dígitos o cliente registrado", "warning");
+            return;
+        }
+
+        if (
+            formData.tipoComprobante === "BOLETA" &&
+            !formData.clienteId &&
+            !formData.nombreComprobante?.trim()
+        ) {
+            Swal.fire("Validación", "La boleta requiere el nombre del cliente", "warning");
+            return;
+        }
+
+        if (
+            formData.tipoComprobante === "FACTURA" &&
+            (!formData.ruc || formData.ruc.length !== 11)
+        ) {
+            Swal.fire("Validación", "La factura requiere RUC de 11 dígitos", "warning");
+            return;
+        }
+
+        if (
+            formData.tipoComprobante === "FACTURA" &&
+            !formData.razonSocial?.trim()
+        ) {
+            Swal.fire("Validación", "La factura requiere razón social", "warning");
             return;
         }
 
@@ -140,14 +175,18 @@ const VentaForm = ({ onSave, loading }) => {
         }
 
         const dataToSend = {
-            clienteId: parseInt(formData.clienteId),
-            vendedorId: parseInt(formData.vendedorId),
+            canal: "PRESENCIAL",
+            clienteId: formData.clienteId
+                ? parseInt(formData.clienteId)
+                : null,
+            tipoComprobante: formData.tipoComprobante,
             metodoPago: formData.metodoPago,
-            tipoEntrega: formData.tipoEntrega,
-            direccionEntrega:
-                formData.tipoEntrega === "DELIVERY"
-                    ? formData.direccionEntrega
-                    : null,
+            nombreComprobante: formData.nombreComprobante || null,
+            dni: formData.dni || null,
+            ruc: formData.ruc || null,
+            razonSocial: formData.razonSocial || null,
+            emailComprobante: formData.emailComprobante || null,
+            direccionFiscal: formData.direccionFiscal || null,
             detalles: formData.detalles.map((d) => ({
                 productoId: d.productoId,
                 cantidad: d.cantidad,
@@ -158,22 +197,53 @@ const VentaForm = ({ onSave, loading }) => {
     };
 
     const total = calculateTotal();
-    const selectedProductData = products.find(
-        (p) => p.id === parseInt(selectedProduct),
-    );
+    const selectedProductData = selectedProduct;
+
+    const normalizedQuery = productQuery.trim().toLowerCase();
+    const filteredProducts =
+        normalizedQuery.length < 2
+            ? []
+            : products
+                  .filter((p) => {
+                      const nombre = String(p.nombre ?? "").toLowerCase();
+                      const codigo = String(p.codigo ?? "").toLowerCase();
+                      return (
+                          nombre.includes(normalizedQuery) ||
+                          codigo.includes(normalizedQuery)
+                      );
+                  })
+                  .slice(0, 8);
 
     return (
         <form onSubmit={handleSubmit} id="ventaForm">
             <div className="row g-3">
+                {/* Tipo comprobante */}
+                <div className="col-md-6">
+                    <label className="form-label fw-bold">Comprobante</label>
+                    <select
+                        name="tipoComprobante"
+                        className="form-select"
+                        value={formData.tipoComprobante}
+                        onChange={handleChange}
+                        required
+                    >
+                        <option value="TICKET">Ticket</option>
+                        <option value="BOLETA">Boleta</option>
+                        <option value="FACTURA">Factura</option>
+                    </select>
+                </div>
+
                 {/* Cliente */}
                 <div className="col-md-6">
-                    <label className="form-label fw-bold">Cliente</label>
+                    <label className="form-label fw-bold">
+                        Cliente{" "}
+                        <small className="text-muted">(opcional)</small>
+                    </label>
                     <select
                         name="clienteId"
                         className="form-select"
                         value={formData.clienteId}
                         onChange={handleChange}
-                        required
                         disabled={loadingData}
                     >
                         <option value="">Seleccionar...</option>
@@ -188,21 +258,12 @@ const VentaForm = ({ onSave, loading }) => {
                 {/* Vendedor */}
                 <div className="col-md-6">
                     <label className="form-label fw-bold">Vendedor</label>
-                    <select
-                        name="vendedorId"
-                        className="form-select"
-                        value={formData.vendedorId}
-                        onChange={handleChange}
-                        required
-                        disabled={loadingData}
-                    >
-                        <option value="">Seleccionar...</option>
-                        {employees.map((employee) => (
-                            <option key={employee.id} value={employee.id}>
-                                {employee.username}
-                            </option>
-                        ))}
-                    </select>
+                    <input
+                        type="text"
+                        className="form-control"
+                        value={user?.username || "Cajero actual"}
+                        disabled
+                    />
                 </div>
 
                 {/* Método de Pago */}
@@ -216,46 +277,113 @@ const VentaForm = ({ onSave, loading }) => {
                         required
                     >
                         <option value="EFECTIVO">Efectivo</option>
+                        <option value="YAPE">Yape</option>
                         <option value="TRANSFERENCIA">Transferencia</option>
+                        <option value="TARJETA">Tarjeta</option>
                         <option value="CREDITO">Crédito</option>
                     </select>
                 </div>
 
-                {/* Tipo de Entrega */}
+                {/* Tipo de Entrega (fijo presencial para cajero) */}
                 <div className="col-md-6">
                     <label className="form-label fw-bold">
                         Tipo de Entrega
                     </label>
-                    <select
-                        name="tipoEntrega"
-                        className="form-select"
-                        value={formData.tipoEntrega}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="PRESENCIAL">Recojo Presencial</option>
-                        <option value="DELIVERY">Delivery</option>
-                        <option value="FAST_LANE">Fast Lane</option>
-                    </select>
+                    <input
+                        type="text"
+                        className="form-control"
+                        value="Presencial"
+                        disabled
+                    />
                 </div>
 
-                {/* Dirección de Entrega (solo si es DELIVERY) */}
-                {formData.tipoEntrega === "DELIVERY" && (
-                    <div className="col-md-12">
-                        <label className="form-label fw-bold">
-                            Dirección de Entrega
-                        </label>
-                        <input
-                            type="text"
-                            name="direccionEntrega"
-                            className="form-control"
-                            placeholder="Ingresa la dirección de entrega"
-                            value={formData.direccionEntrega}
-                            onChange={handleChange}
-                            required={formData.tipoEntrega === "DELIVERY"}
-                        />
-                    </div>
+                {formData.tipoComprobante === "BOLETA" && (
+                    <>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold">Nombre</label>
+                            <input
+                                type="text"
+                                name="nombreComprobante"
+                                className="form-control"
+                                value={formData.nombreComprobante}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold">DNI</label>
+                            <input
+                                type="text"
+                                name="dni"
+                                maxLength={8}
+                                className="form-control"
+                                value={formData.dni}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label fw-bold">Email</label>
+                            <input
+                                type="email"
+                                name="emailComprobante"
+                                className="form-control"
+                                value={formData.emailComprobante}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </>
                 )}
+
+                {formData.tipoComprobante === "FACTURA" && (
+                    <>
+                        <div className="col-md-6">
+                            <label className="form-label fw-bold">
+                                Razón social
+                            </label>
+                            <input
+                                type="text"
+                                name="razonSocial"
+                                className="form-control"
+                                value={formData.razonSocial}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-3">
+                            <label className="form-label fw-bold">RUC</label>
+                            <input
+                                type="text"
+                                name="ruc"
+                                maxLength={11}
+                                className="form-control"
+                                value={formData.ruc}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-3">
+                            <label className="form-label fw-bold">Email</label>
+                            <input
+                                type="email"
+                                name="emailComprobante"
+                                className="form-control"
+                                value={formData.emailComprobante}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="col-md-12">
+                            <label className="form-label fw-bold">
+                                Dirección fiscal
+                            </label>
+                            <input
+                                type="text"
+                                name="direccionFiscal"
+                                className="form-control"
+                                value={formData.direccionFiscal}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </>
+                )}
+
+                {/* Dirección de Entrega: no aplica para cajero presencial */}
 
                 {/* Separador */}
                 <div className="col-12">
@@ -265,19 +393,53 @@ const VentaForm = ({ onSave, loading }) => {
                 {/* Agregar Productos */}
                 <div className="col-md-6">
                     <label className="form-label fw-bold">Producto</label>
-                    <select
-                        className="form-select"
-                        value={selectedProduct}
-                        onChange={(e) => setSelectedProduct(e.target.value)}
-                        disabled={loadingData}
-                    >
-                        <option value="">Seleccionar...</option>
-                        {products.map((product) => (
-                            <option key={product.id} value={product.id}>
-                                {product.nombre} (Stock: {product.stock})
-                            </option>
-                        ))}
-                    </select>
+                    <div className="position-relative">
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={productQuery}
+                            onChange={(e) => {
+                                setProductQuery(e.target.value);
+                                setSelectedProduct(null);
+                            }}
+                            placeholder="Buscar por nombre o código (mín. 2 caracteres)"
+                            disabled={loadingData}
+                            autoComplete="off"
+                        />
+
+                        {filteredProducts.length > 0 && !selectedProduct && (
+                            <div
+                                className="list-group position-absolute w-100"
+                                style={{ zIndex: 20, maxHeight: 240, overflowY: "auto" }}
+                            >
+                                {filteredProducts.map((p) => (
+                                    <button
+                                        key={p.id}
+                                        type="button"
+                                        className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                        onClick={() => {
+                                            setSelectedProduct(p);
+                                            setProductQuery(
+                                                `${p.codigo ? `${p.codigo} - ` : ""}${p.nombre}`,
+                                            );
+                                        }}
+                                    >
+                                        <span className="me-2">
+                                            {p.codigo ? (
+                                                <span className="badge bg-secondary me-2">
+                                                    {p.codigo}
+                                                </span>
+                                            ) : null}
+                                            {p.nombre}
+                                        </span>
+                                        <span className="text-muted">
+                                            Stock: {p.stock}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="col-md-3">
@@ -293,6 +455,7 @@ const VentaForm = ({ onSave, loading }) => {
                         }
                         min="1"
                         max={selectedProductData?.stock || 1}
+                        disabled={!selectedProductData}
                     />
                 </div>
 

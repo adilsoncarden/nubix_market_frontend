@@ -4,6 +4,7 @@ import { Carousel } from "bootstrap";
 import "bootstrap/dist/js/bootstrap.bundle.min.js"; 
 import { Link, useNavigate } from "react-router-dom"; 
 import { useCart } from "../store/CartContext";
+import { useShopProducts } from "../features/products/hooks/useShopProducts";
 
 // Assets originales intactos
 import slide1 from "../assets/imagen1.png";
@@ -40,17 +41,6 @@ const SLIDES_FIXED = [
   { img: slide6, to: "/shop?category=Lácteos" },
 ];
 
-const PRODUCTOS = [
-  { id: 1, nombre: "Manzanas 1kg", cat: "Frutas", precio: 5.9, tag: "Fresco", tagColor: "tag-green", img: "https://media.tottus.com.pe/tottusPE/10161826_1/width=480,height=480,quality=70,format=webp,fit=pad" },
-  { id: 2, nombre: "Coca Cola 3L", cat: "Gaseosas", precio: 11.5, tag: "Popular", tagColor: "tag-blue", img: "https://media.tottus.com.pe/tottusPE/10164192_1/width=480,height=480,quality=70,format=webp,fit=pad" },
-  { id: 3, nombre: "Leche Gloria 1L", cat: "Lácteos", precio: 5.2, tag: "Básico", tagColor: "tag-yellow", img: "https://tse3.mm.bing.net/th/id/OIP.678KDktTo1zSZ8U1nvhGdAHaHa?pid=Api&P=0&h=180" },
-  { id: 4, nombre: "Aceite Primor 900ml", cat: "Abarrotes", precio: 9.0, tag: "Oferta", tagColor: "tag-red", img: "https://media.tottus.com.pe/tottusPE/42757360_2/width=480,height=480,quality=70,format=webp,fit=pad" },
-  { id: 5, nombre: "Papas Nativas 1kg", cat: "Frutas", precio: 4.5, tag: "Orgánico", tagColor: "tag-green", img: "https://media.tottus.com.pe/tottusPE/20014196_1/width=480,height=480,quality=70,format=webp,fit=pad" },
-  { id: 6, nombre: "Detergente Ariel 2kg", cat: "Abarrotes", precio: 18.9, tag: "Limpieza", tagColor: "tag-blue", img: "https://tse1.mm.bing.net/th/id/OIP.wbp2VG1zCwldW2Fe2XY98wHaHa?pid=Api&P=0&h=180" },
-  { id: 7, nombre: "Yogurt Griego 1kg", cat: "Lácteos", precio: 12.5, tag: "Saludable", tagColor: "tag-yellow", img: "https://media.falabella.com/tottusPE/42736718_1/w=1200,h=1200,fit=pad" },
-  { id: 8, nombre: "Papas Lays Clásicas", cat: "Snacks", precio: 6.8, tag: "Crunchy", tagColor: "tag-red", img: "https://media.tottus.com.pe/tottusPE/43526445_2/width=480,height=480,quality=70,format=webp,fit=pad" },
-];
-
 const BENEFICIOS = [
   { icono: "bi-truck", titulo: "Envio Rapido", sub: "Directo a tu casa" },
   { icono: "bi-shield-check", titulo: "Pago Seguro", sub: "Transacciones protegidas" },
@@ -68,13 +58,13 @@ const ProductCard = ({ p }) => {
       <Link to={`/producto/${p.id}`} className="text-decoration-none">
         <div className="product-card card border-0 h-100 rounded-4 overflow-hidden shadow-sm" style={{ cursor: 'pointer' }}>
           {p.tag && <span className={`product-tag ${p.tagColor}`}>{p.tag}</span>}
-          <div className="product-img-wrap"><img src={p.img} alt={p.nombre} /></div>
+          <div className="product-img-wrap"><img src={p.img} alt={p.name || p.nombre} loading="lazy" /></div>
           <div className="card-body p-3 d-flex flex-column">
-            <p className="product-cat mb-1">{p.cat}</p>
-            <h6 className="product-name mb-2">{p.nombre}</h6>
+            <p className="product-cat mb-1">{p.category || p.cat}</p>
+            <h6 className="product-name mb-2">{p.name || p.nombre}</h6>
             <div className="mt-auto d-flex justify-content-between align-items-center">
-              <span className="product-price">S/ {p.precio.toFixed(2)}</span>
-              <button className="btn-add-cart" onClick={(e) => { e.preventDefault(); addToCart({ ...p, name: p.nombre, price: p.precio }); }}><i className="bi bi-cart-plus"></i></button>
+              <span className="product-price">S/ {(p.price ?? p.precio).toFixed(2)}</span>
+              <button className="btn-add-cart" onClick={(e) => { e.preventDefault(); addToCart({ id: p.id, name: p.name || p.nombre, price: p.price ?? p.precio, img: p.img }); }}><i className="bi bi-cart-plus"></i></button>
             </div>
           </div>
         </div>
@@ -87,7 +77,7 @@ const CategoryCard = ({ item }) => (
   <div className="col-4 col-md-2">
     <Link to={`/shop?category=${item.nombre}`} className="category-card text-decoration-none d-block text-center p-3 rounded-4 bg-white shadow-sm">
       <div className="cat-icon-wrap mx-auto mb-2" style={{ background: item.color, overflow: 'hidden' }}>
-        <img src={item.img} alt={item.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+        <img src={item.img} alt={item.nombre} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
       </div>
       <span className="cat-label" style={{ color: item.text, fontWeight: '600' }}>{item.nombre}</span>
     </Link>
@@ -95,6 +85,9 @@ const CategoryCard = ({ item }) => (
 );
 
 const MainContent = () => {
+  const { products, loading: productsLoading } = useShopProducts();
+  const featuredProducts = products.slice(0, 8);
+
   useEffect(() => {
     const mainEl = document.querySelector('#heroCarousel');
     if (mainEl) {
@@ -319,7 +312,7 @@ const MainContent = () => {
           {SLIDES_FIXED.map((_, i) => (<button key={i} type="button" data-bs-target="#heroCarousel" data-bs-slide-to={i} className={i === 0 ? "active" : ""}></button>))}
         </div>
         <div className="carousel-inner hero-inner">
-          {SLIDES_FIXED.map((s, i) => (<div key={i} className={`carousel-item h-100 ${i === 0 ? "active" : ""}`}><Link to={s.to}><img src={s.img} className="hero-img d-block w-100 h-100" alt="slide" /></Link></div>))}
+          {SLIDES_FIXED.map((s, i) => (<div key={i} className={`carousel-item h-100 ${i === 0 ? "active" : ""}`}><Link to={s.to}><img src={s.img} className="hero-img d-block w-100 h-100" alt="slide" loading="lazy" /></Link></div>))}
         </div>
         <button className="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev"><span className="carousel-control-prev-icon"></span></button>
         <button className="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next"><span className="carousel-control-next-icon"></span></button>
@@ -365,20 +358,30 @@ const MainContent = () => {
           <div className="col-12">
             <div className="collage-main-card d-flex align-items-center p-5 shadow-lg overflow-hidden">
               <div className="row w-100 align-items-center">
-                <div className="col-md-6 text-center d-none d-md-block position-relative" style={{height: '300px'}}><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800" className="blob-frame" alt="Fresh" /></div>
+                <div className="col-md-6 text-center d-none d-md-block position-relative" style={{height: '300px'}}><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=800" className="blob-frame" alt="Fresh" loading="lazy" /></div>
                 <div className="col-md-6"><h1 className="fw-black display-4 mb-3" style={{color: '#0d2b22'}}>Frutas y Verduras.<br/>Entrega Diaria.</h1><p className="text-muted fs-5 mb-4">La mejor calidad seleccionada para tu hogar.</p><Link to="/shop" className="btn btn-dark rounded-pill px-5 py-3 fw-bold">Comprar Ahora</Link></div>
               </div>
             </div>
           </div>
-          <div className="col-md-4"><div className="collage-sub-card bg-3d-green shadow-lg"><div className="text-3d-front text-white"><h4 className="fw-bold">10% DE AHORRO EN TU PRIMERA COMPRA</h4></div><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" className="blob-frame" alt="promo1" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="text-white-50 small">Regístrate hoy para tu primer pedido.</span><button className="btn-go-black"><i className="bi bi-chevron-right"></i></button></div></div></div>
-          <div className="col-md-4"><div className="collage-sub-card bg-3d-pink shadow-lg"><div className="text-3d-front" style={{color: '#880e4f'}}><h4 className="fw-bold">ENVÍO GRATIS POR COMPRAS MAYORES A 100 SOLES</h4></div><img src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600" className="blob-frame" alt="promo2" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="small" style={{color: '#880e4f'}}>Abastece tu despensa sin costo extra.</span><button className="btn-go-black"><i className="bi bi-chevron-right"></i></button></div></div></div>
-          <div className="col-md-4"><div className="collage-sub-card bg-3d-yellow shadow-lg"><div className="text-3d-front" style={{color: '#333'}}><h4 className="fw-bold">PRODUCTOS DE LA MEJOR CALIDAD</h4></div><img src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80" className="blob-frame" alt="Tienda Market" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="small" style={{color: '#333'}}>Lo mejor del mercado directo a tu mesa.</span><button className="btn-go-black text-white"><i className="bi bi-chevron-right"></i></button></div></div></div>
+          <div className="col-md-4"><div className="collage-sub-card bg-3d-green shadow-lg"><div className="text-3d-front text-white"><h4 className="fw-bold">10% DE AHORRO EN TU PRIMERA COMPRA</h4></div><img src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" className="blob-frame" alt="promo1" loading="lazy" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="text-white-50 small">Regístrate hoy para tu primer pedido.</span><button className="btn-go-black"><i className="bi bi-chevron-right"></i></button></div></div></div>
+          <div className="col-md-4"><div className="collage-sub-card bg-3d-pink shadow-lg"><div className="text-3d-front" style={{color: '#880e4f'}}><h4 className="fw-bold">ENVÍO GRATIS POR COMPRAS MAYORES A 100 SOLES</h4></div><img src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600" className="blob-frame" alt="promo2" loading="lazy" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="small" style={{color: '#880e4f'}}>Abastece tu despensa sin costo extra.</span><button className="btn-go-black"><i className="bi bi-chevron-right"></i></button></div></div></div>
+          <div className="col-md-4"><div className="collage-sub-card bg-3d-yellow shadow-lg"><div className="text-3d-front" style={{color: '#333'}}><h4 className="fw-bold">PRODUCTOS DE LA MEJOR CALIDAD</h4></div><img src="https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80" className="blob-frame" alt="Tienda Market" loading="lazy" /><div className="text-3d-front d-flex justify-content-between align-items-center"><span className="small" style={{color: '#333'}}>Lo mejor del mercado directo a tu mesa.</span><button className="btn-go-black text-white"><i className="bi bi-chevron-right"></i></button></div></div></div>
         </div>
       </section>
 
       <section className="container py-5">
         <h3 className="section-title mb-4 fw-bold">Top Seleccionados</h3>
-        <div className="row row-cols-2 row-cols-md-4 g-4">{PRODUCTOS.map((p) => <ProductCard key={p.id} p={p} />)}</div>
+        <div className="row row-cols-2 row-cols-md-4 g-4">
+          {productsLoading ? (
+            <div className="col-12 text-center py-4">
+              <div className="spinner-border text-success" role="status"></div>
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            featuredProducts.map((p) => <ProductCard key={p.id} p={p} />)
+          ) : (
+            <div className="col-12 text-center text-muted py-4">No hay productos disponibles</div>
+          )}
+        </div>
       </section>
 
       <section className="container pb-5 pt-3">

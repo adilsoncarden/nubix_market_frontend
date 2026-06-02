@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import imageCompression from "browser-image-compression";
 import {
     productService,
     getProductImageUrl,
@@ -30,15 +31,34 @@ const ProductImageField = ({
             return;
         }
 
+        let processedFile = file;
+        try {
+            processedFile = await imageCompression(file, {
+                maxSizeMB: 0.1, // ~100KB objetivo
+                maxWidthOrHeight: 1280,
+                useWebWorker: true,
+                initialQuality: 0.8,
+            });
+        } catch (error) {
+            console.error("Error al comprimir imagen:", error);
+            alert("No se pudo procesar la imagen seleccionada.");
+            return;
+        }
+
+        if (processedFile.size > 150 * 1024) {
+            alert("La imagen comprimida supera el tamaño permitido (~150KB).");
+            return;
+        }
+
         if (previewUrl) URL.revokeObjectURL(previewUrl);
-        setPreviewUrl(URL.createObjectURL(file));
+        setPreviewUrl(URL.createObjectURL(processedFile));
 
         if (productId) {
             setUploading(true);
             try {
                 const updated = await productService.uploadProductImage(
                     productId,
-                    file,
+                    processedFile,
                 );
                 setPreviewUrl(null);
                 onImageUpdated?.(updated);
@@ -51,7 +71,7 @@ const ProductImageField = ({
                 if (inputRef.current) inputRef.current.value = "";
             }
         } else {
-            onPendingFile?.(file);
+            onPendingFile?.(processedFile);
         }
     };
 
@@ -89,6 +109,7 @@ const ProductImageField = ({
                     <img
                         src={displayUrl}
                         alt="Imagen del producto"
+                        loading="lazy"
                         className="img-fluid rounded"
                         style={{ maxHeight: "180px", objectFit: "contain" }}
                     />
