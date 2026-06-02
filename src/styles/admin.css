@@ -360,6 +360,17 @@
   box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
 }
 
+/* Evitar azul por defecto de Bootstrap en paginación admin */
+.admin-page .pagination .page-item.active .page-link {
+  background-color: transparent;
+  border-color: transparent;
+  color: inherit;
+}
+
+.admin-page .pagination .page-link:not(.active-pagination):not(.active-page) {
+  color: var(--bs-body-color);
+}
+
 /* ─── Tablas responsive ──────────────────────────────────── */
 .admin-page .table-responsive {
   -webkit-overflow-scrolling: touch;

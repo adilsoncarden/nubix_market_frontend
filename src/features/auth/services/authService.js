@@ -1,9 +1,17 @@
 import api from "../../../config/axios";
+import { clearAllAuthData } from "../../../utils/authUtils";
 
 export const authService = {
     login: async (credentials) => {
-        const response = await api.post("/auth/login", credentials);
-        return response.data;
+        try {
+            const response = await api.post("/auth/login", credentials);
+            return response.data;
+        } catch (error) {
+            if (error.response?.data) {
+                return error.response.data;
+            }
+            throw error;
+        }
     },
 
     register: async (userData) => {
@@ -12,8 +20,15 @@ export const authService = {
     },
 
     adminLogin: async (credentials) => {
-        const response = await api.post("/auth/admin-login", credentials);
-        return response.data;
+        try {
+            const response = await api.post("/auth/admin-login", credentials);
+            return response.data;
+        } catch (error) {
+            if (error.response?.data) {
+                return error.response.data;
+            }
+            throw error;
+        }
     },
 
     verifyCode: async (email, code) => {
@@ -39,10 +54,6 @@ export const authService = {
     },
 
     logout: () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("username");
-        localStorage.removeItem("role");
-        localStorage.removeItem("redirectAfterLogin");
+        clearAllAuthData();
     },
 };

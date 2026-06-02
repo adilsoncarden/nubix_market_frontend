@@ -11,6 +11,7 @@ import api from "../config/axios";
 import { productService } from "../features/products/services/productService";
 import { getProductImageUrl } from "../features/products/services/productService";
 import { mapProductosToShopItems } from "../features/products/utils/mapProducto";
+import { priceWithIgv, normalizeCartItem } from "../utils/pricing";
 import { alertLoginRequired } from "../utils/swalConfig";
 import { setRedirectUrl } from "../utils/authUtils";
 
@@ -24,11 +25,13 @@ function mapCarritoToItems(carrito) {
     const items = Array.isArray(carrito?.items) ? carrito.items : [];
     return items.map((it) => {
         const p = it.producto || {};
+        const priceBase = Number(p.precioVenta) || 0;
         return {
             id: p.id,
             name: p.nombre ?? "",
             category: p.categoria?.nombre ?? "",
-            price: Number(p.precioVenta) || 0,
+            priceBase,
+            price: priceWithIgv(priceBase),
             unit: "und",
             stock: p.stock ?? 0,
             codigo: p.codigo ?? "",
@@ -41,12 +44,13 @@ function mapCarritoToItems(carrito) {
 function reducer(state, { type, product, id, qty, synced, items }) {
     switch (type) {
         case "ADD": {
-            const found = state.find((i) => i.id === product.id);
+            const normalized = normalizeCartItem(product, 1);
+            const found = state.find((i) => i.id === normalized.id);
             return found
                 ? state.map((i) =>
-                      i.id === product.id ? { ...i, qty: i.qty + 1 } : i,
+                      i.id === normalized.id ? { ...i, qty: i.qty + 1 } : i,
                   )
-                : [...state, { ...product, qty: 1 }];
+                : [...state, normalized];
         }
         case "REMOVE":
             return state.filter((i) => i.id !== id);
@@ -68,6 +72,7 @@ function reducer(state, { type, product, id, qty, synced, items }) {
                     ...item,
                     name: fresh.name,
                     img: fresh.img,
+                    priceBase: fresh.priceBase,
                     price: fresh.price,
                     category: fresh.category,
                     stock: fresh.stock,
@@ -169,6 +174,9 @@ export function CartProvider({ children }) {
     const totalPrice = token
         ? items.reduce((s, i) => s + i.price * i.qty, 0)
         : 0;
+    const totalPriceBase = token
+        ? items.reduce((s, i) => s + (i.priceBase ?? 0) * i.qty, 0)
+        : 0;
 
     const requireLoginForCart = async () => {
         setRedirectUrl(window.location.pathname + window.location.search);
@@ -185,6 +193,7 @@ export function CartProvider({ children }) {
                 items: token ? items : [],
                 totalItems,
                 totalPrice,
+                totalPriceBase,
                 addToCart: async (p) => {
                     if (!token) return requireLoginForCart();
                     const res = await api.post("/carrito/items", {
@@ -208,10 +217,23 @@ export function CartProvider({ children }) {
                     dispatch({ type: "SET_ALL", items: mapCarritoToItems(res.data) });
                     return true;
                 },
+                reloadCart: async () => {
+                    if (!token) return;
+                    try {
+                        await loadServerCart();
+                    } catch (err) {
+                        console.error("Error recargando carrito", err);
+                    }
+                },
                 clearCart: async () => {
                     if (!token) return false;
-                    await api.delete("/carrito");
+                    try {
+                        await api.delete("/carrito");
+                    } catch (err) {
+                        console.error("Error vaciando carrito en servidor", err);
+                    }
                     dispatch({ type: "CLEAR" });
+                    localStorage.removeItem(KEY);
                     return true;
                 },
             }}

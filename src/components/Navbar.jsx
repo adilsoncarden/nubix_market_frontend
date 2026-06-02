@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
+import { useFavorites } from "../store/FavoritesContext";
 import { useAuth } from "../store/AuthContext";
 import { clearRedirectUrl } from "../utils/authUtils";
 import api from "../config/axios";
@@ -10,7 +11,10 @@ import { CATEGORIAS_DATA } from "./MainContent";
 export default function Navbar() {
     const navigate = useNavigate();
     const { totalItems } = useCart();
-    const { token, user, logout } = useAuth();
+    const { count: favoritesCount } = useFavorites();
+    const { webToken, webUser, logoutWeb, canAccessAdmin } = useAuth();
+    const token = webToken;
+    const user = webUser;
 
     const dropdownRef = useRef(null);
     const userMenuRef = useRef(null);
@@ -86,7 +90,7 @@ export default function Navbar() {
 
     const handleLogout = () => {
         clearRedirectUrl();
-        logout();
+        logoutWeb();
         setUserMenuOpen(false);
         navigate("/");
     };
@@ -229,7 +233,7 @@ export default function Navbar() {
                                             className="position-absolute end-0 dropdown-menu-wow bg-white mt-2 p-2"
                                             style={{ minWidth: "150px" }}
                                         >
-                                            {user?.rol === "ADMIN" && (
+                                            {canAccessAdmin && (
                                                 <Link
                                                     className="dropdown-item mb-2"
                                                     to="/admin/dashboard"
@@ -269,9 +273,16 @@ export default function Navbar() {
 
                             <Link
                                 to={token ? "/favorites" : "/login"}
-                                className="action-icon-btn text-decoration-none"
+                                className="action-icon-btn text-decoration-none position-relative"
                             >
                                 <i className="bi bi-heart"></i>
+                                {token && favoritesCount > 0 && (
+                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle cart-badge-premium">
+                                        {favoritesCount > 9
+                                            ? "9+"
+                                            : favoritesCount}
+                                    </span>
+                                )}
                             </Link>
                             {token && (
                                 <div className="position-relative" ref={notifRef}>

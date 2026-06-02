@@ -59,13 +59,30 @@ export const detectIntent = (message) => {
     return map[top] || INTENTS.UNKNOWN;
 };
 
-export const resolveUserRole = ({ token, user, pathname }) => {
+export const resolveUserRole = ({
+    webToken,
+    webUser,
+    adminToken,
+    pathname,
+}) => {
     const isAdminRoute =
         pathname?.startsWith("/admin") && pathname !== ROUTES.adminLogin;
-    if (isAdminRoute || user?.rol === "ADMIN" || user?.rol === "EMPLEADO") {
-        return ROLES.ADMIN;
+
+    if (isAdminRoute) {
+        if (adminToken) return ROLES.ADMIN;
+        if (
+            webToken &&
+            (webUser?.rol === "ADMIN" || webUser?.rol === "EMPLEADO")
+        ) {
+            return ROLES.ADMIN;
+        }
     }
-    if (token && user) return ROLES.CLIENT;
+
+    if (adminToken && !webToken) {
+        return ROLES.GUEST;
+    }
+
+    if (webToken && webUser) return ROLES.CLIENT;
     return ROLES.GUEST;
 };
 
@@ -410,7 +427,7 @@ const unknownResponse = (role) => {
 
 /**
  * @param {string} message - Mensaje del usuario
- * @param {{ token?: string, user?: object, pathname?: string }} context
+ * @param {{ webToken?: string, webUser?: object, adminToken?: string, pathname?: string }} context
  * @returns {{ text: string, intent: string, suggestions: string[] }}
  */
 export const getChatResponse = (message, context = {}) => {
