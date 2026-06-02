@@ -1,73 +1,169 @@
 /**
- * Utilidades centrales de autenticación
- * Evita duplicación de lógica y sincroniza el estado de auth
+ * Autenticación separada: sesión web (cliente) vs sesión admin (panel).
  */
 
-/**
- * Verifica si el usuario está autenticado
- * @returns {boolean}
- */
-export const isAuthenticated = () => {
-    return !!localStorage.getItem("token");
+export const STORAGE_KEYS = {
+    userToken: "userToken",
+    webUser: "webUser",
+    adminToken: "adminToken",
+    adminUser: "adminUser",
+    redirectAfterLogin: "redirectAfterLogin",
 };
 
-/**
- * Obtiene el token guardado
- * @returns {string|null}
- */
-export const getToken = () => {
-    return localStorage.getItem("token");
+const LEGACY_TOKEN = "token";
+const LEGACY_USER = "user";
+
+export const ADMIN_ROLES = ["ADMIN", "EMPLEADO"];
+
+export const isAdminRole = (rol) =>
+    rol && ADMIN_ROLES.includes(String(rol).toUpperCase());
+
+const parseUser = (raw) => {
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
 };
 
-/**
- * Obtiene el URL a redireccionar después del login
- * @returns {string} URL destino o "/" por defecto
- */
+export const migrateLegacyAuth = () => {
+    const legacyToken = localStorage.getItem(LEGACY_TOKEN);
+    if (!legacyToken) return;
+
+    if (
+        localStorage.getItem(STORAGE_KEYS.userToken) ||
+        localStorage.getItem(STORAGE_KEYS.adminToken)
+    ) {
+        localStorage.removeItem(LEGACY_TOKEN);
+        localStorage.removeItem(LEGACY_USER);
+        localStorage.removeItem("username");
+        localStorage.removeItem("role");
+        return;
+    }
+
+    const legacyUser = parseUser(localStorage.getItem(LEGACY_USER));
+
+    if (legacyUser && isAdminRole(legacyUser.rol)) {
+        saveAdminAuthData(legacyToken, legacyUser);
+    } else {
+        saveWebAuthData(legacyToken, legacyUser);
+    }
+
+    localStorage.removeItem(LEGACY_TOKEN);
+    localStorage.removeItem(LEGACY_USER);
+    localStorage.removeItem("username");
+    localStorage.removeItem("role");
+};
+
+export const getWebToken = () => localStorage.getItem(STORAGE_KEYS.userToken);
+
+export const getAdminToken = () => localStorage.getItem(STORAGE_KEYS.adminToken);
+
+export const getWebUser = () =>
+    parseUser(localStorage.getItem(STORAGE_KEYS.webUser));
+
+export const getAdminUser = () =>
+    parseUser(localStorage.getItem(STORAGE_KEYS.adminUser));
+
+export const isWebAuthenticated = () => !!getWebToken();
+
+export const isAdminAuthenticated = () => !!getAdminToken();
+
+/** Panel admin: token admin dedicado o sesión web con rol admin/empleado */
+export const canAccessAdminPanel = () => {
+    if (getAdminToken()) return true;
+    const webUser = getWebUser();
+    return isWebAuthenticated() && isAdminRole(webUser?.rol);
+};
+
+export const getAdminSessionUser = () => {
+    const adminUser = getAdminUser();
+    if (adminUser) return adminUser;
+    const webUser = getWebUser();
+    if (isWebAuthenticated() && isAdminRole(webUser?.rol)) return webUser;
+    return null;
+};
+
+export const saveWebAuthData = (token, userData) => {
+    localStorage.setItem(STORAGE_KEYS.userToken, token);
+    if (userData) {
+        localStorage.setItem(STORAGE_KEYS.webUser, JSON.stringify(userData));
+    }
+};
+
+export const saveAdminAuthData = (token, userData) => {
+    localStorage.setItem(STORAGE_KEYS.adminToken, token);
+    if (userData) {
+        localStorage.setItem(STORAGE_KEYS.adminUser, JSON.stringify(userData));
+    }
+};
+
+export const clearWebAuthData = () => {
+    localStorage.removeItem(STORAGE_KEYS.userToken);
+    localStorage.removeItem(STORAGE_KEYS.webUser);
+    localStorage.removeItem(STORAGE_KEYS.redirectAfterLogin);
+};
+
+export const clearAdminAuthData = () => {
+    localStorage.removeItem(STORAGE_KEYS.adminToken);
+    localStorage.removeItem(STORAGE_KEYS.adminUser);
+};
+
+export const clearAllAuthData = () => {
+    clearWebAuthData();
+    clearAdminAuthData();
+    localStorage.removeItem(LEGACY_TOKEN);
+    localStorage.removeItem(LEGACY_USER);
+    localStorage.removeItem("username");
+    localStorage.removeItem("role");
+};
+
+/** @deprecated usar isWebAuthenticated */
+export const isAuthenticated = () => isWebAuthenticated();
+
+/** @deprecated usar getWebToken */
+export const getToken = () => getWebToken();
+
+/** @deprecated usar clearAllAuthData o clearWeb/clearAdmin */
+export const clearAuthData = clearAllAuthData;
+
+/** @deprecated usar saveWebAuthData */
+export const saveAuthData = saveWebAuthData;
+
 export const getRedirectUrl = () => {
-    const saved = localStorage.getItem("redirectAfterLogin");
+    const saved = localStorage.getItem(STORAGE_KEYS.redirectAfterLogin);
     return saved ? decodeURIComponent(saved) : "/";
 };
 
-/**
- * Guarda el URL destino ANTES de redirigir a login
- * @param {string} url - URL a redireccionar después del login
- */
 export const setRedirectUrl = (url) => {
     if (url && url !== "/login") {
-        localStorage.setItem("redirectAfterLogin", encodeURIComponent(url));
+        localStorage.setItem(
+            STORAGE_KEYS.redirectAfterLogin,
+            encodeURIComponent(url),
+        );
     }
 };
 
-/**
- * Limpia el URL de redirección después de usarlo
- */
 export const clearRedirectUrl = () => {
-    localStorage.removeItem("redirectAfterLogin");
+    localStorage.removeItem(STORAGE_KEYS.redirectAfterLogin);
 };
 
-/**
- * Limpia TODOS los datos de autenticación
- */
-export const clearAuthData = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("username");
-    localStorage.removeItem("role");
-    localStorage.removeItem("redirectAfterLogin");
-};
+const isAdminApiPath = (pathname) =>
+    pathname.startsWith("/admin") && pathname !== "/admin-login";
 
 /**
- * Guarda los datos del usuario autenticado
- * @param {string} token - Token JWT
- * @param {object} userData - Datos del usuario {username, role, ...}
+ * Token JWT para la petición actual (ruta web vs admin).
  */
-export const saveAuthData = (token, userData) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(userData));
-    if (userData.username) {
-        localStorage.setItem("username", userData.username);
+export const getTokenForRequest = (pathname = window.location.pathname) => {
+    if (isAdminApiPath(pathname)) {
+        const adminToken = getAdminToken();
+        if (adminToken) return adminToken;
+        const webUser = getWebUser();
+        if (isWebAuthenticated() && isAdminRole(webUser?.rol)) {
+            return getWebToken();
+        }
+        return null;
     }
-    if (userData.rol) {
-        localStorage.setItem("role", userData.rol);
-    }
+    return getWebToken();
 };

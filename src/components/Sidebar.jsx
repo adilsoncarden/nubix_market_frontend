@@ -23,7 +23,8 @@ const SidebarItem = ({ to, icon, label, active, isSubItem = false, onNavigate })
 
 const Sidebar = ({ isOpen = false, onClose }) => {
     const location = useLocation();
-    const { logout, user } = useAuth();
+    const { logoutAdmin, adminSessionUser } = useAuth();
+    const user = adminSessionUser;
     const [isUsersOpen, setIsUsersOpen] = useState(
         location.pathname.includes("/admin/usuarios"),
     );
@@ -197,7 +198,7 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                 </div>
 
                 <button
-                    onClick={logout}
+                    onClick={logoutAdmin}
                     className="btn btn-outline-danger w-100 border-0 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3"
                 >
                     <i className="bi bi-box-arrow-right"></i>

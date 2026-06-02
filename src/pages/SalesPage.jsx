@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Modal } from "bootstrap";
 import { useSales } from "../features/sales/hooks/useSales";
-import { saleService, formatSaleDateTime, getSaleClientLabel } from "../features/sales/services/saleService";
+import {
+    saleService,
+    formatSaleDateTime,
+    getSaleClientLabel,
+    getSaleVendorLabel,
+} from "../features/sales/services/saleService";
 import VentaForm from "../features/sales/components/VentaForm";
 import Swal from "sweetalert2";
 import { useProductCatalog } from "../store/ProductCatalogContext";
@@ -549,7 +554,7 @@ const SalesPage = () => {
                                                 #{sale.id}
                                             </td>
                                             <td>{getSaleClientLabel(sale)}</td>
-                                            <td>{sale.vendedor?.username || "-"}</td>
+                                            <td>{getSaleVendorLabel(sale)}</td>
                                             <td>{formatSaleDateTime(sale)}</td>
                                             <td className="fw-bold text-success">
                                                 S/ {sale.total.toFixed(2)}
@@ -610,6 +615,10 @@ const SalesPage = () => {
                                                                 getSaleClientLabel(
                                                                     sale,
                                                                 );
+                                                            const vendedorLabel =
+                                                                getSaleVendorLabel(
+                                                                    sale,
+                                                                );
                                                             const fechaLabel =
                                                                 formatSaleDateTime(
                                                                     sale,
@@ -619,7 +628,7 @@ const SalesPage = () => {
                                                                 html: `
                                                                     <div class="text-start">
                                                                         <p><strong>Cliente:</strong> ${clienteLabel}</p>
-                                                                        <p><strong>Vendedor:</strong> ${sale.vendedor?.username || "-"}</p>
+                                                                        <p><strong>Vendedor:</strong> ${vendedorLabel}</p>
                                                                         <p><strong>Fecha:</strong> ${fechaLabel}</p>
                                                                         <p><strong>Total:</strong> S/ ${sale.total.toFixed(2)}</p>
                                                                         <p><strong>Estado:</strong> ${sale.estadoPedido}</p>

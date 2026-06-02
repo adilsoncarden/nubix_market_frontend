@@ -1,4 +1,5 @@
 import api from "../../../config/axios";
+import { clearAllAuthData } from "../../../utils/authUtils";
 
 export const authService = {
     login: async (credentials) => {
@@ -39,10 +40,6 @@ export const authService = {
     },
 
     logout: () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        localStorage.removeItem("username");
-        localStorage.removeItem("role");
-        localStorage.removeItem("redirectAfterLogin");
+        clearAllAuthData();
     },
 };

@@ -73,6 +73,12 @@ export const formatSaleDateTime = (sale) => {
     });
 };
 
+export const getSaleVendorLabel = (sale) => {
+    if (!sale) return "-";
+    if (sale.canal === "WEB") return "WEB";
+    return sale.vendedor?.username || "-";
+};
+
 export const getSaleClientLabel = (sale) => {
     if (!sale) return "-";
 
