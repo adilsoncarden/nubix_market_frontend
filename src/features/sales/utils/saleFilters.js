@@ -60,7 +60,7 @@ export const matchesSaleSearch = (sale, searchTerm) => {
         sale.estadoPago,
         sale.metodoPago,
         sale.codigoRecojo,
-        sale.vendedor?.username,
+        sale.canal === "WEB" ? "WEB" : sale.vendedor?.username,
     ];
 
     return haystack.some(

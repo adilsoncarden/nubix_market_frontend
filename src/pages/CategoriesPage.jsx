@@ -270,7 +270,6 @@ const CategoriesPage = () => {
                     </table>
                 </div>
 
-                {/* PAGINACIÓN VERDE */}
                 {totalPages > 1 && (
                     <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
                         <div className="text-muted small admin-pagination-info">
@@ -290,10 +289,12 @@ const CategoriesPage = () => {
                                     className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
                                 >
                                     <button
+                                        type="button"
                                         className="page-link border-0 rounded-2"
                                         onClick={() =>
                                             paginate(currentPage - 1)
                                         }
+                                        disabled={currentPage === 1}
                                     >
                                         <i className="bi bi-chevron-left"></i>
                                     </button>
@@ -301,6 +302,7 @@ const CategoriesPage = () => {
                                 {[...Array(totalPages).keys()].map((num) => (
                                     <li key={num + 1}>
                                         <button
+                                            type="button"
                                             className={`page-link border-0 rounded-2 fw-bold ${currentPage === num + 1 ? "active-pagination" : "text-dark bg-light"}`}
                                             onClick={() => paginate(num + 1)}
                                             style={{
@@ -316,10 +318,12 @@ const CategoriesPage = () => {
                                     className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
                                 >
                                     <button
+                                        type="button"
                                         className="page-link border-0 rounded-2"
                                         onClick={() =>
                                             paginate(currentPage + 1)
                                         }
+                                        disabled={currentPage === totalPages}
                                     >
                                         <i className="bi bi-chevron-right"></i>
                                     </button>

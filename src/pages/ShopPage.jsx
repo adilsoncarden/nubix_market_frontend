@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import { useCart } from "../store/CartContext";
@@ -61,6 +61,19 @@ export default function ShopPage() {
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    const rangeFrom =
+        filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+    const rangeTo = Math.min(page * PAGE_SIZE, filtered.length);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, sort, activeCat, activeTag]);
+
+    useEffect(() => {
+        if (page > totalPages) {
+            setPage(totalPages);
+        }
+    }, [page, totalPages]);
 
     const handleAdd = (e, product) => {
         e.preventDefault();
@@ -159,7 +172,9 @@ export default function ShopPage() {
                         <span className="results-count">
                             {loading
                                 ? "Cargando..."
-                                : `${filtered.length} productos`}
+                                : filtered.length === 0
+                                  ? "0 productos"
+                                  : `Mostrando ${rangeFrom}-${rangeTo} de ${filtered.length} productos`}
                         </span>
                         {activeCat !== "Todos" && (
                             <span className="results-cat">— {activeCat}</span>
@@ -276,18 +291,55 @@ export default function ShopPage() {
                     )}
 
                     {!loading && filtered.length > PAGE_SIZE && (
-                        <nav className="mt-4">
-                            <ul className="pagination justify-content-center">
-                                <li className={`page-item ${page === 1 ? "disabled" : ""}`}>
-                                    <button type="button" className="page-link" onClick={() => setPage((p) => Math.max(1, p - 1))}>Anterior</button>
+                        <nav className="mt-4 shop-pagination" aria-label="Paginación de productos">
+                            <ul className="pagination pagination-sm justify-content-center mb-0 gap-1">
+                                <li
+                                    className={`page-item ${page === 1 ? "disabled" : ""}`}
+                                >
+                                    <button
+                                        type="button"
+                                        className="page-link border-0 rounded-2"
+                                        onClick={() =>
+                                            setPage((p) => Math.max(1, p - 1))
+                                        }
+                                        disabled={page === 1}
+                                    >
+                                        <i className="bi bi-chevron-left"></i>
+                                    </button>
                                 </li>
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-                                    <li key={n} className={`page-item ${page === n ? "active" : ""}`}>
-                                        <button type="button" className="page-link" onClick={() => setPage(n)}>{n}</button>
+                                {Array.from(
+                                    { length: totalPages },
+                                    (_, i) => i + 1,
+                                ).map((n) => (
+                                    <li key={n}>
+                                        <button
+                                            type="button"
+                                            className={`page-link border-0 rounded-2 fw-bold ${page === n ? "shop-pagination-active" : "shop-pagination-inactive"}`}
+                                            onClick={() => setPage(n)}
+                                            style={{
+                                                width: "32px",
+                                                height: "32px",
+                                            }}
+                                        >
+                                            {n}
+                                        </button>
                                     </li>
                                 ))}
-                                <li className={`page-item ${page === totalPages ? "disabled" : ""}`}>
-                                    <button type="button" className="page-link" onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Siguiente</button>
+                                <li
+                                    className={`page-item ${page === totalPages ? "disabled" : ""}`}
+                                >
+                                    <button
+                                        type="button"
+                                        className="page-link border-0 rounded-2"
+                                        onClick={() =>
+                                            setPage((p) =>
+                                                Math.min(totalPages, p + 1),
+                                            )
+                                        }
+                                        disabled={page === totalPages}
+                                    >
+                                        <i className="bi bi-chevron-right"></i>
+                                    </button>
                                 </li>
                             </ul>
                         </nav>

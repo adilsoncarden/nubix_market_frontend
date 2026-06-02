@@ -1,5 +1,11 @@
 import axios from "axios";
-import { clearAuthData } from "../utils/authUtils";
+import {
+    clearWebAuthData,
+    clearAdminAuthData,
+    getTokenForRequest,
+    getWebUser,
+    isAdminRole,
+} from "../utils/authUtils";
 
 const api = axios.create({
     baseURL:
@@ -11,7 +17,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("token");
+    const token = getTokenForRequest(window.location.pathname);
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
@@ -29,10 +35,24 @@ api.interceptors.response.use(
             message,
         );
         if (status === 401 && !url?.includes("/auth/")) {
-            clearAuthData();
-            if (!window.location.pathname.includes("/login")) {
-                const isAdmin = window.location.pathname.startsWith("/admin");
-                window.location.href = isAdmin ? "/admin-login" : "/login";
+            const path = window.location.pathname;
+            const isAdminRoute =
+                path.startsWith("/admin") && path !== "/admin-login";
+
+            if (isAdminRoute) {
+                clearAdminAuthData();
+                const webUser = getWebUser();
+                if (isAdminRole(webUser?.rol)) {
+                    clearWebAuthData();
+                }
+                if (!path.includes("/admin-login")) {
+                    window.location.href = "/admin-login";
+                }
+            } else {
+                clearWebAuthData();
+                if (!path.includes("/login")) {
+                    window.location.href = "/login";
+                }
             }
         }
         return Promise.reject(error);

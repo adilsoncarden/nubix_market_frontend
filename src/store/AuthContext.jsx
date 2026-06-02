@@ -1,45 +1,70 @@
-import { createContext, useState, useContext, useEffect } from "react";
-import { saveAuthData, clearAuthData } from "../utils/authUtils";
+import { createContext, useState, useContext, useEffect, useMemo } from "react";
+import {
+    migrateLegacyAuth,
+    saveWebAuthData,
+    saveAdminAuthData,
+    clearWebAuthData,
+    clearAdminAuthData,
+    getWebUser,
+    getAdminUser,
+    getAdminSessionUser,
+    isAdminRole,
+} from "../utils/authUtils";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [token, setToken] = useState(() => localStorage.getItem("token"));
+    const [webToken, setWebToken] = useState(null);
+    const [webUser, setWebUser] = useState(null);
+    const [adminToken, setAdminToken] = useState(null);
+    const [adminUser, setAdminUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem("user");
-            if (saved && token) {
-                setUser(JSON.parse(saved));
-            }
-        } catch {
-            localStorage.removeItem("user");
-        } finally {
-            setLoading(false);
-        }
-    }, [token]);
+        document.documentElement.removeAttribute("data-bs-theme");
+        migrateLegacyAuth();
+        setWebToken(localStorage.getItem("userToken"));
+        setWebUser(getWebUser());
+        setAdminToken(localStorage.getItem("adminToken"));
+        setAdminUser(getAdminUser());
+        setLoading(false);
+    }, []);
 
-    /**
-     * Login: Guarda token y datos del usuario de forma centralizada
-     * @param {object} userData - Datos del usuario {username, rol, ...}
-     * @param {string} userToken - Token JWT
-     */
-    const login = (userData, userToken) => {
-        saveAuthData(userToken, userData);
-        setToken(userToken);
-        setUser(userData);
+    const loginWeb = (userData, token) => {
+        saveWebAuthData(token, userData);
+        setWebToken(token);
+        setWebUser(userData);
     };
 
-    /**
-     * Logout: Limpia TODOS los datos de autenticación
-     */
-    const logout = () => {
-        clearAuthData();
-        setToken(null);
-        setUser(null);
+    const loginAdmin = (userData, token) => {
+        saveAdminAuthData(token, userData);
+        setAdminToken(token);
+        setAdminUser(userData);
     };
+
+    const logoutWeb = () => {
+        clearWebAuthData();
+        setWebToken(null);
+        setWebUser(null);
+    };
+
+    const logoutAdmin = () => {
+        clearAdminAuthData();
+        setAdminToken(null);
+        setAdminUser(null);
+    };
+
+    const adminSessionUser = useMemo(
+        () =>
+            adminUser ??
+            (webToken && isAdminRole(webUser?.rol) ? webUser : null),
+        [adminUser, webToken, webUser],
+    );
+
+    const canAccessAdmin = useMemo(
+        () => !!adminToken || (!!webToken && isAdminRole(webUser?.rol)),
+        [adminToken, webToken, webUser],
+    );
 
     if (loading) {
         return (
@@ -53,7 +78,25 @@ export const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider
-            value={{ user, token, login, logout, isAuthenticated: !!token }}
+            value={{
+                webToken,
+                webUser,
+                adminToken,
+                adminUser,
+                adminSessionUser,
+                loginWeb,
+                loginAdmin,
+                logoutWeb,
+                logoutAdmin,
+                isWebLoggedIn: !!webToken,
+                isAdminLoggedIn: !!adminToken,
+                canAccessAdmin,
+                token: webToken,
+                user: webUser,
+                login: loginWeb,
+                logout: logoutWeb,
+                isAuthenticated: !!webToken,
+            }}
         >
             {children}
         </AuthContext.Provider>

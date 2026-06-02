@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 
 import { AuthProvider } from "./store/AuthContext";
-import { ThemeProvider, useTheme } from "./store/ThemeContext";
+import { ThemeProvider } from "./store/ThemeContext";
 import { CartProvider } from "./store/CartContext";
 import { FavoritesProvider } from "./store/FavoritesContext";
 import { ProductCatalogProvider } from "./store/ProductCatalogContext";
@@ -45,26 +45,21 @@ import EmployeesPage from "./pages/EmployeesPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import SalesPage from "./pages/SalesPage";
 
-// ───────────────── LAYOUT PÚBLICO ─────────────────
-const PublicLayout = () => {
-    const { theme } = useTheme();
-    return (
-        <div className="d-flex flex-column min-vh-100" data-bs-theme={theme}>
-            <Navbar />
-            <main className="flex-grow-1">
-                <Outlet />
-            </main>
-            <Footer />
-        </div>
-    );
-};
+const PublicLayoutShell = () => (
+    <div className="d-flex flex-column min-vh-100" data-bs-theme="light">
+        <Navbar />
+        <main className="flex-grow-1">
+            <Outlet />
+        </main>
+        <Footer />
+    </div>
+);
 
 const WebProtectedRoute = () => {
-    const { token } = useAuth();
+    const { webToken } = useAuth();
     const location = useLocation();
 
-    // ✅ Si no está autenticado, guardar URL destino y redirigir a login
-    if (!token) {
+    if (!webToken) {
         setRedirectUrl(location.pathname + location.search);
         return <Navigate to="/login" replace />;
     }
@@ -88,7 +83,6 @@ const AdminDashboard = () => (
 export default function App() {
     return (
         <BrowserRouter>
-            <ThemeProvider>
             <AuthProvider>
                 <ProductCatalogProvider>
                     <CartProvider>
@@ -96,7 +90,7 @@ export default function App() {
                             <Chatbot />
                             <Routes>
                             {/* ───────────── WEB PÚBLICA ───────────── */}
-                            <Route element={<PublicLayout />}>
+                            <Route element={<PublicLayoutShell />}>
                                 {/* HOME */}
                                 <Route index element={<MainContent />} />
 
@@ -148,14 +142,10 @@ export default function App() {
                             />
 
                             {/* ───────────── RUTAS PROTEGIDAS ADMIN ───────────── */}
-                            <Route
-                                element={
-                                    <ProtectedRoute allowedRoles={["ADMIN"]} />
-                                }
-                            >
+                            <Route element={<ProtectedRoute />}>
                                 <Route
                                     element={
-                                        <ThemeProvider>
+                                        <ThemeProvider scope="admin">
                                             <AdminLayout />
                                         </ThemeProvider>
                                     }
@@ -207,7 +197,6 @@ export default function App() {
                     </CartProvider>
                 </ProductCatalogProvider>
             </AuthProvider>
-            </ThemeProvider>
         </BrowserRouter>
     );
 }

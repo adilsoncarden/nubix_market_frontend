@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { favoritesService } from "../features/favorites/services/favoritesService";
 import { mapProductosToShopItems } from "../features/products/utils/mapProducto";
 import { useCart } from "../store/CartContext";
+import { useFavorites } from "../store/FavoritesContext";
 
 export default function FavoritesPage() {
     const { addToCart } = useCart();
+    const { toggleFavorite } = useFavorites();
     const [raw, setRaw] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -30,7 +32,7 @@ export default function FavoritesPage() {
 
     const handleRemove = async (id) => {
         try {
-            await favoritesService.remove(id);
+            await toggleFavorite(id);
             setRaw((prev) => prev.filter((p) => p.id !== id));
         } catch {
             // noop; se muestra error general al recargar
@@ -89,8 +91,7 @@ export default function FavoritesPage() {
                             <img
                                 src={p.img}
                                 alt={p.name}
-                                className="card-img-top"
-                                style={{ height: 180, objectFit: "cover" }}
+                                className="card-img-top product-img-contain"
                                 loading="lazy"
                             />
                             <div className="card-body">

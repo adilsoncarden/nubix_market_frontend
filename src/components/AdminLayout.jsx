@@ -16,7 +16,8 @@ import {
 import "../styles/admin.css";
 
 const AdminLayout = () => {
-    const { user } = useAuth();
+    const { adminSessionUser } = useAuth();
+    const user = adminSessionUser;
     const { theme, toggleTheme } = useTheme();
     const location = useLocation();
     const [sidebarOpen, setSidebarOpen] = useState(false);
