@@ -4,6 +4,17 @@ import { calcOrderTotals, formatSoles } from "../../utils/pricing";
 import api from "../../config/axios";
 import "../../styles/checkout-modal.css";
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function isValidEmail(email) {
+    const value = email.trim();
+    return value.length > 0 && EMAIL_REGEX.test(value);
+}
+
+function sanitizePhoneDigits(value) {
+    return value.replace(/\D/g, "").slice(0, 9);
+}
+
 const PAYMENT_OPTIONS = [
     {
         uiKey: "TRANSFERENCIA",
@@ -262,6 +273,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const [emailOk, setEmailOk] = useState(null);
     const [ventaCreada, setVentaCreada] = useState(null);
     const [errorCheckout, setErrorCheckout] = useState(null);
+    const [emailTouched, setEmailTouched] = useState(false);
 
     const [form, setForm] = useState({
         nombre: "",
@@ -281,19 +293,43 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const deliveryDisabled = tipoEntrega !== "DELIVERY";
     const selectedPayment = PAYMENT_OPTIONS.find((p) => p.uiKey === metodoPagoUi);
 
+    const emailError = (() => {
+        const value = form.email.trim();
+        if (!value) return "El correo electrónico es obligatorio.";
+        if (!isValidEmail(value)) {
+            return "Ingresa un correo electrónico válido (ej: nombre@ejemplo.com).";
+        }
+        return null;
+    })();
+
     const valido =
         tipo === "boleta"
-            ? form.nombre.trim() &&
-              form.dni.trim().length === 8 &&
-              form.email.trim()
+            ? form.nombre.trim() && form.dni.trim().length === 8
             : form.razonSocial.trim() &&
               form.ruc.trim().length === 11 &&
-              form.email.trim() &&
               form.direccion.trim();
+
+    const emailValido = !emailError;
 
     const entregaValida =
         tipoEntrega !== "DELIVERY" ||
         (form.direccionEntrega.trim() && form.distrito.trim());
+
+    const canContinueStep1 = valido && emailValido && entregaValida;
+
+    const handleTelefonoChange = (e) => {
+        setForm((f) => ({
+            ...f,
+            telefono: sanitizePhoneDigits(e.target.value),
+        }));
+    };
+
+    const handleContinueToPayment = () => {
+        setEmailTouched(true);
+        if (canContinueStep1) {
+            setStep(2);
+        }
+    };
 
     const displayName =
         tipo === "boleta" ? form.nombre : form.razonSocial;
@@ -436,7 +472,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                     Tipo de comprobante
                                 </label>
                                 <select
-                                    className="form-select checkout-input"
+                                    className="form-select checkout-input checkout-select"
                                     value={tipo}
                                     onChange={(e) => setTipo(e.target.value)}
                                 >
@@ -475,9 +511,41 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                 </label>
                                 <input
                                     type="tel"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={9}
                                     className="form-control checkout-input w-100"
+                                    placeholder=""
                                     value={form.telefono}
-                                    onChange={set("telefono")}
+                                    onChange={handleTelefonoChange}
+                                    onPaste={(e) => {
+                                        e.preventDefault();
+                                        const pasted = (
+                                            e.clipboardData || window.clipboardData
+                                        ).getData("text");
+                                        setForm((f) => ({
+                                            ...f,
+                                            telefono: sanitizePhoneDigits(pasted),
+                                        }));
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (
+                                            [
+                                                "Backspace",
+                                                "Delete",
+                                                "Tab",
+                                                "ArrowLeft",
+                                                "ArrowRight",
+                                                "Home",
+                                                "End",
+                                            ].includes(e.key)
+                                        ) {
+                                            return;
+                                        }
+                                        if (!/^\d$/.test(e.key)) {
+                                            e.preventDefault();
+                                        }
+                                    }}
                                 />
                             </div>
 
@@ -487,13 +555,24 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                 </label>
                                 <input
                                     type="email"
-                                    className="form-control checkout-input w-100"
+                                    className={`form-control checkout-input w-100${emailTouched && emailError ? " checkout-input-invalid" : ""}`}
                                     value={form.email}
-                                    onChange={set("email")}
+                                    onChange={(e) => {
+                                        set("email")(e);
+                                        if (emailTouched) setEmailTouched(true);
+                                    }}
+                                    onBlur={() => setEmailTouched(true)}
+                                    autoComplete="email"
                                 />
-                                <span className="field-hint">
-                                    Se enviará la confirmación a este correo
-                                </span>
+                                {emailTouched && emailError ? (
+                                    <span className="checkout-field-error">
+                                        {emailError}
+                                    </span>
+                                ) : (
+                                    <span className="field-hint">
+                                        Se enviará la confirmación a este correo
+                                    </span>
+                                )}
                             </div>
 
                             {tipo === "factura" && (
@@ -515,7 +594,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                     Tipo de entrega
                                 </label>
                                 <select
-                                    className="form-select checkout-input"
+                                    className="form-select checkout-input checkout-select"
                                     value={tipoEntrega}
                                     onChange={(e) =>
                                         setTipoEntrega(e.target.value)
@@ -589,8 +668,8 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                             <button
                                 type="button"
                                 className="btn-modal-confirmar checkout-btn-primary"
-                                onClick={() => setStep(2)}
-                                disabled={!valido || !entregaValida}
+                                onClick={handleContinueToPayment}
+                                disabled={!canContinueStep1}
                             >
                                 Continuar al método de pago →
                             </button>
