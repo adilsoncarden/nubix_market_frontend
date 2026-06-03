@@ -199,7 +199,7 @@ const Footer = () => {
                                             name="nombre"
                                             className="form-control border-0 py-2 px-3" 
                                             style={{ backgroundColor: "#F1F3F5", borderRadius: "12px", fontSize: "0.9rem" }}
-                                            placeholder="Ej: Juan Pérez" 
+                                            placeholder="" 
                                             value={reclamacionData.nombre}
                                             onChange={handleInputChange}
                                             required 

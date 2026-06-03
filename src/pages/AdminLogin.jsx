@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAdminAuth } from "../features/auth/hooks/useAdminAuth";
 import { Tooltip } from "bootstrap";
+import logo from "../assets/logo.png.png";
+import "../styles/auth-pages.css";
 
 /**
  * Componente Atom: AuthInput
@@ -11,12 +13,12 @@ const AuthInput = ({ icon, label, isPassword, ...props }) => {
 
     return (
         <div className="mb-3">
-            <label className="form-label small fw-bold text-secondary ms-1">
+            <label className="form-label admin-auth-label ms-1">
                 {label}
             </label>
-            <div className="input-group custom-input-group shadow-sm">
-                <span className="input-group-text bg-white border-end-0 py-2 ps-3">
-                    <i className={`bi bi-${icon} text-muted`}></i>
+            <div className="input-group admin-auth-input-group">
+                <span className="input-group-text border-end-0 py-2 ps-3">
+                    <i className={`bi bi-${icon}`}></i>
                 </span>
                 <input
                     {...props}
@@ -32,7 +34,7 @@ const AuthInput = ({ icon, label, isPassword, ...props }) => {
                 {isPassword && (
                     <button
                         type="button"
-                        className="input-group-text bg-white border-start-0 pr-3 text-muted"
+                        className="input-group-text bg-white border-start-0 pe-3 text-muted"
                         onClick={() => setShowPassword(!showPassword)}
                         style={{
                             cursor: "pointer",
@@ -40,7 +42,7 @@ const AuthInput = ({ icon, label, isPassword, ...props }) => {
                         }}
                     >
                         <i
-                            className={`bi bi-eye${showPassword ? "-slash" : ""}-fill`}
+                            className={`bi bi-eye${showPassword ? "-slash" : ""}`}
                         ></i>
                     </button>
                 )}
@@ -74,35 +76,23 @@ const AdminLogin = () => {
     };
 
     return (
-        <div className="login-page-wrapper d-flex align-items-center justify-content-center min-vh-100 bg-light">
-            <div
-                className="card border-0 shadow-lg"
-                style={{
-                    maxWidth: "420px",
-                    width: "90%",
-                    borderRadius: "24px",
-                }}
-            >
+        <div className="admin-login-page">
+            <div className="card admin-login-card border-0">
                 <div className="card-body p-4 p-sm-5">
-                    <div className="text-center mb-5">
-                        <div className="brand-icon-container mb-3 shadow-sm d-inline-flex align-items-center justify-content-center">
-                            <i className="bi bi-shield-lock-fill text-success fs-2"></i>
-                        </div>
-                        <h3 className="fw-extrabold text-dark mb-1 tracking-tight">
-                            NUBIX MARKET
-                        </h3>
-                        <p className="text-muted small">
+                    <div className="text-center admin-login-header mb-4">
+                        <img
+                            src={logo}
+                            alt="Nubix Market"
+                            className="admin-login-logo mb-4"
+                        />
+                        <p className="admin-login-subtitle text-muted mb-0">
                             Panel de Administración
                         </p>
                     </div>
 
                     {error && (
                         <div
-                            className="alert alert-danger d-flex align-items-center border-0 py-2 px-3 mb-4 animate__animated animate__shakeX"
-                            style={{
-                                borderRadius: "12px",
-                                fontSize: "0.85rem",
-                            }}
+                            className="alert alert-danger admin-login-alert d-flex align-items-center border-0 py-2 px-3 mb-4"
                         >
                             <i className="bi bi-exclamation-circle-fill me-2"></i>
                             <div>{error}</div>
@@ -115,7 +105,7 @@ const AdminLogin = () => {
                             icon="envelope-at"
                             type="email"
                             name="email"
-                            placeholder="admin@nubix.com"
+                            placeholder=""
                             value={credentials.email}
                             onChange={handleChange}
                             required
@@ -124,16 +114,16 @@ const AdminLogin = () => {
                         <AuthInput
                             label="Contraseña"
                             icon="key"
-                            isPassword={true} // Activamos la funcionalidad del ojo
+                            isPassword={true}
                             name="password"
-                            placeholder="••••••••"
+                            placeholder=""
                             value={credentials.password}
                             onChange={handleChange}
                             required
-                            style={{ borderRadius: "0" }} // El borde redondeado lo maneja el botón del ojo
+                            style={{ borderRadius: "0" }}
                         />
 
-                        <div className="d-flex justify-content-between align-items-center mb-4 mt-2">
+                        <div className="d-flex justify-content-between align-items-center admin-login-actions">
                             <div className="form-check">
                                 <input
                                     className="form-check-input"
@@ -141,7 +131,7 @@ const AdminLogin = () => {
                                     id="remember"
                                 />
                                 <label
-                                    className="form-check-label small text-secondary"
+                                    className="form-check-label"
                                     htmlFor="remember"
                                 >
                                     Recordar sesión
@@ -149,7 +139,7 @@ const AdminLogin = () => {
                             </div>
                             <button
                                 type="button"
-                                className="btn btn-link p-0 text-decoration-none small text-success fw-bold"
+                                className="btn btn-link p-0 admin-help-link"
                                 data-bs-toggle="tooltip"
                                 title="Contacta a TI para recuperar acceso"
                             >
@@ -159,12 +149,8 @@ const AdminLogin = () => {
 
                         <button
                             type="submit"
-                            className="btn btn-success w-100 py-2 fw-bold shadow-sm"
+                            className="btn w-100 admin-btn-access py-2 fw-bold"
                             disabled={loading}
-                            style={{
-                                borderRadius: "12px",
-                                transition: "all 0.3s",
-                            }}
                         >
                             {loading ? (
                                 <div className="d-flex align-items-center justify-content-center gap-2">
@@ -178,8 +164,8 @@ const AdminLogin = () => {
                     </form>
                 </div>
 
-                <div className="card-footer bg-transparent border-0 text-center pb-4">
-                    <p className="text-muted" style={{ fontSize: "0.75rem" }}>
+                <div className="card-footer bg-transparent border-0 text-center pb-4 pt-0">
+                    <p className="admin-login-footer mb-0">
                         © 2026 Nubix Market • Sistemas e Información
                     </p>
                 </div>
