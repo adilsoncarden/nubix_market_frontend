@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+    useState,
+    useEffect,
+    useRef,
+    useMemo,
+    useCallback,
+} from "react";
 import { Modal } from "bootstrap";
 import { useSales } from "../features/sales/hooks/useSales";
 import {
@@ -13,10 +19,7 @@ import { useProductCatalog } from "../store/ProductCatalogContext";
 import { reportService } from "../features/reports/services/reportService";
 import { clientService } from "../features/users/services/clientService";
 import { Toast } from "../utils/swalConfig";
-import {
-    getApiErrorMessage,
-    isForbiddenError,
-} from "../utils/apiErrorUtils";
+import { getApiErrorMessage, isForbiddenError } from "../utils/apiErrorUtils";
 import {
     filterSales,
     TIPO_ENTREGA_OPTIONS,
@@ -192,9 +195,14 @@ const SalesPage = () => {
             },
         }).then((r) => {
             if (r.isConfirmed) {
-                reportService.exportSales(r.value).catch(() =>
-                    Toast.fire({ icon: "error", title: "Error al exportar" }),
-                );
+                reportService
+                    .exportSales(r.value)
+                    .catch(() =>
+                        Toast.fire({
+                            icon: "error",
+                            title: "Error al exportar",
+                        }),
+                    );
             }
         });
     }, [clients, filterClienteId, filterDesde, filterHasta, filterTipoEntrega]);
@@ -476,14 +484,14 @@ const SalesPage = () => {
                         <select
                             className="form-select form-select-sm"
                             value={filterClienteId}
-                            onChange={(e) =>
-                                setFilterClienteId(e.target.value)
-                            }
+                            onChange={(e) => setFilterClienteId(e.target.value)}
                         >
                             <option value="">Todos los clientes</option>
                             {clients.map((c) => (
                                 <option key={c.id} value={c.id}>
-                                    {c.username || c.email || `Cliente #${c.id}`}
+                                    {c.username ||
+                                        c.email ||
+                                        `Cliente #${c.id}`}
                                 </option>
                             ))}
                         </select>
@@ -599,13 +607,14 @@ const SalesPage = () => {
                                                         sale.tipoEntrega
                                                     ] || sale.tipoEntrega}
                                                 </small>
-                                                {sale.tipoEntrega === "FAST_LANE" &&
+                                                {sale.tipoEntrega ===
+                                                    "FAST_LANE" &&
                                                     sale.codigoRecojo && (
-                                                    <div className="text-muted small">
-                                                        Código:{" "}
-                                                        {sale.codigoRecojo}
-                                                    </div>
-                                                )}
+                                                        <div className="text-muted small">
+                                                            Código:{" "}
+                                                            {sale.codigoRecojo}
+                                                        </div>
+                                                    )}
                                                 {sale.tipoEntrega ===
                                                     "DELIVERY" && (
                                                     <div className="text-muted small">
@@ -646,7 +655,10 @@ const SalesPage = () => {
                                                                         <hr>
                                                                         <strong>Detalles:</strong>
                                                                         <ul>
-                                                                            ${(sale.detalles || [])
+                                                                            ${(
+                                                                                sale.detalles ||
+                                                                                []
+                                                                            )
                                                                                 .map(
                                                                                     (
                                                                                         d,
@@ -766,9 +778,7 @@ const SalesPage = () => {
                     <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
                         <div className="text-muted small admin-pagination-info">
                             Mostrando <b>{indexOfFirstItem + 1}</b> a{" "}
-                            <b>
-                                {Math.min(indexOfLastItem, totalResultados)}
-                            </b>{" "}
+                            <b>{Math.min(indexOfLastItem, totalResultados)}</b>{" "}
                             de {totalResultados}
                         </div>
                         <nav>
@@ -853,7 +863,6 @@ const SalesPage = () => {
                     </div>
                 </div>
             </div>
-
         </div>
     );
 };
