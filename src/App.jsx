@@ -44,6 +44,8 @@ import ClientsPage from "./pages/ClientsPage";
 import EmployeesPage from "./pages/EmployeesPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import SalesPage from "./pages/SalesPage";
+import SecurityPermisosPage from "./pages/security/SecurityPermisosPage";
+import SecurityRolesPage from "./pages/security/SecurityRolesPage";
 
 const PublicLayoutShell = () => (
     <div className="d-flex flex-column min-vh-100" data-bs-theme="light">
@@ -184,6 +186,23 @@ export default function App() {
                                         path="/admin/ventas"
                                         element={<SalesPage />}
                                     />
+
+                                    <Route
+                                        element={
+                                            <ProtectedRoute
+                                                allowedRoles={["ADMIN"]}
+                                            />
+                                        }
+                                    >
+                                        <Route
+                                            path="/admin/seguridad/permisos"
+                                            element={<SecurityPermisosPage />}
+                                        />
+                                        <Route
+                                            path="/admin/seguridad/roles"
+                                            element={<SecurityRolesPage />}
+                                        />
+                                    </Route>
                                 </Route>
                             </Route>
 

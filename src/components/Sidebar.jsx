@@ -28,6 +28,9 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     const [isUsersOpen, setIsUsersOpen] = useState(
         location.pathname.includes("/admin/usuarios"),
     );
+    const [isSecurityOpen, setIsSecurityOpen] = useState(
+        location.pathname.includes("/admin/seguridad"),
+    );
 
     const handleNavigate = () => {
         onClose?.();
@@ -154,6 +157,56 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                                     active={
                                         location.pathname ===
                                         "/admin/usuarios/empleados"
+                                    }
+                                    isSubItem
+                                    onNavigate={handleNavigate}
+                                />
+                            </ul>
+                        </div>
+                    </li>
+
+                    <li className="nav-item">
+                        <button
+                            onClick={() => setIsSecurityOpen(!isSecurityOpen)}
+                            className={`nav-link w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-3 border-0 bg-transparent transition-all dropdown-btn ${
+                                location.pathname.includes("/admin/seguridad")
+                                    ? "text-emerald-600 fw-bold"
+                                    : "text-secondary"
+                            }`}
+                        >
+                            <span className="d-flex align-items-center">
+                                <i
+                                    className={`bi bi-shield-lock-fill fs-5 me-3 ${location.pathname.includes("/admin/seguridad") ? "text-emerald-600" : ""}`}
+                                ></i>
+                                <span className="fw-medium">Seguridad</span>
+                            </span>
+                            <i
+                                className={`bi bi-chevron-${isSecurityOpen ? "down" : "right"} small opacity-50`}
+                            ></i>
+                        </button>
+
+                        <div
+                            className={`collapse ${isSecurityOpen ? "show" : ""} mt-1`}
+                        >
+                            <ul className="nav flex-column ms-4 border-start ps-2">
+                                <SidebarItem
+                                    to="/admin/seguridad/permisos"
+                                    icon="bi-dot"
+                                    label="Permisos"
+                                    active={
+                                        location.pathname ===
+                                        "/admin/seguridad/permisos"
+                                    }
+                                    isSubItem
+                                    onNavigate={handleNavigate}
+                                />
+                                <SidebarItem
+                                    to="/admin/seguridad/roles"
+                                    icon="bi-dot"
+                                    label="Roles"
+                                    active={
+                                        location.pathname ===
+                                        "/admin/seguridad/roles"
                                     }
                                     isSubItem
                                     onNavigate={handleNavigate}

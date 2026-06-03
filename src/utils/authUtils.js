@@ -13,7 +13,7 @@ export const STORAGE_KEYS = {
 const LEGACY_TOKEN = "token";
 const LEGACY_USER = "user";
 
-export const ADMIN_ROLES = ["ADMIN", "EMPLEADO"];
+export const ADMIN_ROLES = ["ADMIN", "EMPLEADO", "REPARTIDOR"];
 
 export const isAdminRole = (rol) =>
     rol && ADMIN_ROLES.includes(String(rol).toUpperCase());

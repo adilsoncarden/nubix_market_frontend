@@ -44,7 +44,7 @@ const CategoryForm = ({ category, onSave, loading }) => {
                     rows={3}
                     value={formData.descripcion}
                     onChange={handleChange}
-                    placeholder="Descripción de la categoría"
+                    placeholder=""
                 />
             </div>
         </form>

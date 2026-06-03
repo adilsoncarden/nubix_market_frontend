@@ -20,9 +20,16 @@ export default function Navbar() {
     const { totalItems, cartAnimationTick, addToCart } = useCart();
     const [cartIconAnimating, setCartIconAnimating] = useState(false);
     const { count: favoritesCount, toggleFavorite, isFavorite } = useFavorites();
-    const { webToken, webUser, logoutWeb, canAccessAdmin } = useAuth();
+    const { webToken, webUser, logoutWeb } = useAuth();
     const token = webToken;
     const user = webUser;
+
+    const showPanelAdminLink = useMemo(() => {
+        const rol = user?.rol;
+        if (!rol) return false;
+        const normalized = String(rol).trim().toUpperCase();
+        return normalized === "ADMIN" || normalized === "ADMINISTRADOR";
+    }, [user?.rol]);
 
     const userMenuRef = useRef(null);
     const notifRef = useRef(null);
@@ -457,7 +464,7 @@ export default function Navbar() {
                                             className="position-absolute end-0 dropdown-menu-wow bg-white mt-2 p-2"
                                             style={{ minWidth: "150px" }}
                                         >
-                                            {canAccessAdmin && (
+                                            {showPanelAdminLink && (
                                                 <Link className="dropdown-item mb-2" to="/admin/dashboard">
                                                     Panel Admin
                                                 </Link>
