@@ -1,15 +1,14 @@
 import { useMemo, useState } from "react";
 import { useCart } from "../store/CartContext";
 import { useNavigate } from "react-router-dom";
-import { saleService } from "../features/sales/services/saleService";
 import { useProductCatalog } from "../store/ProductCatalogContext";
 import { calcOrderTotals, formatSoles } from "../utils/pricing";
-import api from "../config/axios";
 import "../styles/cart.css";
 import ProductQtyControl from "../components/shared/ProductQtyControl";
+import CheckoutModal from "../components/checkout/CheckoutModal";
 
-// ─── Utilidad PDF (DISEÑO RENOVADO SEGÚN TU IMAGEN) ───────────────────────────
-const generarPDF = async (orden) => {
+// ─── CartPage ────────────────────────────────────────────────────────────────
+const _REMOVED_PDF_START = async (orden) => {
     const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF();
 
@@ -431,29 +430,29 @@ function ModalPago({ items, onClose, onSuccess }) {
                         {tipo === "boleta" && (
                             <div className="pago-fields">
                                 <div className="pago-field">
-                                    <label>Nombre completo</label>
+                                    <label>Nombre y Apellido / Razón Social</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Juan Perez Garcia"
+                                        placeholder=""
                                         value={form.nombre}
                                         onChange={set("nombre")}
                                     />
                                 </div>
                                 <div className="pago-field">
-                                    <label>DNI</label>
+                                    <label>DNI / RUC</label>
                                     <input
                                         type="text"
-                                        placeholder="12345678"
+                                        placeholder=""
                                         maxLength={8}
                                         value={form.dni}
                                         onChange={set("dni")}
                                     />
                                 </div>
                                 <div className="pago-field">
-                                    <label>Correo electronico</label>
+                                    <label>Correo electrónico</label>
                                     <input
                                         type="email"
-                                        placeholder="correo@ejemplo.com"
+                                        placeholder=""
                                         value={form.email}
                                         onChange={set("email")}
                                     />
@@ -471,7 +470,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                     <label>Razon Social</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Mi Empresa S.A.C."
+                                        placeholder=""
                                         value={form.razonSocial}
                                         onChange={set("razonSocial")}
                                     />
@@ -485,7 +484,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                     </label>
                                     <input
                                         type="text"
-                                        placeholder="20123456789"
+                                        placeholder=""
                                         maxLength={11}
                                         value={form.ruc}
                                         onChange={set("ruc")}
@@ -495,7 +494,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                     <label>Direccion fiscal</label>
                                     <input
                                         type="text"
-                                        placeholder="Av. Ejemplo 123, Lima"
+                                        placeholder=""
                                         value={form.direccion}
                                         onChange={set("direccion")}
                                     />
@@ -504,7 +503,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                     <label>Correo electronico</label>
                                     <input
                                         type="email"
-                                        placeholder="correo@empresa.com"
+                                        placeholder=""
                                         value={form.email}
                                         onChange={set("email")}
                                     />
@@ -829,7 +828,7 @@ export default function CartPage() {
 
             {/* Modal de pago */}
             {modalPago && (
-                <ModalPago
+                <CheckoutModal
                     items={items}
                     onClose={handleCloseModal}
                     onSuccess={handlePagoSuccess}
