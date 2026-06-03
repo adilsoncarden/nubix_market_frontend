@@ -30,6 +30,9 @@ body {
 
 /* ─── Navbar landing ─────────────────────────────────────── */
 .navbar-landing {
+  position: fixed;
+  top: 0;
+  z-index: 1100;
   background: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -69,8 +72,8 @@ body {
 }
 
 .landing-search-input {
-  background: var(--search-bg) !important;
-  border: 1px solid transparent !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
   border-radius: 999px !important;
   padding: 0.55rem 1.25rem !important;
   font-size: 0.9rem;
@@ -79,8 +82,12 @@ body {
 }
 
 .landing-search-input:focus {
-  border-color: rgba(19, 77, 39, 0.2) !important;
+  border-color: rgba(19, 77, 39, 0.25) !important;
   box-shadow: 0 0 0 3px var(--green-light-soft) !important;
+}
+
+body.search-overlay-active {
+  overflow: hidden;
 }
 
 .landing-icon-btn {
@@ -745,28 +752,130 @@ body {
   object-fit: contain;
 }
 
-.nubix-nav-search {
+.overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 998;
+  animation: searchBackdropIn 0.25s ease;
+}
+
+@keyframes searchBackdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.navbar-landing.navbar-search-active {
+  z-index: 1000;
+  background: #ffffff !important;
+  box-shadow: 0 8px 32px rgba(19, 77, 39, 0.1);
+}
+
+.navbar-inner-row--mega {
+  min-height: 58px;
+}
+
+.navbar-search-spacer {
+  min-height: 56px;
+  pointer-events: none;
+}
+
+.navbar-brand-slot--dimmed,
+.navbar-actions-slot--dimmed {
+  opacity: 0.35;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.landing-nav-links--hidden {
+  display: none !important;
+}
+
+/* Colapsado: ocupa el espacio central del navbar */
+.nubix-nav-search.navbar-search-collapsed {
   position: relative;
-  max-width: 860px;
-  min-width: 0;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 520px;
+  min-width: 160px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 992px) {
+  .nubix-nav-search.navbar-search-collapsed {
+    max-width: 640px;
+  }
+}
+
+/* Mega: rompe el flex del navbar y centra en viewport */
+.nubix-nav-search.is-active.is-mega {
+  position: fixed;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 1100px;
+  z-index: 1001;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  animation: searchMegaIn 0.28s ease;
+}
+
+@keyframes searchMegaIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 .search-input-row {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.search-input-row.is-expanded {
+  gap: 0.65rem;
+}
+
+.search-input-row.is-expanded .landing-search-input {
+  min-height: 56px;
+  padding: 0.9rem 4.5rem 0.9rem 1.65rem !important;
+  font-size: 1.05rem;
+  border-radius: 28px !important;
+  background: #ffffff !important;
+  box-shadow: 0 6px 24px rgba(19, 77, 39, 0.1) !important;
+  border: 1px solid rgba(19, 77, 39, 0.1) !important;
 }
 
 .search-input-row.is-open .landing-search-input {
-  padding-right: 2.75rem !important;
+  padding-right: 4.5rem !important;
 }
 
-.search-close-btn {
+.is-mega .search-clear-inline {
+  right: 68px;
+}
+
+.search-clear-inline {
   position: absolute;
-  right: 0.5rem;
-  width: 34px;
-  height: 34px;
+  right: 58px;
+  width: 30px;
+  height: 30px;
   border: none;
   border-radius: 50%;
   background: #f1f5f3;
@@ -779,29 +888,203 @@ body {
   z-index: 2;
 }
 
-.search-close-btn:hover {
+.search-clear-inline:hover {
   background: #e2e8e4;
   color: var(--green-dark);
+}
+
+.btn-search-submit-round {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border: none;
+  border-radius: 50%;
+  background: var(--green-dark);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  transition: var(--transition-landing);
+  box-shadow: 0 4px 14px rgba(19, 77, 39, 0.25);
+}
+
+.search-input-row.is-expanded .btn-search-submit-round {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+}
+
+.btn-search-submit-round:hover {
+  background: #0f3d1f;
+  transform: scale(1.04);
 }
 
 .landing-search-input--wide {
   min-width: 0;
   width: 100%;
+  flex: 1;
 }
 
+.search-dropdown,
 .search-suggestions-panel {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 10px);
   left: 0;
   right: 0;
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
   background: #ffffff;
   border-radius: 20px;
-  box-shadow: 0 20px 48px rgba(19, 77, 39, 0.14);
+  box-shadow: 0 32px 72px rgba(19, 77, 39, 0.2);
   border: 1px solid rgba(19, 77, 39, 0.06);
-  z-index: 1200;
-  padding: 0.85rem 0 0.5rem;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  max-height: min(580px, calc(100vh - 120px));
+  padding: 0;
   animation: searchPanelIn 0.25s ease;
   overflow: hidden;
+}
+
+.is-mega .search-dropdown {
+  width: 100%;
+  left: 0;
+  right: 0;
+}
+
+.search-dropdown-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(19, 77, 39, 0.25) transparent;
+}
+
+.search-dropdown-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.search-dropdown-body::-webkit-scrollbar-thumb {
+  background: rgba(19, 77, 39, 0.2);
+  border-radius: 999px;
+}
+
+.search-dropdown-footer,
+.search-suggestions-footer {
+  flex-shrink: 0;
+  border-top: 1px solid #f1f5f3;
+  padding: 0.85rem 1.5rem;
+  text-align: center;
+  background: #fff;
+}
+
+@media (max-width: 991.98px) {
+  .nubix-nav-search.is-active.is-mega {
+    width: calc(100% - 24px);
+    max-width: none;
+    top: 8px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .search-suggestion-row {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem !important;
+  }
+
+  .search-suggestion-main {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+    margin-right: 0 !important;
+  }
+
+  .search-suggestion-prices-col {
+    align-items: flex-start;
+    text-align: left !important;
+    padding: 0;
+  }
+
+  .search-suggestion-actions {
+    margin-left: auto;
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+.search-dropdown-loading {
+  position: relative;
+  padding: 2.5rem 1rem;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-dropdown-spinner {
+  width: 2.25rem;
+  height: 2.25rem;
+  z-index: 2;
+}
+
+.search-skeleton-list {
+  position: absolute;
+  inset: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  opacity: 0.45;
+}
+
+.search-skeleton-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.search-skeleton-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f0f2f0 25%, #e8ebe8 50%, #f0f2f0 75%);
+  background-size: 200% 100%;
+  animation: searchSkeletonShimmer 1.2s ease infinite;
+}
+
+.search-skeleton-lines {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.search-skeleton-line {
+  height: 10px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #f0f2f0 25%, #e8ebe8 50%, #f0f2f0 75%);
+  background-size: 200% 100%;
+  animation: searchSkeletonShimmer 1.2s ease infinite;
+}
+
+.search-skeleton-line.short {
+  width: 35%;
+}
+
+.search-skeleton-line.medium {
+  width: 65%;
+}
+
+@keyframes searchSkeletonShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 @keyframes searchPanelIn {
@@ -821,13 +1104,13 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-muted-landing);
-  padding: 0 1rem 0.5rem;
+  padding: 0.85rem 1.5rem 0.5rem;
   margin: 0;
+  flex-shrink: 0;
 }
 
 .search-suggestions-scroll {
-  max-height: 320px;
-  overflow-y: auto;
+  /* legacy alias — scroll lives in .search-dropdown-body */
 }
 
 .search-suggestions-empty {
@@ -840,35 +1123,40 @@ body {
 .search-suggestion-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.85rem 1.15rem;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 1.5rem;
+  width: 100%;
   transition: background 0.2s ease;
-  border-bottom: 1px solid #f1f5f3;
+  border-bottom: 1px solid #f1f5f3 !important;
 }
 
 .search-suggestion-row:last-of-type {
-  border-bottom: none;
+  border-bottom: none !important;
 }
 
 .search-suggestion-row:hover {
   background: rgba(163, 230, 185, 0.15);
 }
 
-.search-suggestion-link {
-  flex: 1;
+.search-suggestion-link,
+.search-suggestion-main {
+  flex: 1 1 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0;
   text-decoration: none;
   color: inherit;
   min-width: 0;
+  max-width: none;
+  overflow: hidden;
 }
 
 .search-suggestion-img {
-  width: 52px;
-  height: 52px;
+  width: 64px;
+  height: 64px;
   object-fit: contain;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #f8faf8;
   flex-shrink: 0;
 }
@@ -876,8 +1164,9 @@ body {
 .search-suggestion-info {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.2rem;
   min-width: 0;
+  flex: 1;
 }
 
 .search-suggestion-format {
@@ -889,10 +1178,14 @@ body {
 }
 
 .search-suggestion-name {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-body);
-  line-height: 1.25;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .search-suggestion-provider {
@@ -912,52 +1205,62 @@ body {
   border-radius: 6px;
 }
 
-.search-suggestion-prices {
+.search-suggestion-prices-col {
+  flex: 0 0 auto;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.5rem;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.2rem;
+  min-width: 130px;
+  padding: 0 1rem;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.search-suggestion-prices-col .old {
+  text-decoration: line-through;
+  color: var(--text-muted-landing);
   font-size: 0.78rem;
 }
 
-.search-suggestion-prices .old {
-  text-decoration: line-through;
-  color: var(--text-muted-landing);
-}
-
-.search-suggestion-prices {
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.1rem;
-}
-
-.search-suggestion-prices .normal {
+.search-suggestion-prices-col .normal {
   color: var(--text-body);
+  font-weight: 600;
 }
 
-.search-suggestion-prices .card {
+.search-suggestion-prices-col .card {
   font-weight: 800;
   color: var(--green-dark);
-  font-size: 0.88rem;
+  font-size: 1rem;
 }
 
 .search-suggestion-actions {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.45rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  flex: 0 0 auto;
   flex-shrink: 0;
+  margin-left: 0.5rem;
 }
 
 .btn-search-add-oval {
   border: none;
   background: var(--green-dark);
   color: #fff;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  padding: 0.45rem 0.85rem;
+  padding: 0.6rem 1.35rem;
   border-radius: 999px;
   white-space: nowrap;
   transition: var(--transition-landing);
+}
+
+.is-mega .btn-search-add-oval {
+  padding: 0.65rem 1.5rem;
+  font-size: 0.85rem;
 }
 
 .btn-search-add-oval:hover {
@@ -965,8 +1268,8 @@ body {
 }
 
 .btn-search-fav {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: none;
   background: rgba(163, 230, 185, 0.45);
@@ -980,12 +1283,6 @@ body {
 .btn-search-fav.active {
   color: #e11d48;
   background: rgba(254, 226, 226, 0.9);
-}
-
-.search-suggestions-footer {
-  border-top: 1px solid #f1f5f3;
-  padding: 0.75rem 1rem;
-  text-align: center;
 }
 
 .search-show-all-link {
@@ -1002,8 +1299,20 @@ body {
 }
 
 /* ─── Promo ticker (above Ofertas Flash) ─────────────────── */
+.landing-promo-mosaic {
+  padding-top: 0.5rem;
+}
+
+.landing-product-sections {
+  padding-top: 0.25rem;
+}
+
+.landing-newsletter-section {
+  margin: 2rem 0;
+}
+
 .landing-promo-ticker-wrap {
-  margin: 0.5rem 0 1rem;
+  margin: 0.25rem 0 1rem;
 }
 
 .landing-promo-ticker {

@@ -95,6 +95,7 @@ export default function FlashProductCard({ p }) {
                             className="btn-flash-add-cart"
                             onClick={handleAdd}
                             disabled={p.stock <= 0}
+                            title="Agregar al carrito"
                         >
                             Agregar al carrito
                         </button>
@@ -103,6 +104,11 @@ export default function FlashProductCard({ p }) {
                             className={`btn-flash-fav${favorited ? " active" : ""}`}
                             onClick={handleFavorite}
                             aria-label="Favoritos"
+                            title={
+                                favorited
+                                    ? "Quitar de favoritos"
+                                    : "Agregar a favoritos"
+                            }
                         >
                             <i
                                 className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
@@ -117,6 +123,7 @@ export default function FlashProductCard({ p }) {
                                 className="flash-qty-btn"
                                 onClick={(e) => handleQtyChange(e, cartQty - 1)}
                                 aria-label="Reducir"
+                                title="Reducir cantidad"
                             >
                                 −
                             </button>
@@ -126,6 +133,7 @@ export default function FlashProductCard({ p }) {
                                 className="flash-qty-btn"
                                 onClick={(e) => handleQtyChange(e, cartQty + 1)}
                                 aria-label="Aumentar"
+                                title="Aumentar cantidad"
                                 disabled={p.stock > 0 && cartQty >= p.stock}
                             >
                                 +
@@ -136,6 +144,11 @@ export default function FlashProductCard({ p }) {
                             className={`btn-flash-fav${favorited ? " active" : ""}`}
                             onClick={handleFavorite}
                             aria-label="Favoritos"
+                            title={
+                                favorited
+                                    ? "Quitar de favoritos"
+                                    : "Agregar a favoritos"
+                            }
                         >
                             <i
                                 className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}

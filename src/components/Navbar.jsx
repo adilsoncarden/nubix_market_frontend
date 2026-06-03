@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 import { useFavorites } from "../store/FavoritesContext";
@@ -27,16 +27,30 @@ export default function Navbar() {
     const notifRef = useRef(null);
     const searchWrapRef = useRef(null);
 
-    const { products } = useShopProducts();
+    const { products, loading: catalogLoading } = useShopProducts();
     const [scrolled, setScrolled] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
     const [searchFocused, setSearchFocused] = useState(false);
+    const [searchLoading, setSearchLoading] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
 
     const searchPanelOpen = searchFocused || searchValue.trim().length > 0;
+    const searchQuery = searchValue.trim().toLowerCase();
+
+    const suggestedProducts = useMemo(() => {
+        let list = products;
+        if (searchQuery) {
+            list = list.filter((p) =>
+                String(p.name || "")
+                    .toLowerCase()
+                    .includes(searchQuery),
+            );
+        }
+        return list.slice(0, 8);
+    }, [products, searchQuery]);
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -105,15 +119,15 @@ export default function Navbar() {
         navigate("/");
     };
 
-    const suggestedProducts = products
-        .filter((p) => {
-            const q = searchValue.trim().toLowerCase();
-            if (!q) return true;
-            return String(p.name || "")
-                .toLowerCase()
-                .includes(q);
-        })
-        .slice(0, 8);
+    useEffect(() => {
+        if (!searchPanelOpen) {
+            setSearchLoading(false);
+            return;
+        }
+        setSearchLoading(true);
+        const timer = setTimeout(() => setSearchLoading(false), 320);
+        return () => clearTimeout(timer);
+    }, [searchValue, searchPanelOpen, catalogLoading]);
 
     const handleSearchSubmit = (e) => {
         e.preventDefault();
@@ -126,6 +140,28 @@ export default function Navbar() {
         setSearchFocused(false);
         setSearchValue("");
     };
+
+    useEffect(() => {
+        if (!searchPanelOpen) return;
+        const onEscape = (e) => {
+            if (e.key === "Escape") closeSearchPanel();
+        };
+        window.addEventListener("keydown", onEscape);
+        return () => window.removeEventListener("keydown", onEscape);
+    }, [searchPanelOpen]);
+
+    const clearSearchText = () => {
+        setSearchValue("");
+    };
+
+    useEffect(() => {
+        if (searchPanelOpen) {
+            document.body.classList.add("search-overlay-active");
+        } else {
+            document.body.classList.remove("search-overlay-active");
+        }
+        return () => document.body.classList.remove("search-overlay-active");
+    }, [searchPanelOpen]);
 
     const handleSuggestedAdd = async (e, product) => {
         e.preventDefault();
@@ -173,29 +209,53 @@ export default function Navbar() {
         .notif-unread-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; display: inline-block; }
       `}</style>
 
+            {searchPanelOpen && (
+                <div
+                    className="overlay-backdrop"
+                    onClick={closeSearchPanel}
+                    role="presentation"
+                    aria-hidden="true"
+                />
+            )}
+
             <nav
-                className={`fixed-top w-100 navbar-nubix navbar-landing ${scrolled ? "scrolled" : ""}`}
-                style={{ zIndex: 1100 }}
+                className={`fixed-top w-100 navbar-nubix navbar-landing${searchPanelOpen ? " navbar-search-active" : ""} ${scrolled ? "scrolled" : ""}`}
             >
                 <div className="container py-2">
-                    <div className="d-flex align-items-center gap-2 gap-lg-3">
-                        <Link to="/" className="d-flex align-items-center text-decoration-none flex-shrink-0">
+                    <div
+                        className={`d-flex align-items-center gap-2 gap-lg-3 navbar-inner-row${searchPanelOpen ? " navbar-inner-row--mega" : ""}`}
+                    >
+                        <Link
+                            to="/"
+                            className={`d-flex align-items-center text-decoration-none flex-shrink-0 navbar-brand-slot${searchPanelOpen ? " navbar-brand-slot--dimmed" : ""}`}
+                        >
                             <img src={logoImage} alt="Nubix Market" className="navbar-logo-only" />
                         </Link>
 
-                        <nav className="landing-nav-links d-none d-xl-flex">
+                        <nav
+                            className={`landing-nav-links d-none d-xl-flex${searchPanelOpen ? " landing-nav-links--hidden" : ""}`}
+                        >
                             <Link to="/" className="landing-nav-link">Inicio</Link>
                             <Link to="/shop" className="landing-nav-link">Tienda</Link>
                             <Link to="/shop" className="landing-nav-link">Ofertas</Link>
                             <Link to="/shop" className="landing-nav-link">Categorías</Link>
                         </nav>
 
+                        {searchPanelOpen && (
+                            <div
+                                className="navbar-search-spacer flex-grow-1 d-none d-md-block"
+                                aria-hidden="true"
+                            />
+                        )}
+
                         <form
-                            className="flex-grow-1 nubix-nav-search mx-lg-2"
+                            className={`nubix-nav-search${searchPanelOpen ? " is-active is-mega" : " navbar-search-collapsed flex-grow-1"}`}
                             onSubmit={handleSearchSubmit}
                             ref={searchWrapRef}
                         >
-                            <div className={`search-input-row${searchPanelOpen ? " is-open" : ""}`}>
+                            <div
+                                className={`search-input-row${searchPanelOpen ? " is-open is-expanded" : ""}`}
+                            >
                                 <input
                                     type="text"
                                     className="form-control landing-search-input landing-search-input--wide"
@@ -204,26 +264,59 @@ export default function Navbar() {
                                     onChange={(e) => setSearchValue(e.target.value)}
                                     onFocus={() => setSearchFocused(true)}
                                     autoComplete="off"
+                                    title="Buscar productos en Nubix Market"
                                 />
-                                {searchPanelOpen && (
+                                {searchValue.trim().length > 0 && (
                                     <button
                                         type="button"
-                                        className="search-close-btn"
-                                        onClick={closeSearchPanel}
-                                        aria-label="Cerrar búsqueda"
+                                        className="search-clear-inline"
+                                        onClick={clearSearchText}
+                                        aria-label="Borrar búsqueda"
+                                        title="Borrar texto"
                                     >
                                         <i className="bi bi-x-lg" />
                                     </button>
                                 )}
+                                <button
+                                    type="submit"
+                                    className="btn-search-submit-round"
+                                    aria-label="Buscar"
+                                    title="Buscar"
+                                >
+                                    <i className="bi bi-search" />
+                                </button>
                             </div>
 
                             {searchPanelOpen && (
-                                <div className="search-suggestions-panel">
+                                <div className="search-dropdown" role="dialog" aria-label="Productos sugeridos">
                                     <p className="search-suggestions-title">Productos sugeridos</p>
-                                    <div className="search-suggestions-scroll">
-                                        {suggestedProducts.length === 0 ? (
+                                    <div className="search-dropdown-body">
+                                        {catalogLoading || searchLoading ? (
+                                            <div className="search-dropdown-loading">
+                                                <div
+                                                    className="spinner-border text-success search-dropdown-spinner"
+                                                    role="status"
+                                                />
+                                                <div className="search-skeleton-list" aria-hidden="true">
+                                                    {[1, 2, 3].map((i) => (
+                                                        <div key={i} className="search-skeleton-row">
+                                                            <div className="search-skeleton-img" />
+                                                            <div className="search-skeleton-lines">
+                                                                <div className="search-skeleton-line short" />
+                                                                <div className="search-skeleton-line" />
+                                                                <div className="search-skeleton-line medium" />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : searchQuery && suggestedProducts.length === 0 ? (
                                             <p className="search-suggestions-empty">
-                                                No hay sugerencias para esta búsqueda.
+                                                No se encontraron productos para tu búsqueda
+                                            </p>
+                                        ) : suggestedProducts.length === 0 ? (
+                                            <p className="search-suggestions-empty">
+                                                No hay productos disponibles en el catálogo
                                             </p>
                                         ) : (
                                             suggestedProducts.map((p) => {
@@ -231,18 +324,21 @@ export default function Navbar() {
                                                 const cardP = (Number(p.price) * 0.94).toFixed(2);
                                                 const favorited = isFavorite(p.id);
                                                 return (
-                                                    <div key={p.id} className="search-suggestion-row">
+                                                    <div
+                                                        key={p.id}
+                                                        className="search-suggestion-row d-flex align-items-center justify-content-between py-3 px-4 border-bottom w-100"
+                                                    >
                                                         <Link
                                                             to={`/producto/${p.id}`}
-                                                            className="search-suggestion-link"
+                                                            className="search-suggestion-link search-suggestion-main d-flex align-items-center flex-grow-1 me-3"
                                                             onClick={() => setSearchFocused(false)}
                                                         >
                                                             <img
                                                                 src={p.img}
                                                                 alt=""
-                                                                className="search-suggestion-img"
+                                                                className="search-suggestion-img flex-shrink-0 me-3"
                                                             />
-                                                            <div className="search-suggestion-info">
+                                                            <div className="search-suggestion-info text-start">
                                                                 <span className="search-suggestion-format">
                                                                     {productFormatLabel(p)}
                                                                 </span>
@@ -255,20 +351,21 @@ export default function Navbar() {
                                                                 <span className="search-suggestion-provider">
                                                                     {p.category || "Nubix Market"}
                                                                 </span>
-                                                                <div className="search-suggestion-prices">
-                                                                    <span className="old">S/ {oldP}</span>
-                                                                    <span className="normal">
-                                                                        S/ {Number(p.price).toFixed(2)}
-                                                                    </span>
-                                                                    <span className="card">S/ {cardP}</span>
-                                                                </div>
                                                             </div>
                                                         </Link>
-                                                        <div className="search-suggestion-actions">
+                                                        <div className="search-suggestion-prices-col flex-shrink-0 text-end">
+                                                            <span className="old d-block">S/ {oldP}</span>
+                                                            <span className="normal d-block">
+                                                                S/ {Number(p.price).toFixed(2)}
+                                                            </span>
+                                                            <span className="card d-block">S/ {cardP}</span>
+                                                        </div>
+                                                        <div className="search-suggestion-actions flex-shrink-0 d-flex align-items-center">
                                                             <button
                                                                 type="button"
                                                                 className="btn-search-add-oval"
                                                                 onClick={(e) => handleSuggestedAdd(e, p)}
+                                                                title="Agregar al carrito"
                                                             >
                                                                 Agregar al carrito
                                                             </button>
@@ -279,6 +376,11 @@ export default function Navbar() {
                                                                     handleSuggestedFavorite(e, p.id)
                                                                 }
                                                                 aria-label="Favoritos"
+                                                                title={
+                                                                    favorited
+                                                                        ? "Quitar de favoritos"
+                                                                        : "Agregar a favoritos"
+                                                                }
                                                             >
                                                                 <i
                                                                     className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
@@ -290,7 +392,7 @@ export default function Navbar() {
                                             })
                                         )}
                                     </div>
-                                    <div className="search-suggestions-footer">
+                                    <div className="search-dropdown-footer">
                                         <Link
                                             to={showAllHref}
                                             className="search-show-all-link"
@@ -303,7 +405,9 @@ export default function Navbar() {
                             )}
                         </form>
 
-                        <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                        <div
+                            className={`d-flex align-items-center gap-1 flex-shrink-0 navbar-actions-slot${searchPanelOpen ? " navbar-actions-slot--dimmed" : ""}`}
+                        >
                             <button
                                 type="button"
                                 className="landing-icon-btn"

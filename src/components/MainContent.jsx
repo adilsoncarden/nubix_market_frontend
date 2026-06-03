@@ -3,6 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Carousel } from "bootstrap";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Link } from "react-router-dom";
+import { useShopProducts } from "../features/products/hooks/useShopProducts";
+import FlashProductCard from "./landing/FlashProductCard";
 import "../styles/landing.css";
 
 import slide1 from "../assets/imagen1.png";
@@ -46,11 +48,44 @@ const ANUNCIOS_PROMO = [
   "ACUMULA PUNTOS NUBIX EN CADA COMPRA Y CANJÉALOS POR VALES DE DSCTO",
 ];
 
+const CountdownDisplay = ({ seconds }) => {
+  const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
+  const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return (
+    <div className="landing-countdown">
+      <span className="landing-countdown-block">{h}</span>
+      <span className="landing-countdown-sep">:</span>
+      <span className="landing-countdown-block">{m}</span>
+      <span className="landing-countdown-sep">:</span>
+      <span className="landing-countdown-block">{s}</span>
+    </div>
+  );
+};
+
+const ProductSectionHeader = ({ title, timeLeft, seeAllTo = "/shop" }) => (
+  <div className="landing-section-header">
+    <div className="d-flex flex-wrap align-items-center gap-3">
+      <h2 className="landing-section-title">{title}</h2>
+      {timeLeft != null && <CountdownDisplay seconds={timeLeft} />}
+    </div>
+    <Link to={seeAllTo} className="landing-see-all">
+      Ver todo <i className="bi bi-arrow-right-short" />
+    </Link>
+  </div>
+);
+
 const DISTRITOS_LIMA = ["Ancón", "Ate", "Barranco", "Breña", "Carabayllo", "Chaclacayo", "Chorrillos", "Cieneguilla", "Comas", "El Agustino", "Independencia", "Jesús María", "La Molina", "La Victoria", "Lima", "Lince", "Los Olivos", "Lurigancho-Chosica", "Lurín", "Magdalena del Mar", "Miraflores", "Pachacámac", "Pucusana", "Pueblo Libre", "Puente Piedra", "Punta Hermosa", "Punta Negra", "Rímac", "San Bartolo", "San Borja", "San Isidro", "San Juan de Lurigancho", "San Juan de Miraflores", "San Luis", "San Martín de Porres", "San Miguel", "Santa Anita", "Santa María del Mar", "Santa Rosa", "Santiago de Surco", "Surquillo", "Villa El Salvador", "Villa María del Triunfo"];
 const DISTRITOS_CALLAO = ["Bellavista", "Callao", "Carmen de la Legua-Reynoso", "La Perla", "La Punta", "Mi Perú", "Ventanilla"];
 
 const MainContent = () => {
+  const { products, loading: productsLoading } = useShopProducts();
+  const flashProducts = products.slice(0, 4);
+  const popularProducts = products.slice(4, 8);
+  const featuredProducts = products.slice(0, 8);
+
   const [subscribeEmail, setSubscribeEmail] = useState("");
+  const [timeLeft, setTimeLeft] = useState(2 * 3600 + 45 * 60 + 12);
   const [promoIndex, setPromoIndex] = useState(0);
   const [promoVisible, setPromoVisible] = useState(true);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
@@ -64,6 +99,12 @@ const MainContent = () => {
       new Carousel(mainEl, { interval: 8000, pause: false, ride: "carousel" });
     }
   }, []);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    const interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    return () => clearInterval(interval);
+  }, [timeLeft]);
 
   useEffect(() => {
     let swapTimeout;
@@ -106,6 +147,28 @@ const MainContent = () => {
     e.preventDefault();
     console.log("Ubicación guardada:", direccionForm);
     setLocationModalOpen(false);
+  };
+
+  const renderProductGrid = (items) => {
+    if (productsLoading) {
+      return (
+        <div className="col-12 text-center py-4">
+          <div className="spinner-border text-success" role="status" />
+        </div>
+      );
+    }
+    if (items.length > 0) {
+      return items.map((p) => (
+        <div key={p.id} className="col">
+          <FlashProductCard p={p} />
+        </div>
+      ));
+    }
+    return (
+      <div className="col-12 text-center text-muted py-4">
+        No hay productos disponibles
+      </div>
+    );
   };
 
   return (
@@ -245,15 +308,7 @@ const MainContent = () => {
         </div>
       </section>
 
-      <div className="container-fluid px-0 landing-promo-ticker-wrap">
-        <div className="landing-promo-ticker">
-          <p className={`landing-promo-ticker-text${promoVisible ? " visible" : ""}`}>
-            {ANUNCIOS_PROMO[promoIndex]}
-          </p>
-        </div>
-      </div>
-
-      <section className="container py-4">
+      <section className="container py-4 landing-promo-mosaic">
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <Link
@@ -305,7 +360,33 @@ const MainContent = () => {
         </div>
       </section>
 
-      <section className="container">
+      <section className="container py-4 landing-product-sections">
+        <ProductSectionHeader title="Ofertas Flash" timeLeft={timeLeft} seeAllTo="/shop" />
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+          {renderProductGrid(flashProducts)}
+        </div>
+      </section>
+
+      <section className="container py-4 landing-product-sections">
+        <ProductSectionHeader title="Los más pedidos" timeLeft={null} seeAllTo="/shop" />
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+          {renderProductGrid(
+            popularProducts.length > 0
+              ? popularProducts
+              : featuredProducts.slice(0, 4),
+          )}
+        </div>
+      </section>
+
+      <div className="container-fluid px-0 landing-promo-ticker-wrap">
+        <div className="landing-promo-ticker">
+          <p className={`landing-promo-ticker-text${promoVisible ? " visible" : ""}`}>
+            {ANUNCIOS_PROMO[promoIndex]}
+          </p>
+        </div>
+      </div>
+
+      <section className="container landing-newsletter-section">
         <div className="landing-newsletter">
           <i className="bi bi-bag landing-newsletter-deco" aria-hidden="true" />
           <div className="row align-items-center g-4">
