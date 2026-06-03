@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { employeeService } from "../features/users/services/employeeService";
+import { securityService } from "../features/security/services/securityService";
 import Swal from "sweetalert2";
-import { Modal } from "bootstrap";
+import { Modal, Tooltip } from "bootstrap";
+
+const isSupremeAdminRoleName = (nombre) => {
+    const n = String(nombre ?? "").trim().toUpperCase();
+    return n === "ADMIN" || n === "ADMINISTRADOR";
+};
+
+const isRoleAssignableToEmployee = (rol) => {
+    const nombre = String(rol?.nombre ?? "").trim().toUpperCase();
+    return nombre && !isSupremeAdminRoleName(nombre) && nombre !== "CLIENTE";
+};
 
 const EmployeesPage = () => {
     const [employees, setEmployees] = useState([]);
@@ -12,13 +23,16 @@ const EmployeesPage = () => {
 
     const modalRef = useRef();
     const bsModal = useRef();
+    const [showPassword, setShowPassword] = useState(false);
+    const passwordTooltipRef = useRef(null);
 
+    const [roles, setRoles] = useState([]);
     const [formData, setFormData] = useState({
         id: null,
         username: "",
         email: "",
         password: "",
-        rolNombre: "EMPLEADO",
+        rolId: "",
     });
 
     const Toast = Swal.mixin({
@@ -41,15 +55,64 @@ const EmployeesPage = () => {
         }
     };
 
+    const assignableRoles = useMemo(
+        () => roles.filter(isRoleAssignableToEmployee),
+        [roles],
+    );
+
+    const defaultRolId = useMemo(() => {
+        const empleado = assignableRoles.find(
+            (r) => String(r.nombre).toUpperCase() === "EMPLEADO",
+        );
+        return empleado?.id ?? assignableRoles[0]?.id ?? "";
+    }, [assignableRoles]);
+
+    const fetchRoles = async () => {
+        try {
+            const data = await securityService.getRoles();
+            setRoles(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Error al cargar roles", err);
+        }
+    };
+
     useEffect(() => {
         fetchEmployees();
+        fetchRoles();
         if (modalRef.current) {
             bsModal.current = new Modal(modalRef.current);
             modalRef.current.addEventListener('hidden.bs.modal', () => {
-                setFormData({ id: null, username: "", email: "", password: "", rolNombre: "EMPLEADO" });
+                setFormData({
+                    id: null,
+                    username: "",
+                    email: "",
+                    password: "",
+                    rolId: defaultRolId,
+                });
             });
         }
     }, []);
+
+    useEffect(() => {
+        if (!formData.id && defaultRolId && !formData.rolId) {
+            setFormData((prev) => ({ ...prev, rolId: defaultRolId }));
+        }
+    }, [defaultRolId, formData.id, formData.rolId]);
+
+    useEffect(() => {
+        const el = document.getElementById("toggleEmployeePassword");
+        if (!el || formData.id) {
+            passwordTooltipRef.current?.dispose();
+            passwordTooltipRef.current = null;
+            return;
+        }
+        passwordTooltipRef.current?.dispose();
+        passwordTooltipRef.current = new Tooltip(el);
+        return () => {
+            passwordTooltipRef.current?.dispose();
+            passwordTooltipRef.current = null;
+        };
+    }, [formData.id, showPassword]);
 
     // --- FILTRADO INTELIGENTE ---
     const filteredEmployees = useMemo(() => {
@@ -67,10 +130,28 @@ const EmployeesPage = () => {
     const currentItems = filteredEmployees.slice(indexOfFirstItem, indexOfLastItem);
 
     const openModal = (employee = null) => {
+        setShowPassword(false);
         if (employee) {
-            setFormData({ ...employee, password: "" });
+            const matched = roles.find(
+                (r) =>
+                    String(r.nombre).toUpperCase() ===
+                    String(employee.rolNombre).toUpperCase(),
+            );
+            setFormData({
+                id: employee.id,
+                username: employee.username,
+                email: employee.email,
+                password: "",
+                rolId: matched?.id ?? defaultRolId,
+            });
         } else {
-            setFormData({ id: null, username: "", email: "", password: "", rolNombre: "EMPLEADO" });
+            setFormData({
+                id: null,
+                username: "",
+                email: "",
+                password: "",
+                rolId: defaultRolId,
+            });
         }
         bsModal.current.show();
     };
@@ -268,15 +349,77 @@ const EmployeesPage = () => {
                                 {!formData.id && (
                                     <div className="mb-3">
                                         <label className="form-label extra-small fw-bold text-muted text-uppercase">Contraseña Temporal</label>
-                                        <input type="password" placeholder="Mínimo 6 caracteres" className="form-control bg-light border-0 py-2 shadow-none" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} required style={{ borderRadius: '10px' }} />
+                                        <div className="input-group">
+                                            <input
+                                                id="temporalPassword"
+                                                type={showPassword ? "text" : "password"}
+                                                placeholder=""
+                                                className="form-control bg-light border-0 py-2 shadow-none"
+                                                value={formData.password}
+                                                onChange={(e) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        password: e.target.value,
+                                                    })
+                                                }
+                                                required
+                                                style={{
+                                                    borderRadius: "10px 0 0 10px",
+                                                }}
+                                            />
+                                            <button
+                                                className="btn btn-outline-secondary"
+                                                type="button"
+                                                id="toggleEmployeePassword"
+                                                data-bs-toggle="tooltip"
+                                                title={
+                                                    showPassword
+                                                        ? "Ocultar contraseña"
+                                                        : "Mostrar contraseña"
+                                                }
+                                                onClick={() =>
+                                                    setShowPassword((v) => !v)
+                                                }
+                                                style={{
+                                                    borderRadius: "0 10px 10px 0",
+                                                }}
+                                            >
+                                                <i
+                                                    className={`bi bi-eye${showPassword ? "-slash" : ""}`}
+                                                ></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                                 <div className="mb-0">
                                     <label className="form-label extra-small fw-bold text-muted text-uppercase">Rol de Acceso</label>
-                                    <select className="form-select bg-light border-0 py-2 shadow-none" value={formData.rolNombre} onChange={(e) => setFormData({ ...formData, rolNombre: e.target.value })} style={{ borderRadius: '10px' }}>
-                                        <option value="EMPLEADO">EMPLEADO (Ventas/Inventario)</option>
-                                        <option value="ADMIN">ADMINISTRADOR (Acceso Total)</option>
-                                    </select>
+                                    {assignableRoles.length > 0 ? (
+                                        <select
+                                            className="form-select bg-light border-0 py-2 shadow-none"
+                                            value={formData.rolId}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    rolId: Number(e.target.value),
+                                                })
+                                            }
+                                            style={{ borderRadius: "10px" }}
+                                            required
+                                        >
+                                            {assignableRoles.map((rol) => (
+                                                <option key={rol.id} value={rol.id}>
+                                                    {rol.nombre}
+                                                    {rol.descripcion
+                                                        ? ` — ${rol.descripcion}`
+                                                        : ""}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <p className="text-muted small mb-0">
+                                            No hay roles asignables disponibles.
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div className="modal-footer border-0 p-4 pt-0 gap-2">

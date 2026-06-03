@@ -29,7 +29,10 @@ const Login = () => {
 
             if (!data.success) {
                 setAlertType("danger");
-                setAlertMessage(data.message || "Credenciales incorrectas");
+                setAlertMessage(
+                    data.message ||
+                        "Correo electrónico o contraseña incorrectos. Por favor, inténtelo de nuevo.",
+                );
                 return;
             }
 
@@ -56,14 +59,17 @@ const Login = () => {
             }, 1200);
         } catch (error) {
             setAlertType("danger");
-            if (error.response?.data?.message) {
-                setAlertMessage(error.response.data.message);
+            const apiMessage = error.response?.data?.message;
+            if (apiMessage) {
+                setAlertMessage(apiMessage);
             } else if (!error.response) {
                 setAlertMessage(
                     "No se pudo conectar con el servidor. Intenta de nuevo.",
                 );
             } else {
-                setAlertMessage("Credenciales incorrectas");
+                setAlertMessage(
+                    "Correo electrónico o contraseña incorrectos. Por favor, inténtelo de nuevo.",
+                );
             }
             console.error("Login error:", error);
         }

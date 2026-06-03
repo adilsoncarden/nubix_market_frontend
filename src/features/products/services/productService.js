@@ -37,11 +37,11 @@ export const productService = {
         return unwrapApiList(response.data);
     },
 
-    getAll: async ({ bustCache = false } = {}) => {
-        const response = await api.get(
-            "/admin/productos",
-            noCacheConfig(bustCache),
-        );
+    getAll: async ({ bustCache = false, silent403 = false } = {}) => {
+        const response = await api.get("/admin/productos", {
+            ...noCacheConfig(bustCache),
+            silent403,
+        });
         return unwrapApiList(response.data);
     },
 

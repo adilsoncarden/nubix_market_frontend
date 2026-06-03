@@ -4,8 +4,9 @@ import { clientService } from "../../users/services/clientService";
 import { productService } from "../../products/services/productService";
 import { useAuth } from "../../../store/AuthContext";
 import Swal from "sweetalert2";
+import { fetchOptionalResource } from "../../../utils/apiErrorUtils";
 
-const VentaForm = ({ onSave, loading }) => {
+const VentaForm = ({ onSave, loading, active = false }) => {
     const { adminSessionUser } = useAuth();
     const user = adminSessionUser;
 
@@ -34,24 +35,47 @@ const VentaForm = ({ onSave, loading }) => {
     const [loadingData, setLoadingData] = useState(false);
 
     useEffect(() => {
+        if (!active) return;
+
         const loadData = async () => {
             setLoadingData(true);
+            let clientsData = [];
+            let productsData = [];
+            let criticalError = null;
+
             try {
-                const [clientsData, productsData] = await Promise.all([
-                    clientService.getAll(),
-                    productService.getAll(),
-                ]);
-                setClients(clientsData);
-                setProducts(productsData);
+                clientsData = await fetchOptionalResource(() =>
+                    clientService.getAll({ silent403: true }),
+                );
             } catch (err) {
-                console.error("Error al cargar datos", err);
-                Swal.fire("Error", "No se pudieron cargar los datos", "error");
-            } finally {
-                setLoadingData(false);
+                console.error("Error al cargar clientes para venta", err);
+                criticalError = err;
             }
+
+            try {
+                productsData = await fetchOptionalResource(() =>
+                    productService.getAll({ silent403: true }),
+                );
+            } catch (err) {
+                console.error("Error al cargar productos para venta", err);
+                criticalError = criticalError ?? err;
+            }
+
+            setClients(Array.isArray(clientsData) ? clientsData : []);
+            setProducts(Array.isArray(productsData) ? productsData : []);
+
+            if (criticalError) {
+                Swal.fire(
+                    "Error",
+                    "No se pudieron cargar algunos datos del formulario. Verifique su conexión o permisos.",
+                    "error",
+                );
+            }
+            setLoadingData(false);
         };
+
         loadData();
-    }, []);
+    }, [active]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;

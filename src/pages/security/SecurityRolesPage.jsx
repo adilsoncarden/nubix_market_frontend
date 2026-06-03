@@ -9,6 +9,11 @@ import { Toast, confirmDelete } from "../../utils/swalConfig";
 const emptyRolForm = { nombre: "", descripcion: "" };
 const ROLES_BASE = ["ADMIN", "CLIENTE"];
 
+const isSupremeAdminRole = (rol) => {
+    const nombre = String(rol?.nombre ?? "").trim().toUpperCase();
+    return nombre === "ADMIN" || nombre === "ADMINISTRADOR" || rol?.id === 1;
+};
+
 export default function SecurityRolesPage() {
     const [roles, setRoles] = useState([]);
     const [permisos, setPermisos] = useState([]);
@@ -131,6 +136,13 @@ export default function SecurityRolesPage() {
     };
 
     const handleDelete = async (rol) => {
+        if (isSupremeAdminRole(rol)) {
+            Toast.fire({
+                icon: "warning",
+                title: "El rol de Administrador Supremo no puede ser eliminado",
+            });
+            return;
+        }
         if (ROLES_BASE.includes(rol.nombre)) {
             Toast.fire({
                 icon: "warning",
@@ -273,17 +285,24 @@ export default function SecurityRolesPage() {
                                             >
                                                 <i className="bi bi-pencil-square"></i>
                                             </button>
-                                            <button
-                                                type="button"
-                                                className="btn-action btn-delete"
-                                                title="Eliminar"
-                                                disabled={ROLES_BASE.includes(
-                                                    r.nombre,
-                                                )}
-                                                onClick={() => handleDelete(r)}
-                                            >
-                                                <i className="bi bi-trash3-fill"></i>
-                                            </button>
+                                            {!isSupremeAdminRole(r) && (
+                                                <button
+                                                    type="button"
+                                                    className="btn-action btn-delete"
+                                                    title="Eliminar"
+                                                    disabled={
+                                                        String(
+                                                            r.nombre,
+                                                        ).toUpperCase() ===
+                                                        "CLIENTE"
+                                                    }
+                                                    onClick={() =>
+                                                        handleDelete(r)
+                                                    }
+                                                >
+                                                    <i className="bi bi-trash3-fill"></i>
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
@@ -347,7 +366,7 @@ export default function SecurityRolesPage() {
                                         <input
                                             type="text"
                                             className="form-control"
-                                            placeholder="ej: GESTOR_TIENDA"
+                                            placeholder=""
                                             value={rolForm.nombre}
                                             onChange={(e) =>
                                                 setRolForm((f) => ({
@@ -371,7 +390,7 @@ export default function SecurityRolesPage() {
                                         <input
                                             type="text"
                                             className="form-control"
-                                            placeholder="Propósito del rol"
+                                            placeholder=""
                                             value={rolForm.descripcion}
                                             onChange={(e) =>
                                                 setRolForm((f) => ({

@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { saleService } from "../services/saleService";
 import Swal from "sweetalert2";
+import {
+    getApiErrorMessage,
+    isForbiddenError,
+} from "../../../utils/apiErrorUtils";
 
 export const useSales = () => {
     const [sales, setSales] = useState([]);
@@ -41,11 +45,16 @@ export const useSales = () => {
             });
         } catch (err) {
             setSales(original);
-            Swal.fire(
-                "Error",
-                "No se pudo actualizar el estado de la venta.",
-                "error",
-            );
+            if (!isForbiddenError(err)) {
+                Swal.fire(
+                    "Error",
+                    getApiErrorMessage(
+                        err,
+                        "No se pudo actualizar el estado de la venta.",
+                    ),
+                    "error",
+                );
+            }
         }
     };
 
@@ -68,11 +77,16 @@ export const useSales = () => {
                 showConfirmButton: false,
             });
         } catch (err) {
-            Swal.fire(
-                "Error",
-                err.response?.data || "No se pudo registrar el crédito.",
-                "error",
-            );
+            if (!isForbiddenError(err)) {
+                Swal.fire(
+                    "Error",
+                    getApiErrorMessage(
+                        err,
+                        "No se pudo registrar el crédito.",
+                    ),
+                    "error",
+                );
+            }
         }
     };
 

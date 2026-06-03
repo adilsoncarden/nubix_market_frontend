@@ -4,8 +4,14 @@ import {
     clearAdminAuthData,
     getTokenForRequest,
     getWebUser,
-    isAdminRole,
+    isPanelEligibleRole,
 } from "../utils/authUtils";
+import {
+    FORBIDDEN_TOAST_MESSAGE,
+    getApiErrorMessage,
+    isForbiddenError,
+} from "../utils/apiErrorUtils";
+import { Toast } from "../utils/swalConfig";
 
 const api = axios.create({
     baseURL:
@@ -24,6 +30,18 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
+const showForbiddenToast = (error) => {
+    const backendMessage = getApiErrorMessage(error, "");
+    Toast.fire({
+        icon: "warning",
+        title: FORBIDDEN_TOAST_MESSAGE,
+        text: backendMessage && backendMessage !== FORBIDDEN_TOAST_MESSAGE
+            ? backendMessage
+            : undefined,
+        timer: 4500,
+    });
+};
+
 api.interceptors.response.use(
     (response) => response,
     (error) => {
@@ -34,6 +52,11 @@ api.interceptors.response.use(
             `[API] ${error.config?.method?.toUpperCase() ?? "?"} ${url} → ${status ?? "network"}:`,
             message,
         );
+
+        if (status === 403 && !error.config?.silent403) {
+            showForbiddenToast(error);
+        }
+
         if (status === 401 && !url?.includes("/auth/")) {
             const path = window.location.pathname;
             const isAdminRoute =
@@ -42,7 +65,7 @@ api.interceptors.response.use(
             if (isAdminRoute) {
                 clearAdminAuthData();
                 const webUser = getWebUser();
-                if (isAdminRole(webUser?.rol)) {
+                if (isPanelEligibleRole(webUser?.rol)) {
                     clearWebAuthData();
                 }
                 if (!path.includes("/admin-login")) {
@@ -59,4 +82,5 @@ api.interceptors.response.use(
     },
 );
 
+export { isForbiddenError, getApiErrorMessage, FORBIDDEN_TOAST_MESSAGE };
 export default api;

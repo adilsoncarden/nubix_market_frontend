@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { useState } from "react";
+import { hasAnyPermission, hasPermission } from "../utils/authUtils";
 import logo from "../assets/logo.png";
 
 const SidebarItem = ({ to, icon, label, active, isSubItem = false, onNavigate }) => (
@@ -23,8 +24,24 @@ const SidebarItem = ({ to, icon, label, active, isSubItem = false, onNavigate })
 
 const Sidebar = ({ isOpen = false, onClose }) => {
     const location = useLocation();
-    const { logoutAdmin, adminSessionUser } = useAuth();
+    const { logoutAdmin, adminSessionUser, adminPermisos } = useAuth();
     const user = adminSessionUser;
+    const permisos = adminPermisos;
+
+    const canDashboard = hasPermission("ver:dashboard", permisos);
+    const canCategorias = hasPermission("ver:categorias", permisos);
+    const canProductos = hasPermission("ver:productos", permisos);
+    const canProveedores = hasPermission("ver:proveedores", permisos);
+    const canVentas = hasPermission("ver:ventas", permisos);
+    const canUsuarios = hasAnyPermission(
+        ["ver:usuarios", "gestionar:usuarios"],
+        permisos,
+    );
+    const canSeguridad = hasAnyPermission(
+        ["ver:roles", "gestionar:seguridad", "gestionar:permisos"],
+        permisos,
+    );
+
     const [isUsersOpen, setIsUsersOpen] = useState(
         location.pathname.includes("/admin/usuarios"),
     );
@@ -37,32 +54,32 @@ const Sidebar = ({ isOpen = false, onClose }) => {
     };
 
     const menuItems = [
-        {
+        canDashboard && {
             path: "/admin/dashboard",
             icon: "bi-grid-1x2-fill",
             label: "Dashboard",
         },
-        {
+        canCategorias && {
             path: "/admin/categorias",
             icon: "bi-tags-fill",
             label: "Categorías",
         },
-        {
+        canProductos && {
             path: "/admin/productos",
             icon: "bi-box-seam-fill",
             label: "Productos",
         },
-        {
+        canProveedores && {
             path: "/admin/proveedores",
             icon: "bi-truck-flatbed",
             label: "Proveedores",
         },
-        {
+        canVentas && {
             path: "/admin/ventas",
             icon: "bi-cart-check-fill",
             label: "Ventas",
         },
-    ];
+    ].filter(Boolean);
 
     return (
         <aside
@@ -115,105 +132,111 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                         />
                     ))}
 
-                    <li className="nav-item">
-                        <button
-                            onClick={() => setIsUsersOpen(!isUsersOpen)}
-                            className={`nav-link w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-3 border-0 bg-transparent transition-all dropdown-btn ${
-                                location.pathname.includes("/admin/usuarios")
-                                    ? "text-emerald-600 fw-bold"
-                                    : "text-secondary"
-                            }`}
-                        >
-                            <span className="d-flex align-items-center">
+                    {canUsuarios && (
+                        <li className="nav-item">
+                            <button
+                                type="button"
+                                onClick={() => setIsUsersOpen(!isUsersOpen)}
+                                className={`nav-link w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-3 border-0 bg-transparent transition-all dropdown-btn ${
+                                    location.pathname.includes("/admin/usuarios")
+                                        ? "text-emerald-600 fw-bold"
+                                        : "text-secondary"
+                                }`}
+                            >
+                                <span className="d-flex align-items-center">
+                                    <i
+                                        className={`bi bi-people-fill fs-5 me-3 ${location.pathname.includes("/admin/usuarios") ? "text-emerald-600" : ""}`}
+                                    ></i>
+                                    <span className="fw-medium">Usuarios</span>
+                                </span>
                                 <i
-                                    className={`bi bi-people-fill fs-5 me-3 ${location.pathname.includes("/admin/usuarios") ? "text-emerald-600" : ""}`}
+                                    className={`bi bi-chevron-${isUsersOpen ? "down" : "right"} small opacity-50`}
                                 ></i>
-                                <span className="fw-medium">Usuarios</span>
-                            </span>
-                            <i
-                                className={`bi bi-chevron-${isUsersOpen ? "down" : "right"} small opacity-50`}
-                            ></i>
-                        </button>
+                            </button>
 
-                        <div
-                            className={`collapse ${isUsersOpen ? "show" : ""} mt-1`}
-                        >
-                            <ul className="nav flex-column ms-4 border-start ps-2">
-                                <SidebarItem
-                                    to="/admin/usuarios/clientes"
-                                    icon="bi-dot"
-                                    label="Clientes"
-                                    active={
-                                        location.pathname ===
-                                        "/admin/usuarios/clientes"
-                                    }
-                                    isSubItem
-                                    onNavigate={handleNavigate}
-                                />
-                                <SidebarItem
-                                    to="/admin/usuarios/empleados"
-                                    icon="bi-dot"
-                                    label="Empleados"
-                                    active={
-                                        location.pathname ===
-                                        "/admin/usuarios/empleados"
-                                    }
-                                    isSubItem
-                                    onNavigate={handleNavigate}
-                                />
-                            </ul>
-                        </div>
-                    </li>
+                            <div
+                                className={`collapse ${isUsersOpen ? "show" : ""} mt-1`}
+                            >
+                                <ul className="nav flex-column ms-4 border-start ps-2">
+                                    <SidebarItem
+                                        to="/admin/usuarios/clientes"
+                                        icon="bi-dot"
+                                        label="Clientes"
+                                        active={
+                                            location.pathname ===
+                                            "/admin/usuarios/clientes"
+                                        }
+                                        isSubItem
+                                        onNavigate={handleNavigate}
+                                    />
+                                    <SidebarItem
+                                        to="/admin/usuarios/empleados"
+                                        icon="bi-dot"
+                                        label="Empleados"
+                                        active={
+                                            location.pathname ===
+                                            "/admin/usuarios/empleados"
+                                        }
+                                        isSubItem
+                                        onNavigate={handleNavigate}
+                                    />
+                                </ul>
+                            </div>
+                        </li>
+                    )}
 
-                    <li className="nav-item">
-                        <button
-                            onClick={() => setIsSecurityOpen(!isSecurityOpen)}
-                            className={`nav-link w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-3 border-0 bg-transparent transition-all dropdown-btn ${
-                                location.pathname.includes("/admin/seguridad")
-                                    ? "text-emerald-600 fw-bold"
-                                    : "text-secondary"
-                            }`}
-                        >
-                            <span className="d-flex align-items-center">
+                    {canSeguridad && (
+                        <li className="nav-item">
+                            <button
+                                type="button"
+                                onClick={() => setIsSecurityOpen(!isSecurityOpen)}
+                                className={`nav-link w-100 d-flex align-items-center justify-content-between px-3 py-2 rounded-3 border-0 bg-transparent transition-all dropdown-btn ${
+                                    location.pathname.includes("/admin/seguridad")
+                                        ? "text-emerald-600 fw-bold"
+                                        : "text-secondary"
+                                }`}
+                            >
+                                <span className="d-flex align-items-center">
+                                    <i
+                                        className={`bi bi-shield-lock-fill fs-5 me-3 ${location.pathname.includes("/admin/seguridad") ? "text-emerald-600" : ""}`}
+                                    ></i>
+                                    <span className="fw-medium">Seguridad</span>
+                                </span>
                                 <i
-                                    className={`bi bi-shield-lock-fill fs-5 me-3 ${location.pathname.includes("/admin/seguridad") ? "text-emerald-600" : ""}`}
+                                    className={`bi bi-chevron-${isSecurityOpen ? "down" : "right"} small opacity-50`}
                                 ></i>
-                                <span className="fw-medium">Seguridad</span>
-                            </span>
-                            <i
-                                className={`bi bi-chevron-${isSecurityOpen ? "down" : "right"} small opacity-50`}
-                            ></i>
-                        </button>
+                            </button>
 
-                        <div
-                            className={`collapse ${isSecurityOpen ? "show" : ""} mt-1`}
-                        >
-                            <ul className="nav flex-column ms-4 border-start ps-2">
-                                <SidebarItem
-                                    to="/admin/seguridad/permisos"
-                                    icon="bi-dot"
-                                    label="Permisos"
-                                    active={
-                                        location.pathname ===
-                                        "/admin/seguridad/permisos"
-                                    }
-                                    isSubItem
-                                    onNavigate={handleNavigate}
-                                />
-                                <SidebarItem
-                                    to="/admin/seguridad/roles"
-                                    icon="bi-dot"
-                                    label="Roles"
-                                    active={
-                                        location.pathname ===
-                                        "/admin/seguridad/roles"
-                                    }
-                                    isSubItem
-                                    onNavigate={handleNavigate}
-                                />
-                            </ul>
-                        </div>
-                    </li>
+                            <div
+                                className={`collapse ${isSecurityOpen ? "show" : ""} mt-1`}
+                            >
+                                <ul className="nav flex-column ms-4 border-start ps-2">
+                                    <SidebarItem
+                                        to="/admin/seguridad/permisos"
+                                        icon="bi-dot"
+                                        label="Permisos"
+                                        active={
+                                            location.pathname ===
+                                            "/admin/seguridad/permisos"
+                                        }
+                                        isSubItem
+                                        onNavigate={handleNavigate}
+                                    />
+                                    <SidebarItem
+                                        to="/admin/seguridad/roles"
+                                        icon="bi-dot"
+                                        label="Roles"
+                                        active={
+                                            location.pathname ===
+                                            "/admin/seguridad/roles"
+                                        }
+                                        isSubItem
+                                        onNavigate={handleNavigate}
+                                    />
+                                </ul>
+                            </div>
+                        </li>
+                    )}
                 </ul>
             </div>
 
@@ -245,12 +268,13 @@ const Sidebar = ({ isOpen = false, onClose }) => {
                             className="mb-0 text-muted text-uppercase fw-semibold"
                             style={{ fontSize: "0.65rem" }}
                         >
-                            Administrador
+                            {user?.rol || "Administrador"}
                         </p>
                     </div>
                 </div>
 
                 <button
+                    type="button"
                     onClick={logoutAdmin}
                     className="btn btn-outline-danger w-100 border-0 d-flex align-items-center justify-content-center gap-2 py-2 rounded-3"
                 >

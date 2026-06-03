@@ -7,8 +7,15 @@ export const authService = {
             const response = await api.post("/auth/login", credentials);
             return response.data;
         } catch (error) {
-            if (error.response?.data) {
-                return error.response.data;
+            const data = error.response?.data;
+            if (data) {
+                if (typeof data === "object" && data.message && data.success === undefined) {
+                    return {
+                        success: false,
+                        message: data.message,
+                    };
+                }
+                return data;
             }
             throw error;
         }
@@ -19,13 +26,25 @@ export const authService = {
         return response.data;
     },
 
+    fetchAdminPermisos: async () => {
+        const response = await api.get("/auth/admin-permisos");
+        return Array.isArray(response.data) ? response.data : [];
+    },
+
     adminLogin: async (credentials) => {
         try {
             const response = await api.post("/auth/admin-login", credentials);
             return response.data;
         } catch (error) {
-            if (error.response?.data) {
-                return error.response.data;
+            const data = error.response?.data;
+            if (data) {
+                if (typeof data === "object" && data.message && data.success === undefined) {
+                    return {
+                        success: false,
+                        message: data.message,
+                    };
+                }
+                return data;
             }
             throw error;
         }

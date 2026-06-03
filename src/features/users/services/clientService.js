@@ -1,8 +1,8 @@
 import api from "../../../config/axios";
 
 export const clientService = {
-    getAll: async () => {
-        const response = await api.get("/admin/clientes");
+    getAll: async ({ silent403 = false } = {}) => {
+        const response = await api.get("/admin/clientes", { silent403 });
         return response.data;
     },
 

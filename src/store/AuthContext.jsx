@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useEffect, useMemo } from "react";
+import { createContext, useState, useContext, useEffect, useMemo, useCallback } from "react";
 import {
     migrateLegacyAuth,
     saveWebAuthData,
@@ -8,8 +8,9 @@ import {
     getWebUser,
     getAdminUser,
     getAdminSessionUser,
-    isAdminRole,
+    isPanelEligibleRole,
 } from "../utils/authUtils";
+import { authService } from "../features/auth/services/authService";
 
 const AuthContext = createContext(null);
 
@@ -57,14 +58,41 @@ export const AuthProvider = ({ children }) => {
     const adminSessionUser = useMemo(
         () =>
             adminUser ??
-            (webToken && isAdminRole(webUser?.rol) ? webUser : null),
+            (webToken && isPanelEligibleRole(webUser?.rol) ? webUser : null),
         [adminUser, webToken, webUser],
     );
 
     const canAccessAdmin = useMemo(
-        () => !!adminToken || (!!webToken && isAdminRole(webUser?.rol)),
+        () => !!adminToken || (!!webToken && isPanelEligibleRole(webUser?.rol)),
         [adminToken, webToken, webUser],
     );
+
+    const adminPermisos = useMemo(
+        () =>
+            Array.isArray(adminUser?.permisos) ? adminUser.permisos : [],
+        [adminUser],
+    );
+
+    const refreshAdminPermisos = useCallback(async () => {
+        if (!adminToken) return;
+        try {
+            const permisos = await authService.fetchAdminPermisos();
+            setAdminUser((prev) => {
+                const base = prev ?? getAdminUser() ?? {};
+                const next = { ...base, permisos };
+                saveAdminAuthData(adminToken, next);
+                return next;
+            });
+        } catch {
+            /* sesión expirada o sin permisos */
+        }
+    }, [adminToken]);
+
+    useEffect(() => {
+        if (!loading && adminToken && adminPermisos.length === 0) {
+            refreshAdminPermisos();
+        }
+    }, [loading, adminToken, adminPermisos.length, refreshAdminPermisos]);
 
     if (loading) {
         return (
@@ -91,6 +119,8 @@ export const AuthProvider = ({ children }) => {
                 isWebLoggedIn: !!webToken,
                 isAdminLoggedIn: !!adminToken,
                 canAccessAdmin,
+                adminPermisos,
+                refreshAdminPermisos,
                 token: webToken,
                 user: webUser,
                 login: loginWeb,
