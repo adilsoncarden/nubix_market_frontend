@@ -3,38 +3,48 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 import { useFavorites } from "../store/FavoritesContext";
 import { useAuth } from "../store/AuthContext";
-import { clearRedirectUrl } from "../utils/authUtils";
+import { clearRedirectUrl, setRedirectUrl } from "../utils/authUtils";
 import api from "../config/axios";
 import logoImage from "../assets/logo.png";
-import { CATEGORIAS_DATA } from "./MainContent";
+import { useShopProducts } from "../features/products/hooks/useShopProducts";
+import "../styles/landing.css";
+
+function productFormatLabel(product) {
+    if (product.unit === "kg") return "FRASCO";
+    if (product.tag) return "SUPER PACK";
+    return "CAJA 30 UN";
+}
 
 export default function Navbar() {
     const navigate = useNavigate();
-    const { totalItems } = useCart();
-    const { count: favoritesCount } = useFavorites();
+    const { totalItems, addToCart } = useCart();
+    const { count: favoritesCount, toggleFavorite, isFavorite } = useFavorites();
     const { webToken, webUser, logoutWeb, canAccessAdmin } = useAuth();
     const token = webToken;
     const user = webUser;
 
-    const dropdownRef = useRef(null);
     const userMenuRef = useRef(null);
     const notifRef = useRef(null);
+    const searchWrapRef = useRef(null);
 
+    const { products } = useShopProducts();
     const [scrolled, setScrolled] = useState(false);
-    const [catOpen, setCatOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
     const [searchValue, setSearchValue] = useState("");
+    const [searchFocused, setSearchFocused] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    const searchPanelOpen = searchFocused || searchValue.trim().length > 0;
 
     useEffect(() => {
         const handleScroll = () => setScrolled(window.scrollY > 10);
         const handleClickOutside = (e) => {
             if (userMenuRef.current && !userMenuRef.current.contains(e.target))
                 setUserMenuOpen(false);
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target))
-                setCatOpen(false);
+            if (searchWrapRef.current && !searchWrapRef.current.contains(e.target))
+                setSearchFocused(false);
             if (notifRef.current && !notifRef.current.contains(e.target))
                 setNotifOpen(false);
         };
@@ -63,7 +73,7 @@ export default function Navbar() {
                 if (!mounted) return;
                 setNotifications(Array.isArray(listRes.data) ? listRes.data : []);
                 setUnreadCount(Number(countRes.data || 0));
-            } catch (e) {
+            } catch {
                 // no-op
             }
         };
@@ -83,7 +93,7 @@ export default function Navbar() {
                 prev.map((n) => (n.id === id ? { ...n, leido: true } : n)),
             );
             setUnreadCount((prev) => Math.max(0, prev - 1));
-        } catch (e) {
+        } catch {
             // no-op
         }
     };
@@ -95,29 +105,66 @@ export default function Navbar() {
         navigate("/");
     };
 
-    const iconMap = {
-        Gaseosas: "bi-cup-straw",
-        Frutas: "bi-apple",
-        Lácteos: "bi-droplet-half",
-        Snacks: "bi-bag-heart",
-        Abarrotes: "bi-box-seam",
-        Bebidas: "bi-cup-hot",
+    const suggestedProducts = products
+        .filter((p) => {
+            const q = searchValue.trim().toLowerCase();
+            if (!q) return true;
+            return String(p.name || "")
+                .toLowerCase()
+                .includes(q);
+        })
+        .slice(0, 8);
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        const q = searchValue.trim();
+        setSearchFocused(false);
+        navigate(q ? `/shop?search=${encodeURIComponent(q)}` : "/shop");
     };
+
+    const closeSearchPanel = () => {
+        setSearchFocused(false);
+        setSearchValue("");
+    };
+
+    const handleSuggestedAdd = async (e, product) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await addToCart({
+            id: product.id,
+            name: product.name,
+            category: product.category,
+            priceBase: product.priceBase,
+            price: product.price,
+            stock: product.stock,
+            unit: product.unit || "und",
+            img: product.img,
+        });
+    };
+
+    const handleSuggestedFavorite = async (e, productId) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!token) {
+            setRedirectUrl(window.location.pathname);
+            navigate("/login");
+            return;
+        }
+        await toggleFavorite(productId);
+    };
+
+    const showAllHref = searchValue.trim()
+        ? `/shop?search=${encodeURIComponent(searchValue.trim())}`
+        : "/shop";
 
     return (
         <>
             <style>{`
-        :root { --nubix-green: #006634; --text-dark: #1e293b; }
+        :root { --nubix-green: #134d27; --text-dark: #1e293b; }
         .navbar-nubix { background-color: #ffffff !important; transition: all 0.3s ease; }
-        .btn-categorias-clean { border: 1px solid transparent; padding: 6px 14px; border-radius: 10px; cursor: pointer; color: var(--text-dark); font-size: 0.85rem; font-weight: 500; transition: 0.2s; }
-        .btn-categorias-clean:hover { background: #f8fafc; border-color: #e2e8f0; }
         .action-icon-btn { color: var(--text-dark); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; }
         .action-icon-btn:hover { background-color: #f1f5f9; color: var(--nubix-green); }
-        .cart-badge-premium { background-color: var(--nubix-green) !important; font-size: 0.65rem !important; min-width: 18px; height: 18px; border: 2px solid #fff; }
         .dropdown-menu-wow { border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 16px; padding: 8px; }
-        .dropdown-item-custom { display: flex; align-items: center; padding: 10px 15px !important; color: #334155 !important; font-weight: 500; transition: all 0.2s ease; border-radius: 8px; }
-        .dropdown-item-custom:hover { background-color: #f0fdf4 !important; color: var(--nubix-green) !important; }
-        .dropdown-item-custom i { margin-right: 12px; font-size: 1.1rem; width: 20px; }
         .btn-logout-mini { display: flex; align-items: center; gap: 8px; color: #dc3545; background: #fff5f5; border-radius: 8px; padding: 6px 12px; font-size: 0.75rem; font-weight: 600; border: none; transition: all 0.2s; }
         .btn-logout-mini:hover { background: #fee2e2; }
         .notif-dropdown { width: 320px; max-height: 380px; overflow-y: auto; }
@@ -127,104 +174,160 @@ export default function Navbar() {
       `}</style>
 
             <nav
-                className={`fixed-top w-100 navbar-nubix ${scrolled ? "shadow-sm" : "border-bottom"}`}
+                className={`fixed-top w-100 navbar-nubix navbar-landing ${scrolled ? "scrolled" : ""}`}
                 style={{ zIndex: 1100 }}
             >
                 <div className="container py-2">
-                    <div className="d-flex align-items-center justify-content-between">
-                        <Link to="/">
-                            <img
-                                src={logoImage}
-                                alt="Logo"
-                                style={{ height: "36px" }}
-                            />
+                    <div className="d-flex align-items-center gap-2 gap-lg-3">
+                        <Link to="/" className="d-flex align-items-center text-decoration-none flex-shrink-0">
+                            <img src={logoImage} alt="Nubix Market" className="navbar-logo-only" />
                         </Link>
 
-                        <div
-                            className="d-none d-lg-block position-relative"
-                            ref={dropdownRef}
-                        >
-                            <div
-                                className="btn-categorias-clean ms-3"
-                                onClick={() => setCatOpen(!catOpen)}
-                            >
-                                <i
-                                    className="bi bi-grid-3x3-gap-fill me-2"
-                                    style={{ color: "var(--nubix-green)" }}
-                                ></i>
-                                CATEGORÍAS
-                            </div>
-                            {catOpen && (
-                                <div
-                                    className="position-absolute dropdown-menu-wow bg-white mt-2 p-2"
-                                    style={{ minWidth: "220px" }}
-                                >
-                                    {CATEGORIAS_DATA.map((cat, i) => (
-                                        <Link
-                                            key={i}
-                                            to={`/shop?category=${cat.nombre}`}
-                                            className="dropdown-item dropdown-item-custom"
-                                            onClick={() => setCatOpen(false)}
-                                        >
-                                            <i
-                                                className={`bi ${iconMap[cat.nombre] || "bi-tag"}`}
-                                            ></i>
-                                            {cat.nombre}
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        <nav className="landing-nav-links d-none d-xl-flex">
+                            <Link to="/" className="landing-nav-link">Inicio</Link>
+                            <Link to="/shop" className="landing-nav-link">Tienda</Link>
+                            <Link to="/shop" className="landing-nav-link">Ofertas</Link>
+                            <Link to="/shop" className="landing-nav-link">Categorías</Link>
+                        </nav>
 
                         <form
-                            className="flex-grow-1 mx-md-4 nubix-nav-search"
-                            style={{ maxWidth: "380px" }}
+                            className="flex-grow-1 nubix-nav-search mx-lg-2"
+                            onSubmit={handleSearchSubmit}
+                            ref={searchWrapRef}
                         >
-                            <input
-                                type="text"
-                                className="form-control rounded-pill ps-4"
-                                placeholder="¿Qué buscas hoy?"
-                                value={searchValue}
-                                onChange={(e) => setSearchValue(e.target.value)}
-                            />
+                            <div className={`search-input-row${searchPanelOpen ? " is-open" : ""}`}>
+                                <input
+                                    type="text"
+                                    className="form-control landing-search-input landing-search-input--wide"
+                                    placeholder="¿Qué buscas hoy?"
+                                    value={searchValue}
+                                    onChange={(e) => setSearchValue(e.target.value)}
+                                    onFocus={() => setSearchFocused(true)}
+                                    autoComplete="off"
+                                />
+                                {searchPanelOpen && (
+                                    <button
+                                        type="button"
+                                        className="search-close-btn"
+                                        onClick={closeSearchPanel}
+                                        aria-label="Cerrar búsqueda"
+                                    >
+                                        <i className="bi bi-x-lg" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {searchPanelOpen && (
+                                <div className="search-suggestions-panel">
+                                    <p className="search-suggestions-title">Productos sugeridos</p>
+                                    <div className="search-suggestions-scroll">
+                                        {suggestedProducts.length === 0 ? (
+                                            <p className="search-suggestions-empty">
+                                                No hay sugerencias para esta búsqueda.
+                                            </p>
+                                        ) : (
+                                            suggestedProducts.map((p) => {
+                                                const oldP = (Number(p.price) * 1.2).toFixed(2);
+                                                const cardP = (Number(p.price) * 0.94).toFixed(2);
+                                                const favorited = isFavorite(p.id);
+                                                return (
+                                                    <div key={p.id} className="search-suggestion-row">
+                                                        <Link
+                                                            to={`/producto/${p.id}`}
+                                                            className="search-suggestion-link"
+                                                            onClick={() => setSearchFocused(false)}
+                                                        >
+                                                            <img
+                                                                src={p.img}
+                                                                alt=""
+                                                                className="search-suggestion-img"
+                                                            />
+                                                            <div className="search-suggestion-info">
+                                                                <span className="search-suggestion-format">
+                                                                    {productFormatLabel(p)}
+                                                                </span>
+                                                                <span className="search-suggestion-name">
+                                                                    {p.name}
+                                                                </span>
+                                                                <span className="search-suggestion-badge">
+                                                                    Te puede interesar
+                                                                </span>
+                                                                <span className="search-suggestion-provider">
+                                                                    {p.category || "Nubix Market"}
+                                                                </span>
+                                                                <div className="search-suggestion-prices">
+                                                                    <span className="old">S/ {oldP}</span>
+                                                                    <span className="normal">
+                                                                        S/ {Number(p.price).toFixed(2)}
+                                                                    </span>
+                                                                    <span className="card">S/ {cardP}</span>
+                                                                </div>
+                                                            </div>
+                                                        </Link>
+                                                        <div className="search-suggestion-actions">
+                                                            <button
+                                                                type="button"
+                                                                className="btn-search-add-oval"
+                                                                onClick={(e) => handleSuggestedAdd(e, p)}
+                                                            >
+                                                                Agregar al carrito
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                className={`btn-search-fav${favorited ? " active" : ""}`}
+                                                                onClick={(e) =>
+                                                                    handleSuggestedFavorite(e, p.id)
+                                                                }
+                                                                aria-label="Favoritos"
+                                                            >
+                                                                <i
+                                                                    className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
+                                                                />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                    <div className="search-suggestions-footer">
+                                        <Link
+                                            to={showAllHref}
+                                            className="search-show-all-link"
+                                            onClick={() => setSearchFocused(false)}
+                                        >
+                                            Mostrar todos los resultados
+                                        </Link>
+                                    </div>
+                                </div>
+                            )}
                         </form>
 
-                        <div className="d-flex align-items-center gap-2">
+                        <div className="d-flex align-items-center gap-1 flex-shrink-0">
+                            <button
+                                type="button"
+                                className="landing-icon-btn"
+                                aria-label="Ingresa tu ubicación"
+                                onClick={() =>
+                                    document.querySelector(".bar-ubicacion-trigger")?.click()
+                                }
+                            >
+                                <i className="bi bi-geo-alt" />
+                            </button>
                             {token ? (
-                                <div
-                                    className="position-relative"
-                                    ref={userMenuRef}
-                                >
+                                <div className="position-relative" ref={userMenuRef}>
                                     <button
+                                        type="button"
                                         className="btn d-flex align-items-center gap-2 border-0"
-                                        onClick={() =>
-                                            setUserMenuOpen(!userMenuOpen)
-                                        }
+                                        onClick={() => setUserMenuOpen(!userMenuOpen)}
                                     >
-                                        <div className="action-icon-btn">
-                                            <i className="bi bi-person"></i>
+                                        <div className="landing-icon-btn">
+                                            <i className="bi bi-person" />
                                         </div>
-                                        <div
-                                            className="text-start d-none d-sm-block"
-                                            style={{ lineHeight: "1.1" }}
-                                        >
-                                            <div
-                                                style={{
-                                                    fontSize: "0.6rem",
-                                                    color: "#64748b",
-                                                }}
-                                            >
-                                                HOLA,
-                                            </div>
-                                            <div
-                                                className="fw-bold"
-                                                style={{
-                                                    fontSize: "0.78rem",
-                                                    color: "black",
-                                                }}
-                                            >
-                                                {user?.username?.toUpperCase() ||
-                                                    "USUARIO"}
+                                        <div className="text-start d-none d-sm-block" style={{ lineHeight: "1.1" }}>
+                                            <div style={{ fontSize: "0.6rem", color: "#64748b" }}>HOLA,</div>
+                                            <div className="fw-bold" style={{ fontSize: "0.78rem", color: "black" }}>
+                                                {user?.username?.toUpperCase() || "USUARIO"}
                                             </div>
                                         </div>
                                     </button>
@@ -234,38 +337,23 @@ export default function Navbar() {
                                             style={{ minWidth: "150px" }}
                                         >
                                             {canAccessAdmin && (
-                                                <Link
-                                                    className="dropdown-item mb-2"
-                                                    to="/admin/dashboard"
-                                                >
+                                                <Link className="dropdown-item mb-2" to="/admin/dashboard">
                                                     Panel Admin
                                                 </Link>
                                             )}
-                                            <button
-                                                className="btn-logout-mini w-100"
-                                                onClick={handleLogout}
-                                            >
-                                                <i className="bi bi-box-arrow-left"></i>
+                                            <button type="button" className="btn-logout-mini w-100" onClick={handleLogout}>
+                                                <i className="bi bi-box-arrow-left" />
                                                 Cerrar Sesión
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <Link
-                                    to="/login"
-                                    className="text-decoration-none d-flex align-items-center gap-2"
-                                >
-                                    <div className="action-icon-btn">
-                                        <i className="bi bi-person"></i>
+                                <Link to="/login" className="text-decoration-none d-flex align-items-center gap-2">
+                                    <div className="landing-icon-btn">
+                                        <i className="bi bi-person" />
                                     </div>
-                                    <div
-                                        className="fw-bold d-none d-sm-block"
-                                        style={{
-                                            fontSize: "0.78rem",
-                                            color: "black",
-                                        }}
-                                    >
+                                    <div className="fw-bold d-none d-sm-block" style={{ fontSize: "0.78rem", color: "black" }}>
                                         INICIAR SESIÓN
                                     </div>
                                 </Link>
@@ -273,14 +361,12 @@ export default function Navbar() {
 
                             <Link
                                 to={token ? "/favorites" : "/login"}
-                                className="action-icon-btn text-decoration-none position-relative"
+                                className="landing-icon-btn text-decoration-none position-relative"
                             >
-                                <i className="bi bi-heart"></i>
+                                <i className="bi bi-heart" />
                                 {token && favoritesCount > 0 && (
-                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle cart-badge-premium">
-                                        {favoritesCount > 9
-                                            ? "9+"
-                                            : favoritesCount}
+                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle landing-cart-badge">
+                                        {favoritesCount > 9 ? "9+" : favoritesCount}
                                     </span>
                                 )}
                             </Link>
@@ -288,11 +374,11 @@ export default function Navbar() {
                                 <div className="position-relative" ref={notifRef}>
                                     <button
                                         type="button"
-                                        className="action-icon-btn border-0 bg-transparent position-relative"
+                                        className="landing-icon-btn border-0 bg-transparent position-relative"
                                         onClick={() => setNotifOpen((v) => !v)}
                                         aria-label="Notificaciones"
                                     >
-                                        <i className="bi bi-bell"></i>
+                                        <i className="bi bi-bell" />
                                         {unreadCount > 0 && (
                                             <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-danger">
                                                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -317,7 +403,7 @@ export default function Navbar() {
                                                         <div className="d-flex align-items-start justify-content-between gap-2">
                                                             <div style={{ fontSize: "0.8rem", color: "#0f172a" }}>
                                                                 <div className="d-flex align-items-center gap-2 mb-1">
-                                                                    {!n.leido && <span className="notif-unread-dot"></span>}
+                                                                    {!n.leido && <span className="notif-unread-dot" />}
                                                                     <strong className="text-capitalize">{n.tipo}</strong>
                                                                 </div>
                                                                 <div>{n.mensaje}</div>
@@ -344,11 +430,11 @@ export default function Navbar() {
                             )}
                             <Link
                                 to={token ? "/cart" : "/login"}
-                                className="action-icon-btn text-decoration-none position-relative"
+                                className="landing-icon-btn text-decoration-none position-relative"
                             >
-                                <i className="bi bi-cart3"></i>
+                                <i className="bi bi-cart3" />
                                 {token && totalItems > 0 && (
-                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle cart-badge-premium">
+                                    <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle landing-cart-badge">
                                         {totalItems}
                                     </span>
                                 )}
@@ -357,7 +443,7 @@ export default function Navbar() {
                     </div>
                 </div>
             </nav>
-            <div style={{ marginTop: "75px" }}></div>
+            <div style={{ marginTop: "75px" }} />
         </>
     );
 }

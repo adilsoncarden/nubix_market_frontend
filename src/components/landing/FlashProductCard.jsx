@@ -1,0 +1,149 @@
+import { Link } from "react-router-dom";
+import { useCart } from "../../store/CartContext";
+import { useFavorites } from "../../store/FavoritesContext";
+import { useAuth } from "../../store/AuthContext";
+import { setRedirectUrl } from "../../utils/authUtils";
+
+const PAYMENT_LOGOS = (
+    <span className="flash-card-payments" aria-hidden="true">
+        <span className="pay-pill">VISA</span>
+        <span className="pay-pill">YAPE</span>
+    </span>
+);
+
+export default function FlashProductCard({ p }) {
+    const { items, addToCart, setQty, removeFromCart } = useCart();
+    const { toggleFavorite, isFavorite } = useFavorites();
+    const { token } = useAuth();
+
+    const currentPrice = Number(p.price ?? p.precio) || 0;
+    const priceOld = (currentPrice * 1.22).toFixed(2);
+    const priceNormal = currentPrice.toFixed(2);
+    const priceCard = (currentPrice * 0.94).toFixed(2);
+    const presentation = `CAJA ${p.unit === "kg" ? "1 KG" : "30 UN"}`;
+    const vendor = p.category || "Nubix Market";
+    const cartItem = items.find((i) => i.id === p.id);
+    const cartQty = cartItem?.qty || 0;
+    const favorited = isFavorite(p.id);
+
+    const buildProductPayload = () => ({
+        id: p.id,
+        name: p.name || p.nombre,
+        category: p.category,
+        priceBase: p.priceBase,
+        price: currentPrice,
+        stock: p.stock,
+        unit: p.unit || "und",
+        img: p.img,
+    });
+
+    const handleAdd = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await addToCart(buildProductPayload());
+    };
+
+    const handleQtyChange = async (e, next) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (next < 1) {
+            await removeFromCart(p.id);
+        } else {
+            await setQty(p.id, next);
+        }
+    };
+
+    const handleFavorite = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!token) {
+            setRedirectUrl(window.location.pathname);
+            window.location.href = "/login";
+            return;
+        }
+        await toggleFavorite(p.id);
+    };
+
+    return (
+        <div className="flash-product-card">
+            <span className="flash-badge-today">🔔 ¡SOLO POR HOY!</span>
+
+            <Link to={`/producto/${p.id}`} className="flash-card-link">
+                <div className="flash-card-image">
+                    <img src={p.img} alt={p.name || p.nombre} loading="lazy" />
+                </div>
+                <p className="flash-card-presentation">{presentation}</p>
+                <h6 className="flash-card-name">{p.name || p.nombre}</h6>
+                <span className="flash-tag-interest">Te puede interesar</span>
+                <span className="flash-card-vendor">{vendor}</span>
+
+                <div className="flash-price-stack">
+                    <span className="flash-price-old">S/ {priceOld}</span>
+                    <span className="flash-price-normal">S/ {priceNormal}</span>
+                    <div className="flash-price-card-row">
+                        <span className="flash-price-card">S/ {priceCard}</span>
+                        {PAYMENT_LOGOS}
+                    </div>
+                </div>
+            </Link>
+
+            <div className="flash-card-actions">
+                {cartQty === 0 ? (
+                    <>
+                        <button
+                            type="button"
+                            className="btn-flash-add-cart"
+                            onClick={handleAdd}
+                            disabled={p.stock <= 0}
+                        >
+                            Agregar al carrito
+                        </button>
+                        <button
+                            type="button"
+                            className={`btn-flash-fav${favorited ? " active" : ""}`}
+                            onClick={handleFavorite}
+                            aria-label="Favoritos"
+                        >
+                            <i
+                                className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
+                            />
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <div className="flash-qty-pill">
+                            <button
+                                type="button"
+                                className="flash-qty-btn"
+                                onClick={(e) => handleQtyChange(e, cartQty - 1)}
+                                aria-label="Reducir"
+                            >
+                                −
+                            </button>
+                            <span className="flash-qty-value">{cartQty}</span>
+                            <button
+                                type="button"
+                                className="flash-qty-btn"
+                                onClick={(e) => handleQtyChange(e, cartQty + 1)}
+                                aria-label="Aumentar"
+                                disabled={p.stock > 0 && cartQty >= p.stock}
+                            >
+                                +
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            className={`btn-flash-fav${favorited ? " active" : ""}`}
+                            onClick={handleFavorite}
+                            aria-label="Favoritos"
+                        >
+                            <i
+                                className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
+                            />
+                        </button>
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
