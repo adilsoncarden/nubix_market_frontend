@@ -1564,6 +1564,22 @@ body.search-overlay-active {
   opacity: 0.4;
 }
 
+.flash-qty-btn.qty-btn--remove,
+.qty-btn.qty-btn--remove {
+  color: #dc2626;
+}
+
+.flash-qty-btn.qty-btn--remove:hover,
+.qty-btn.qty-btn--remove:hover {
+  background: rgba(254, 226, 226, 0.65);
+  color: #b91c1c;
+}
+
+.flash-qty-btn.qty-btn--remove i,
+.qty-btn.qty-btn--remove i {
+  font-size: 0.95rem;
+}
+
 .flash-qty-value {
   font-weight: 700;
   font-size: 0.95rem;

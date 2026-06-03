@@ -151,7 +151,7 @@ const Login = () => {
                                         <input
                                             type="email"
                                             className="form-control bg-light border-start-0 py-2"
-                                            placeholder="ejemplo@nubix.com"
+                                            placeholder=""
                                             value={email}
                                             onChange={(e) =>
                                                 setEmail(e.target.value)
@@ -191,7 +191,7 @@ const Login = () => {
                                                     : "password"
                                             }
                                             className="form-control bg-light border-start-0 border-end-0 py-2"
-                                            placeholder="••••••••"
+                                            placeholder=""
                                             value={password}
                                             onChange={(e) =>
                                                 setPassword(e.target.value)

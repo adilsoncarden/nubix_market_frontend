@@ -35,3 +35,110 @@
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(25, 135, 84, 0.2) !important;
 }
+
+/* SweetAlert2 — toasts por encima del navbar y buscador maximizado */
+.swal2-container {
+    z-index: 99999 !important;
+}
+
+.swal2-container.swal2-top-end,
+.swal2-container.swal2-top-start,
+.swal2-container.swal2-top {
+    margin-top: 20px !important;
+}
+
+/* Toast Nubix — redondeado, sombra suave, animación rápida */
+.swal2-popup.nubix-toast.swal2-toast {
+    border-radius: 18px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(19, 77, 39, 0.12);
+    padding: 0.7rem 1rem;
+    background: #ffffff;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+}
+
+.swal2-popup.nubix-toast .swal2-icon {
+    margin: 0 auto 0.35rem !important;
+    transform: scale(0.8);
+}
+
+.swal2-popup.nubix-toast .swal2-title,
+.swal2-popup.nubix-toast .swal2-html-container {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    text-align: center !important;
+}
+
+.swal2-popup.nubix-toast .swal2-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #134d27;
+}
+
+.swal2-popup.nubix-toast .swal2-html-container {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #134d27;
+}
+
+.nubix-toast-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    text-align: center;
+    line-height: 1.35;
+}
+
+.nubix-toast-link {
+    color: #0d6efd;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.nubix-toast-link:hover {
+    color: #0a58ca;
+    text-decoration: underline;
+}
+
+.swal2-popup.nubix-toast .swal2-timer-progress-bar-container,
+.swal2-popup.nubix-toast .swal2-timer-progress-bar {
+    display: none !important;
+}
+
+@keyframes nubix-toast-in {
+    from {
+        opacity: 0;
+        transform: translate3d(14px, -6px, 0) scale(0.94);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+
+@keyframes nubix-toast-out {
+    from {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translate3d(10px, -4px, 0) scale(0.96);
+    }
+}
+
+.swal2-popup.nubix-toast.nubix-toast-show {
+    animation: nubix-toast-in 0.2s cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+.swal2-popup.nubix-toast.nubix-toast-hide {
+    animation: nubix-toast-out 0.15s cubic-bezier(0.4, 0, 0.8, 0.6) forwards !important;
+}

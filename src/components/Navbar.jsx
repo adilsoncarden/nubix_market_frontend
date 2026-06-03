@@ -17,7 +17,8 @@ function productFormatLabel(product) {
 
 export default function Navbar() {
     const navigate = useNavigate();
-    const { totalItems, addToCart } = useCart();
+    const { totalItems, cartAnimationTick, addToCart } = useCart();
+    const [cartIconAnimating, setCartIconAnimating] = useState(false);
     const { count: favoritesCount, toggleFavorite, isFavorite } = useFavorites();
     const { webToken, webUser, logoutWeb, canAccessAdmin } = useAuth();
     const token = webToken;
@@ -163,6 +164,13 @@ export default function Navbar() {
         return () => document.body.classList.remove("search-overlay-active");
     }, [searchPanelOpen]);
 
+    useEffect(() => {
+        if (cartAnimationTick === 0) return;
+        setCartIconAnimating(true);
+        const timer = setTimeout(() => setCartIconAnimating(false), 320);
+        return () => clearTimeout(timer);
+    }, [cartAnimationTick]);
+
     const handleSuggestedAdd = async (e, product) => {
         e.preventDefault();
         e.stopPropagation();
@@ -178,7 +186,7 @@ export default function Navbar() {
         });
     };
 
-    const handleSuggestedFavorite = async (e, productId) => {
+    const handleSuggestedFavorite = async (e, product) => {
         e.preventDefault();
         e.stopPropagation();
         if (!token) {
@@ -186,7 +194,16 @@ export default function Navbar() {
             navigate("/login");
             return;
         }
-        await toggleFavorite(productId);
+        await toggleFavorite(product.id, {
+            id: product.id,
+            name: product.name,
+            category: product.category,
+            priceBase: product.priceBase,
+            price: product.price,
+            stock: product.stock,
+            unit: product.unit || "und",
+            img: product.img,
+        });
     };
 
     const showAllHref = searchValue.trim()
@@ -373,7 +390,7 @@ export default function Navbar() {
                                                                 type="button"
                                                                 className={`btn-search-fav${favorited ? " active" : ""}`}
                                                                 onClick={(e) =>
-                                                                    handleSuggestedFavorite(e, p.id)
+                                                                    handleSuggestedFavorite(e, p)
                                                                 }
                                                                 aria-label="Favoritos"
                                                                 title={
@@ -534,7 +551,7 @@ export default function Navbar() {
                             )}
                             <Link
                                 to={token ? "/cart" : "/login"}
-                                className="landing-icon-btn text-decoration-none position-relative"
+                                className={`landing-icon-btn text-decoration-none position-relative${cartIconAnimating ? " animate-bounce-cart" : ""}`}
                             >
                                 <i className="bi bi-cart3" />
                                 {token && totalItems > 0 && (

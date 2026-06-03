@@ -3,6 +3,7 @@ import { useCart } from "../../store/CartContext";
 import { useFavorites } from "../../store/FavoritesContext";
 import { useAuth } from "../../store/AuthContext";
 import { setRedirectUrl } from "../../utils/authUtils";
+import ProductQtyControl from "../shared/ProductQtyControl";
 
 const PAYMENT_LOGOS = (
     <span className="flash-card-payments" aria-hidden="true">
@@ -43,14 +44,20 @@ export default function FlashProductCard({ p }) {
         await addToCart(buildProductPayload());
     };
 
-    const handleQtyChange = async (e, next) => {
+    const handleDecreaseQty = async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        if (next < 1) {
+        if (cartQty === 1) {
             await removeFromCart(p.id);
         } else {
-            await setQty(p.id, next);
+            await setQty(p.id, cartQty - 1);
         }
+    };
+
+    const handleIncreaseQty = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        await setQty(p.id, cartQty + 1);
     };
 
     const handleFavorite = async (e) => {
@@ -61,7 +68,7 @@ export default function FlashProductCard({ p }) {
             window.location.href = "/login";
             return;
         }
-        await toggleFavorite(p.id);
+        await toggleFavorite(p.id, buildProductPayload());
     };
 
     return (
@@ -117,28 +124,12 @@ export default function FlashProductCard({ p }) {
                     </>
                 ) : (
                     <>
-                        <div className="flash-qty-pill">
-                            <button
-                                type="button"
-                                className="flash-qty-btn"
-                                onClick={(e) => handleQtyChange(e, cartQty - 1)}
-                                aria-label="Reducir"
-                                title="Reducir cantidad"
-                            >
-                                −
-                            </button>
-                            <span className="flash-qty-value">{cartQty}</span>
-                            <button
-                                type="button"
-                                className="flash-qty-btn"
-                                onClick={(e) => handleQtyChange(e, cartQty + 1)}
-                                aria-label="Aumentar"
-                                title="Aumentar cantidad"
-                                disabled={p.stock > 0 && cartQty >= p.stock}
-                            >
-                                +
-                            </button>
-                        </div>
+                        <ProductQtyControl
+                            qty={cartQty}
+                            stock={p.stock}
+                            onDecrease={handleDecreaseQty}
+                            onIncrease={handleIncreaseQty}
+                        />
                         <button
                             type="button"
                             className={`btn-flash-fav${favorited ? " active" : ""}`}

@@ -6,11 +6,19 @@ import {
     useCallback,
 } from "react";
 import { useAuth } from "./AuthContext";
-import api from "../config/axios";
 import { favoritesService } from "../features/favorites/services/favoritesService";
+import { favToastAdded, favToastRemoved } from "../utils/swalConfig";
+import {
+    resolveUserId,
+    loadUserFavoriteIds,
+    saveUserFavoriteIds,
+    loadUserFavoriteCache,
+    upsertFavoriteInCache,
+    removeFavoriteFromCache,
+    persistFavoritesFromServer,
+} from "../utils/favoritesStorage";
 
 const FavoritesContext = createContext(null);
-const LOCAL_KEY = "nubix_favorites_pending";
 
 function reducer(state, { type, productoId, ids }) {
     switch (type) {
@@ -28,96 +36,110 @@ function reducer(state, { type, productoId, ids }) {
 }
 
 export function FavoritesProvider({ children }) {
-    const { token } = useAuth();
-    const [favoriteIds, dispatch] = useReducer(reducer, [], () => {
-        try {
-            return JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
-        } catch {
-            return [];
-        }
-    });
+    const { webToken, webUser } = useAuth();
+    const userId = resolveUserId(webUser);
+    const [favoriteIds, dispatch] = useReducer(reducer, []);
 
-    // Cargar favoritos del servidor
-    const loadServerFavorites = useCallback(async () => {
+    const loadServerFavorites = useCallback(async (activeUserId) => {
+        if (!activeUserId) return;
         try {
             const productos = await favoritesService.list();
-            const ids = productos.map((p) => p.id);
+            const { ids } = persistFavoritesFromServer(activeUserId, productos);
             dispatch({ type: "SET_ALL", ids });
-            localStorage.removeItem(LOCAL_KEY);
         } catch (err) {
             console.error("Error cargando favoritos del servidor", err);
         }
     }, []);
 
-    // Sincronizar favoritos cuando el usuario se autentica
     useEffect(() => {
-        if (!token) return;
+        if (!webToken || !userId) {
+            dispatch({ type: "CLEAR" });
+            return;
+        }
+
+        const localIds = loadUserFavoriteIds(userId);
+        dispatch({ type: "SET_ALL", ids: localIds });
 
         const syncFavorites = async () => {
             try {
-                // Si hay favoritos pendientes en localStorage, sincronizarlos
-                const pending = (() => {
-                    try {
-                        return JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
-                    } catch {
-                        return [];
-                    }
-                })();
-
-                if (Array.isArray(pending) && pending.length > 0) {
-                    for (const productoId of pending) {
-                        await favoritesService.toggle(productoId);
-                    }
-                    localStorage.removeItem(LOCAL_KEY);
+                let serverIds = [];
+                try {
+                    const productos = await favoritesService.list();
+                    serverIds = productos.map((p) => p.id);
+                } catch {
+                    serverIds = [];
                 }
 
-                // Luego cargar los favoritos del servidor
-                await loadServerFavorites();
+                const missingOnServer = localIds.filter(
+                    (id) => !serverIds.includes(id),
+                );
+                for (const productoId of missingOnServer) {
+                    try {
+                        await favoritesService.toggle(productoId);
+                    } catch (err) {
+                        console.error(
+                            "Error sincronizando favorito pendiente",
+                            productoId,
+                            err,
+                        );
+                    }
+                }
+
+                await loadServerFavorites(userId);
             } catch (err) {
                 console.error("Error sincronizando favoritos", err);
             }
         };
 
         syncFavorites();
-    }, [token, loadServerFavorites]);
+    }, [webToken, userId, loadServerFavorites]);
 
-    // Guardar favoritos locales en localStorage cuando cambien
     useEffect(() => {
-        localStorage.setItem(LOCAL_KEY, JSON.stringify(favoriteIds));
-    }, [favoriteIds]);
+        if (!userId) return;
+        saveUserFavoriteIds(userId, favoriteIds);
+    }, [favoriteIds, userId]);
 
     const toggleFavorite = useCallback(
-        async (productoId) => {
-            if (!token) {
-                // No autenticado: solo actualizar local
-                const isFavorite = favoriteIds.includes(productoId);
-                if (isFavorite) {
-                    dispatch({ type: "REMOVE", productoId });
-                } else {
-                    dispatch({ type: "ADD", productoId });
-                }
-                return;
-            }
+        async (productoId, productSnapshot = null) => {
+            if (!webToken || !userId) return false;
 
-            // Autenticado: actualizar en servidor
+            const wasFavorite = favoriteIds.includes(productoId);
+
             try {
                 const isFavorite = await favoritesService.toggle(productoId);
                 if (isFavorite) {
                     dispatch({ type: "ADD", productoId });
+                    if (productSnapshot) {
+                        upsertFavoriteInCache(userId, productSnapshot);
+                    }
+                    favToastAdded();
                 } else {
                     dispatch({ type: "REMOVE", productoId });
+                    removeFavoriteFromCache(userId, productoId);
+                    favToastRemoved();
                 }
+                return true;
             } catch (err) {
                 console.error("Error al toggle favorito", err);
+                if (wasFavorite) {
+                    dispatch({ type: "REMOVE", productoId });
+                    removeFavoriteFromCache(userId, productoId);
+                }
+                return false;
             }
         },
-        [token, favoriteIds],
+        [webToken, userId, favoriteIds],
     );
 
     const isFavorite = useCallback(
         (productoId) => favoriteIds.includes(productoId),
         [favoriteIds],
     );
+
+    const getCachedProducts = useCallback(() => {
+        if (!userId) return [];
+        return loadUserFavoriteCache(userId);
+    }, [userId]);
 
     return (
         <FavoritesContext.Provider
@@ -126,6 +148,9 @@ export function FavoritesProvider({ children }) {
                 toggleFavorite,
                 isFavorite,
                 count: favoriteIds.length,
+                userId,
+                getCachedProducts,
+                reloadFavorites: () => loadServerFavorites(userId),
             }}
         >
             {children}
