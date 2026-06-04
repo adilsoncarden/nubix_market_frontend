@@ -24,7 +24,7 @@ const ResetPassword = () => {
             hasLowerCase: /[a-z]/.test(pwd),
             hasNumber: /\d/.test(pwd),
             // Regex exacto y seguro para los símbolos: @ $ ! % ? & . _ # -
-            hasSpecialChar: /[@$!%?&._#-]/ .test(pwd),
+            hasSpecialChar: /[@$!%?&._#-]/.test(pwd),
         };
     }, [password]);
 
@@ -122,7 +122,7 @@ const ResetPassword = () => {
                                         onChange={(e) =>
                                             setEmail(e.target.value)
                                         }
-                                        placeholder="tu@email.com"
+                                        placeholder=""
                                         required
                                         disabled={loading}
                                     />
@@ -139,7 +139,7 @@ const ResetPassword = () => {
                                         onChange={(e) =>
                                             setCode(e.target.value)
                                         }
-                                        placeholder="Introduce el código de 6 dígitos"
+                                        placeholder=""
                                         required
                                         disabled={loading}
                                     />
@@ -346,7 +346,6 @@ const ResetPassword = () => {
                                                 >
                                                     Un carácter especial
                                                     (@$!%?&._#-)
-
                                                 </small>
                                             </div>
                                         </div>

@@ -13,10 +13,15 @@ export const STORAGE_KEYS = {
 const LEGACY_TOKEN = "token";
 const LEGACY_USER = "user";
 
-export const ADMIN_ROLES = ["ADMIN", "EMPLEADO"];
+export const ADMIN_ROLES = ["ADMIN", "EMPLEADO", "REPARTIDOR"];
 
+/** Roles legacy con acceso amplio al panel (compatibilidad). */
 export const isAdminRole = (rol) =>
     rol && ADMIN_ROLES.includes(String(rol).toUpperCase());
+
+/** Personal interno: cualquier rol distinto de CLIENTE (incluye CAJERO y roles RBAC). */
+export const isPanelEligibleRole = (rol) =>
+    !!rol && String(rol).trim().toUpperCase() !== "CLIENTE";
 
 const parseUser = (raw) => {
     if (!raw) return null;
@@ -70,18 +75,29 @@ export const isWebAuthenticated = () => !!getWebToken();
 
 export const isAdminAuthenticated = () => !!getAdminToken();
 
-/** Panel admin: token admin dedicado o sesión web con rol admin/empleado */
+/** Panel admin: token admin dedicado o sesión web con rol interno (no CLIENTE). */
 export const canAccessAdminPanel = () => {
     if (getAdminToken()) return true;
     const webUser = getWebUser();
-    return isWebAuthenticated() && isAdminRole(webUser?.rol);
+    return isWebAuthenticated() && isPanelEligibleRole(webUser?.rol);
 };
+
+export const getAdminPermisos = () => {
+    const adminUser = getAdminUser();
+    return Array.isArray(adminUser?.permisos) ? adminUser.permisos : [];
+};
+
+export const hasPermission = (perm, permisos = getAdminPermisos()) =>
+    !!perm && Array.isArray(permisos) && permisos.includes(perm);
+
+export const hasAnyPermission = (perms, permisos = getAdminPermisos()) =>
+    Array.isArray(perms) && perms.some((p) => hasPermission(p, permisos));
 
 export const getAdminSessionUser = () => {
     const adminUser = getAdminUser();
     if (adminUser) return adminUser;
     const webUser = getWebUser();
-    if (isWebAuthenticated() && isAdminRole(webUser?.rol)) return webUser;
+    if (isWebAuthenticated() && isPanelEligibleRole(webUser?.rol)) return webUser;
     return null;
 };
 
@@ -90,6 +106,28 @@ export const saveWebAuthData = (token, userData) => {
     if (userData) {
         localStorage.setItem(STORAGE_KEYS.webUser, JSON.stringify(userData));
     }
+};
+
+/** Fusiona datos de perfil (dirección, teléfono) en la sesión web guardada. */
+export const mergeWebUserProfile = (profile) => {
+    if (!profile) return;
+    const current = getWebUser() || {};
+    const merged = {
+        ...current,
+        id: profile.id ?? current.id,
+        username: profile.username ?? current.username,
+        email: profile.email ?? current.email,
+        rol: profile.rolNombre ?? current.rol,
+        telefono: profile.telefono ?? "",
+        direccion: profile.direccion ?? "",
+        departamento: profile.departamento ?? "",
+        provincia: profile.provincia ?? "",
+        distrito: profile.distrito ?? "",
+        referencia: profile.referencia ?? "",
+    };
+    localStorage.setItem(STORAGE_KEYS.webUser, JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent("nubix:web-user-updated", { detail: merged }));
+    return merged;
 };
 
 export const saveAdminAuthData = (token, userData) => {
@@ -160,7 +198,7 @@ export const getTokenForRequest = (pathname = window.location.pathname) => {
         const adminToken = getAdminToken();
         if (adminToken) return adminToken;
         const webUser = getWebUser();
-        if (isWebAuthenticated() && isAdminRole(webUser?.rol)) {
+        if (isWebAuthenticated() && isPanelEligibleRole(webUser?.rol)) {
             return getWebToken();
         }
         return null;

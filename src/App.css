@@ -10,7 +10,7 @@
   --accent:       #ff6900;
   --text-dark:    #1a1a1a;
   --text-muted:   #7a7a7a;
-  --bg:           #f4f6f8;
+  --bg:           rgba(240, 244, 241, 1);
   --white:        #ffffff;
   --radius-card:  20px;
   --shadow-sm:    0 2px 12px rgba(0,0,0,.07);
@@ -257,16 +257,6 @@ body {
 .btn-favorite:hover { border-color: #ff6b9d; color: #ff6b9d; transform: scale(1.12); }
 .btn-favorite.favorited { background: #ff6b9d; color: var(--white); border-color: #ff6b9d; }
 
-/* ─── BANNER OFERTA ──────────────────────────────────────── */
-.offer-banner { position: relative; background: linear-gradient(135deg, #0d1b0f 0%, #1a3320 50%, #0d1b0f 100%); border-radius: var(--radius-card); padding: 3rem 3.5rem; overflow: hidden; color: var(--white); box-shadow: var(--shadow-lg); margin-bottom: 3rem; }
-.offer-deco { position: absolute; right: -2rem; top: 50%; transform: translateY(-50%); font-size: 18rem; line-height: 1; color: rgba(255,255,255,.04); pointer-events: none; }
-.offer-content { position: relative; z-index: 1; max-width: 580px; }
-.offer-badge { display: inline-block; background: #ffe066; color: #1a1a00; font-size: .72rem; font-weight: 800; letter-spacing: 1px; padding: 5px 14px; border-radius: 50px; margin-bottom: 1rem; }
-.offer-title { font-size: clamp(1.6rem, 3.5vw, 2.4rem); font-weight: 800; margin-bottom: .75rem; line-height: 1.2; }
-.offer-sub { font-size: .95rem; opacity: .75; margin-bottom: 1.75rem; }
-.btn-offer-cta { background: var(--green); color: var(--white); border: none; border-radius: 50px; padding: .8rem 2.4rem; font-weight: 700; font-size: 1rem; box-shadow: 0 6px 24px rgba(0,166,80,.4); transition: background var(--transition), transform var(--transition); text-decoration: none; display: inline-block; }
-.btn-offer-cta:hover { background: var(--green-dark); color: var(--white); transform: translateY(-2px); }
-
 /* ─── LOGIN PAGE ─────────────────────────────────────────── */
 .login-page-container { flex: 1; display: flex; align-items: center; justify-content: center; background: var(--green-light); padding: 40px 20px; min-height: calc(100vh - 220px); }
 .login-card { background: var(--white); border-radius: 16px; padding: 40px; width: 100%; max-width: 420px; box-shadow: var(--shadow-md); }
@@ -279,7 +269,7 @@ body {
 /* ═══════════════════════════════════════════════════════════
    SHOP PAGE
    ═══════════════════════════════════════════════════════════ */
-.shop-page { padding: 2rem 0 3rem; min-height: 70vh; }
+.shop-page { padding: 2rem 0 3rem; min-height: 70vh; background: rgba(240, 244, 241, 1); }
 
 .shop-layout { display: grid; grid-template-columns: 220px 1fr; gap: 2rem; align-items: start; }
 
@@ -402,8 +392,6 @@ body {
 @media (max-width: 576px) {
   body { background: #edf7f0; }
   .hero-caption { align-items: center; text-align: center; max-width: 100%; padding: 1.25rem; }
-  .offer-banner { padding: 2rem 1.5rem; }
-  .offer-deco   { font-size: 8rem; }
   .section-gap  { padding-top: 2rem; }
   .benefits-bar .col-6 { border-bottom: 1px solid #f0f0f0; }
   .brand-name   { font-size: 1.05rem; }

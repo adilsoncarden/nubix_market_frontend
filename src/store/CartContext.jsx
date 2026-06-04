@@ -4,6 +4,7 @@ import {
     useReducer,
     useEffect,
     useCallback,
+    useState,
 } from "react";
 import { useProductCatalog } from "./ProductCatalogContext";
 import { useAuth } from "./AuthContext";
@@ -12,14 +13,40 @@ import { productService } from "../features/products/services/productService";
 import { getProductImageUrl } from "../features/products/services/productService";
 import { mapProductosToShopItems } from "../features/products/utils/mapProducto";
 import { priceWithIgv, normalizeCartItem } from "../utils/pricing";
-import { alertLoginRequired } from "../utils/swalConfig";
+import {
+    alertLoginRequired,
+    cartToastFirstAdded,
+    cartToastRemovedComplete,
+} from "../utils/swalConfig";
 import { setRedirectUrl } from "../utils/authUtils";
+import {
+    hasWebSessionToken,
+    loadCartFromLocalStorage,
+} from "../utils/cartStorage";
 
 const CartContext = createContext(null);
 const KEY = "nubix_cart";
 
+function readInitialCartItems() {
+    if (!hasWebSessionToken()) return [];
+    return loadCartFromLocalStorage();
+}
+
 const PLACEHOLDER_IMAGE =
     "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80";
+
+/** Conserva el orden visual del cliente al sincronizar respuesta del servidor. */
+function mergeCartPreservingOrder(prevItems, carritoResponse) {
+    const serverItems = mapCarritoToItems(carritoResponse);
+    if (!prevItems?.length) return serverItems;
+    const byId = Object.fromEntries(serverItems.map((it) => [it.id, it]));
+    const ordered = prevItems
+        .map((prev) => byId[prev.id])
+        .filter(Boolean);
+    const prevIds = new Set(prevItems.map((i) => i.id));
+    const appended = serverItems.filter((it) => !prevIds.has(it.id));
+    return [...ordered, ...appended];
+}
 
 function mapCarritoToItems(carrito) {
     const items = Array.isArray(carrito?.items) ? carrito.items : [];
@@ -87,7 +114,10 @@ function reducer(state, { type, product, id, qty, synced, items }) {
 export function CartProvider({ children }) {
     const { version } = useProductCatalog();
     const { token } = useAuth();
-    const [items, dispatch] = useReducer(reducer, [], () => []);
+    const [items, dispatch] = useReducer(reducer, [], readInitialCartItems);
+    const [cartAnimationTick, setCartAnimationTick] = useState(0);
+
+    const bumpCartIcon = () => setCartAnimationTick((t) => t + 1);
 
     const syncCartWithCatalog = useCallback(async () => {
         if (!token || items.length === 0) return;
@@ -168,7 +198,8 @@ export function CartProvider({ children }) {
         migrateIfNeeded();
     }, [token, loadServerCart]);
 
-    const totalItems = token
+    const totalItems = token ? items.length : 0;
+    const totalUnits = token
         ? items.reduce((s, i) => s + i.qty, 0)
         : 0;
     const totalPrice = token
@@ -192,29 +223,56 @@ export function CartProvider({ children }) {
             value={{
                 items: token ? items : [],
                 totalItems,
+                totalUnits,
+                cartAnimationTick,
                 totalPrice,
                 totalPriceBase,
                 addToCart: async (p) => {
                     if (!token) return requireLoginForCart();
+                    const isFirstAdd = !items.some((i) => i.id === p.id);
                     const res = await api.post("/carrito/items", {
                         productoId: p.id,
                         cantidad: 1,
                     });
-                    dispatch({ type: "SET_ALL", items: mapCarritoToItems(res.data) });
+                    dispatch({
+                        type: "SET_ALL",
+                        items: mergeCartPreservingOrder(items, res.data),
+                    });
+                    bumpCartIcon();
+                    if (isFirstAdd) {
+                        cartToastFirstAdded();
+                    }
                     return true;
                 },
                 removeFromCart: async (id) => {
                     if (!token) return requireLoginForCart();
+                    const hadItem = items.some((i) => i.id === id);
                     const res = await api.delete(`/carrito/items/${id}`);
-                    dispatch({ type: "SET_ALL", items: mapCarritoToItems(res.data) });
+                    dispatch({
+                        type: "SET_ALL",
+                        items: mergeCartPreservingOrder(items, res.data),
+                    });
+                    bumpCartIcon();
+                    if (hadItem) {
+                        cartToastRemovedComplete();
+                    }
                     return true;
                 },
                 setQty: async (id, qty) => {
                     if (!token) return requireLoginForCart();
+                    const prevQty =
+                        items.find((i) => i.id === id)?.qty ?? 0;
                     const res = await api.put(`/carrito/items/${id}`, null, {
                         params: { cantidad: qty },
                     });
-                    dispatch({ type: "SET_ALL", items: mapCarritoToItems(res.data) });
+                    dispatch({
+                        type: "SET_ALL",
+                        items: mergeCartPreservingOrder(items, res.data),
+                    });
+                    bumpCartIcon();
+                    if (prevQty === 1 && qty < 1) {
+                        cartToastRemovedComplete();
+                    }
                     return true;
                 },
                 reloadCart: async () => {

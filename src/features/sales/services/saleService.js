@@ -22,6 +22,11 @@ export const saleService = {
         return response.data;
     },
 
+    getMyOrders: async (params = {}) => {
+        const response = await api.get("/ventas/mis-pedidos", { params });
+        return Array.isArray(response.data) ? response.data : [];
+    },
+
     updateStatus: async (id, estado) => {
         const response = await api.post(`/admin/ventas/${id}`, null, {
             params: { estado },

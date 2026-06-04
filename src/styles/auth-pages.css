@@ -1,0 +1,339 @@
+/* ═══════════════════════════════════════════════════════════
+   AUTH PAGES — Login / Register (tarjeta centrada)
+   ═══════════════════════════════════════════════════════════ */
+
+.auth-page-shell {
+  width: 100%;
+}
+
+.auth-page-col {
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.auth-page-col--register {
+  max-width: 520px;
+}
+
+.auth-page-logo {
+  width: 130px;
+  height: auto;
+  object-fit: contain;
+}
+
+.auth-page-heading {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #134d27;
+  margin: 0;
+  padding-top: 0.5rem;
+}
+
+.auth-page-subheading {
+  font-size: 0.92rem;
+  color: #64748b;
+  margin: 0;
+  padding-top: 0.35rem;
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(19, 77, 39, 0.06);
+}
+
+.auth-alert-slot {
+  min-height: 35px;
+}
+
+.auth-alert {
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.auth-field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 0.35rem;
+}
+
+.auth-input-group .input-group-text {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #94a3b8;
+}
+
+.auth-input-group .input-group-text i {
+  color: #94a3b8;
+}
+
+.auth-input-group .form-control {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.auth-input-group .form-control:focus {
+  border-color: #134d27;
+  box-shadow: 0 0 0 3px rgba(19, 77, 39, 0.12);
+  background: #ffffff;
+}
+
+.auth-input-group .input-group-text.border-end-0,
+.auth-input-group .form-control.border-start-0 {
+  border-color: #e2e8f0;
+}
+
+.auth-input-group:focus-within .input-group-text,
+.auth-input-group:focus-within .form-control {
+  border-color: #134d27;
+}
+
+.auth-input-group:focus-within .form-control {
+  box-shadow: 0 0 0 3px rgba(19, 77, 39, 0.12);
+}
+
+.auth-link-brand {
+  color: #134d27;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.auth-link-brand:hover {
+  color: #0f3d1f;
+}
+
+.auth-btn-primary {
+  background: #134d27;
+  border: none;
+  border-radius: 50px;
+  padding: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.auth-btn-primary:hover:not(:disabled) {
+  background: #0f3d1f;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(19, 77, 39, 0.28);
+}
+
+.auth-btn-primary:disabled {
+  background: #cbd5e1;
+  color: #f8fafc;
+  cursor: not-allowed;
+}
+
+.auth-divider {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.auth-btn-social {
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 50px;
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #334155;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.auth-btn-social:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+.auth-footer-text {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.auth-password-checklist {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ADMIN LOGIN — SaaS / corporativo
+   ═══════════════════════════════════════════════════════════ */
+
+.admin-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(
+    135deg,
+    #f1f5f9 0%,
+    #f8fafc 35%,
+    #edf7f0 70%,
+    #e8f5ec 100%
+  );
+}
+
+.admin-login-card {
+  max-width: 440px;
+  width: 100%;
+  border: 1px solid rgba(19, 77, 39, 0.08);
+  border-radius: 20px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+}
+
+.admin-login-card .card-body {
+  padding: 2.5rem 2.75rem !important;
+}
+
+.admin-login-header {
+  margin-bottom: 2rem;
+}
+
+.admin-login-logo {
+  display: block;
+  width: 140px;
+  height: auto;
+  margin-left: auto;
+  margin-right: auto;
+  object-fit: contain;
+}
+
+.admin-login-subtitle {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.admin-login-alert {
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.admin-auth-input-group {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-auth-input-group:focus-within {
+  border-color: #134d27;
+  box-shadow: 0 0 0 3px rgba(19, 77, 39, 0.12);
+}
+
+.admin-auth-input-group .input-group-text {
+  border: none;
+  background: #ffffff;
+  color: #94a3b8;
+}
+
+.admin-auth-input-group .input-group-text i {
+  color: #94a3b8;
+}
+
+.admin-auth-input-group .form-control {
+  border: none;
+  background: #ffffff;
+  color: #1e293b;
+  transition: box-shadow 0.2s ease;
+}
+
+.admin-auth-input-group .form-control:focus {
+  box-shadow: none;
+  background: #ffffff;
+}
+
+.admin-auth-input-group .input-group-text.border-start-0 {
+  border: none;
+  background: #ffffff;
+}
+
+.admin-auth-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.admin-login-actions {
+  margin-top: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-login-actions .form-check-input:checked {
+  background-color: #134d27;
+  border-color: #134d27;
+}
+
+.admin-login-actions .form-check-label {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.admin-help-link {
+  color: #134d27;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.admin-help-link:hover {
+  color: #0f3d1f;
+}
+
+.admin-btn-access {
+  background: #134d27;
+  border: none;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+  transition:
+    background 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.2s ease;
+}
+
+.admin-btn-access:hover:not(:disabled) {
+  background: #0f3d1f;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(19, 77, 39, 0.22);
+  transform: translateY(-1px);
+}
+
+.admin-btn-access:disabled {
+  opacity: 0.85;
+}
+
+.admin-login-footer {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+

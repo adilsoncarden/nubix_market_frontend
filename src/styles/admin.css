@@ -424,6 +424,93 @@
   }
 }
 
+/* Tabla premium (productos / seguridad) */
+.admin-page .admin-premium-table tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.15s ease;
+}
+
+.admin-page .admin-premium-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.admin-page .admin-premium-table thead th {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+.admin-page .admin-module-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--admin-accent, #10b981);
+  background: var(--admin-accent-soft, #d1fae5);
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.5rem;
+}
+
+.admin-page .admin-role-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #134d27;
+  background: rgba(19, 77, 39, 0.12);
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.admin-page .admin-slug-badge {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 0.25rem 0.55rem;
+  border-radius: 0.4rem;
+}
+
+.admin-page .admin-filter-select {
+  border-color: #e2e8f0;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #334155;
+  max-width: 220px;
+}
+
+.admin-page .admin-filter-select:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 2px var(--admin-accent-soft);
+}
+
+/* Modal asignación permisos por rol */
+.admin-page .role-permisos-modal {
+  overflow: hidden;
+}
+
+.admin-page .permission-panel-scroll {
+  max-height: 400px;
+  min-height: 120px;
+  padding-right: 0.25rem;
+}
+
+.admin-page .permission-module-card {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.admin-page .permission-module-card .card-body {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.admin-page .permission-check-item {
+  transition: background-color 0.15s ease;
+}
+
+.admin-page .permission-check-item:hover {
+  background-color: #f8fafc !important;
+}
+
 /* Paginación compacta */
 .admin-page .admin-pagination-bar {
   flex-wrap: wrap;

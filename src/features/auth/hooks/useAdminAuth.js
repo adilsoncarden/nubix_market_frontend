@@ -17,18 +17,29 @@ export const useAdminAuth = () => {
             if (data.success) {
                 // Guardamos en el contexto: { username, rol } y el token
                 loginAdmin(
-                    { username: data.username, rol: data.rol, id: data.id },
+                    {
+                        username: data.username,
+                        rol: data.rol,
+                        id: data.id,
+                        permisos: data.permisos ?? [],
+                    },
                     data.token,
                 );
                 navigate("/admin/dashboard"); // Redirección tras éxito
             } else {
-                setError(data.message || "Error de autenticación");
+                setError(
+                    data.message ||
+                        "Correo electrónico o contraseña incorrectos. Por favor, inténtelo de nuevo.",
+                );
             }
         } catch (err) {
             if (!err.response) {
                 setError("No se pudo conectar con el servidor. Intenta de nuevo.");
             } else {
-                setError(err.response?.data?.message || "Credenciales incorrectas");
+                setError(
+                    err.response?.data?.message ||
+                        "Correo electrónico o contraseña incorrectos. Por favor, inténtelo de nuevo.",
+                );
             }
         } finally {
             setLoading(false);

@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
 import { useCart } from "../store/CartContext";
 import { useNavigate } from "react-router-dom";
-import { saleService } from "../features/sales/services/saleService";
 import { useProductCatalog } from "../store/ProductCatalogContext";
 import { calcOrderTotals, formatSoles } from "../utils/pricing";
-import api from "../config/axios";
+import "../styles/cart.css";
+import ProductQtyControl from "../components/shared/ProductQtyControl";
+import CheckoutModal from "../components/checkout/CheckoutModal";
 
-// ─── Utilidad PDF (DISEÑO RENOVADO SEGÚN TU IMAGEN) ───────────────────────────
-const generarPDF = async (orden) => {
+// ─── CartPage ────────────────────────────────────────────────────────────────
+const _REMOVED_PDF_START = async (orden) => {
     const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF();
 
@@ -429,29 +430,29 @@ function ModalPago({ items, onClose, onSuccess }) {
                         {tipo === "boleta" && (
                             <div className="pago-fields">
                                 <div className="pago-field">
-                                    <label>Nombre completo</label>
+                                    <label>Nombre y Apellido / Razón Social</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Juan Perez Garcia"
+                                        placeholder=""
                                         value={form.nombre}
                                         onChange={set("nombre")}
                                     />
                                 </div>
                                 <div className="pago-field">
-                                    <label>DNI</label>
+                                    <label>DNI / RUC</label>
                                     <input
                                         type="text"
-                                        placeholder="12345678"
+                                        placeholder=""
                                         maxLength={8}
                                         value={form.dni}
                                         onChange={set("dni")}
                                     />
                                 </div>
                                 <div className="pago-field">
-                                    <label>Correo electronico</label>
+                                    <label>Correo electrónico</label>
                                     <input
                                         type="email"
-                                        placeholder="correo@ejemplo.com"
+                                        placeholder=""
                                         value={form.email}
                                         onChange={set("email")}
                                     />
@@ -469,7 +470,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                     <label>Razon Social</label>
                                     <input
                                         type="text"
-                                        placeholder="Ej: Mi Empresa S.A.C."
+                                        placeholder=""
                                         value={form.razonSocial}
                                         onChange={set("razonSocial")}
                                     />
@@ -483,7 +484,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                     </label>
                                     <input
                                         type="text"
-                                        placeholder="20123456789"
+                                        placeholder=""
                                         maxLength={11}
                                         value={form.ruc}
                                         onChange={set("ruc")}
@@ -493,7 +494,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                     <label>Direccion fiscal</label>
                                     <input
                                         type="text"
-                                        placeholder="Av. Ejemplo 123, Lima"
+                                        placeholder=""
                                         value={form.direccion}
                                         onChange={set("direccion")}
                                     />
@@ -502,7 +503,7 @@ function ModalPago({ items, onClose, onSuccess }) {
                                     <label>Correo electronico</label>
                                     <input
                                         type="email"
-                                        placeholder="correo@empresa.com"
+                                        placeholder=""
                                         value={form.email}
                                         onChange={set("email")}
                                     />
@@ -750,7 +751,7 @@ function OrderSuccessView({ venta, onContinue }) {
 
 // ─── CartPage ────────────────────────────────────────────────────────────────
 export default function CartPage() {
-    const { items, removeFromCart, setQty, clearCart, reloadCart, totalItems } =
+    const { items, removeFromCart, setQty, clearCart, reloadCart, totalItems, totalUnits } =
         useCart();
     const { invalidate: invalidateCatalog } = useProductCatalog();
     const navigate = useNavigate();
@@ -827,14 +828,14 @@ export default function CartPage() {
 
             {/* Modal de pago */}
             {modalPago && (
-                <ModalPago
+                <CheckoutModal
                     items={items}
                     onClose={handleCloseModal}
                     onSuccess={handlePagoSuccess}
                 />
             )}
 
-            <div className="container cart-page">
+            <div className="container cart-page cart-page-premium">
                 {/* Header */}
                 <div className="cart-header">
                     <h2 className="cart-title">
@@ -881,40 +882,41 @@ export default function CartPage() {
                                     </p>
                                 </div>
 
-                                <div className="cart-item-controls">
-                                    <button
-                                        className="qty-btn"
-                                        onClick={() =>
-                                            setQty(item.id, item.qty - 1)
+                                <ProductQtyControl
+                                    qty={item.qty}
+                                    stock={item.stock}
+                                    pillClassName="cart-item-controls"
+                                    btnClassName="qty-btn"
+                                    valueClassName="qty-value"
+                                    onDecrease={async (e) => {
+                                        e?.preventDefault?.();
+                                        if (item.qty === 1) {
+                                            await removeFromCart(item.id);
+                                        } else {
+                                            await setQty(item.id, item.qty - 1);
                                         }
-                                        aria-label="Reducir"
-                                    >
-                                        <i className="bi bi-dash"></i>
-                                    </button>
-                                    <span className="qty-value">
-                                        {item.qty}
-                                    </span>
-                                    <button
-                                        className="qty-btn"
-                                        onClick={() =>
-                                            setQty(item.id, item.qty + 1)
-                                        }
-                                        aria-label="Aumentar"
-                                    >
-                                        <i className="bi bi-plus"></i>
-                                    </button>
-                                </div>
+                                    }}
+                                    onIncrease={async (e) => {
+                                        e?.preventDefault?.();
+                                        await setQty(item.id, item.qty + 1);
+                                    }}
+                                />
 
                                 <div className="cart-item-subtotal">
                                     S/ {(item.price * item.qty).toFixed(2)}
                                 </div>
 
                                 <button
+                                    type="button"
                                     className="cart-item-remove"
-                                    onClick={() => removeFromCart(item.id)}
-                                    aria-label="Eliminar"
+                                    onClick={async (e) => {
+                                        e?.preventDefault?.();
+                                        await removeFromCart(item.id);
+                                    }}
+                                    aria-label="Eliminar producto del carrito"
+                                    title="Eliminar del carrito"
                                 >
-                                    <i className="bi bi-x-lg"></i>
+                                    <i className="bi bi-x-lg" aria-hidden="true" />
                                 </button>
                             </div>
                         ))}
@@ -925,7 +927,7 @@ export default function CartPage() {
                         <h4 className="summary-title">Resumen del pedido</h4>
 
                         <div className="summary-row">
-                            <span>Subtotal sin IGV ({totalItems} items)</span>
+                            <span>Subtotal sin IGV ({totalUnits} items)</span>
                             <span>{formatSoles(cartTotals.subtotalBase)}</span>
                         </div>
                         <div className="summary-row">

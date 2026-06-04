@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useEffect, useMemo } from "react";
+import { createContext, useState, useContext, useEffect, useMemo, useCallback } from "react";
 import {
     migrateLegacyAuth,
     saveWebAuthData,
@@ -8,17 +8,23 @@ import {
     getWebUser,
     getAdminUser,
     getAdminSessionUser,
-    isAdminRole,
+    isPanelEligibleRole,
 } from "../utils/authUtils";
+import { authService } from "../features/auth/services/authService";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [webToken, setWebToken] = useState(null);
-    const [webUser, setWebUser] = useState(null);
-    const [adminToken, setAdminToken] = useState(null);
-    const [adminUser, setAdminUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [webToken, setWebToken] = useState(() => {
+        migrateLegacyAuth();
+        return localStorage.getItem("userToken");
+    });
+    const [webUser, setWebUser] = useState(() => getWebUser());
+    const [adminToken, setAdminToken] = useState(() =>
+        localStorage.getItem("adminToken"),
+    );
+    const [adminUser, setAdminUser] = useState(() => getAdminUser());
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         document.documentElement.removeAttribute("data-bs-theme");
@@ -27,7 +33,15 @@ export const AuthProvider = ({ children }) => {
         setWebUser(getWebUser());
         setAdminToken(localStorage.getItem("adminToken"));
         setAdminUser(getAdminUser());
-        setLoading(false);
+    }, []);
+
+    useEffect(() => {
+        const onProfileUpdated = (e) => {
+            if (e.detail) setWebUser(e.detail);
+        };
+        window.addEventListener("nubix:web-user-updated", onProfileUpdated);
+        return () =>
+            window.removeEventListener("nubix:web-user-updated", onProfileUpdated);
     }, []);
 
     const loginWeb = (userData, token) => {
@@ -48,6 +62,16 @@ export const AuthProvider = ({ children }) => {
         setWebUser(null);
     };
 
+    const patchWebUser = useCallback((partial) => {
+        setWebUser((prev) => {
+            const next = { ...(prev || getWebUser() || {}), ...partial };
+            if (webToken) {
+                saveWebAuthData(webToken, next);
+            }
+            return next;
+        });
+    }, [webToken]);
+
     const logoutAdmin = () => {
         clearAdminAuthData();
         setAdminToken(null);
@@ -57,14 +81,41 @@ export const AuthProvider = ({ children }) => {
     const adminSessionUser = useMemo(
         () =>
             adminUser ??
-            (webToken && isAdminRole(webUser?.rol) ? webUser : null),
+            (webToken && isPanelEligibleRole(webUser?.rol) ? webUser : null),
         [adminUser, webToken, webUser],
     );
 
     const canAccessAdmin = useMemo(
-        () => !!adminToken || (!!webToken && isAdminRole(webUser?.rol)),
+        () => !!adminToken || (!!webToken && isPanelEligibleRole(webUser?.rol)),
         [adminToken, webToken, webUser],
     );
+
+    const adminPermisos = useMemo(
+        () =>
+            Array.isArray(adminUser?.permisos) ? adminUser.permisos : [],
+        [adminUser],
+    );
+
+    const refreshAdminPermisos = useCallback(async () => {
+        if (!adminToken) return;
+        try {
+            const permisos = await authService.fetchAdminPermisos();
+            setAdminUser((prev) => {
+                const base = prev ?? getAdminUser() ?? {};
+                const next = { ...base, permisos };
+                saveAdminAuthData(adminToken, next);
+                return next;
+            });
+        } catch {
+            /* sesión expirada o sin permisos */
+        }
+    }, [adminToken]);
+
+    useEffect(() => {
+        if (!loading && adminToken && adminPermisos.length === 0) {
+            refreshAdminPermisos();
+        }
+    }, [loading, adminToken, adminPermisos.length, refreshAdminPermisos]);
 
     if (loading) {
         return (
@@ -88,9 +139,12 @@ export const AuthProvider = ({ children }) => {
                 loginAdmin,
                 logoutWeb,
                 logoutAdmin,
+                patchWebUser,
                 isWebLoggedIn: !!webToken,
                 isAdminLoggedIn: !!adminToken,
                 canAccessAdmin,
+                adminPermisos,
+                refreshAdminPermisos,
                 token: webToken,
                 user: webUser,
                 login: loginWeb,

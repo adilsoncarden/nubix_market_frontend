@@ -98,7 +98,7 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         rows={3}
                         value={formData.descripcion}
                         onChange={handleChange}
-                        placeholder="Descripción del producto"
+                        placeholder=""
                     />
                 </div>
                 <div className="col-md-4">

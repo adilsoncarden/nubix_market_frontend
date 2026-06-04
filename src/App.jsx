@@ -32,6 +32,8 @@ import ShopPage from "./pages/ShopPage";
 import CartPage from "./pages/CartPage";
 import ProductDetail from "./pages/ProductDetail";
 import FavoritesPage from "./pages/FavoritesPage";
+import ProfilePage from "./pages/ProfilePage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ResetPasswordManual from "./pages/ResetPasswordManual";
@@ -44,6 +46,8 @@ import ClientsPage from "./pages/ClientsPage";
 import EmployeesPage from "./pages/EmployeesPage";
 import SuppliersPage from "./pages/SuppliersPage";
 import SalesPage from "./pages/SalesPage";
+import SecurityPermisosPage from "./pages/security/SecurityPermisosPage";
+import SecurityRolesPage from "./pages/security/SecurityRolesPage";
 
 const PublicLayoutShell = () => (
     <div className="d-flex flex-column min-vh-100" data-bs-theme="light">
@@ -108,6 +112,14 @@ export default function App() {
                                     <Route
                                         path="/favorites"
                                         element={<FavoritesPage />}
+                                    />
+                                    <Route
+                                        path="/perfil"
+                                        element={<ProfilePage />}
+                                    />
+                                    <Route
+                                        path="/mis-pedidos"
+                                        element={<MyOrdersPage />}
                                     />
                                 </Route>
 
@@ -184,6 +196,23 @@ export default function App() {
                                         path="/admin/ventas"
                                         element={<SalesPage />}
                                     />
+
+                                    <Route
+                                        element={
+                                            <ProtectedRoute
+                                                allowedRoles={["ADMIN"]}
+                                            />
+                                        }
+                                    >
+                                        <Route
+                                            path="/admin/seguridad/permisos"
+                                            element={<SecurityPermisosPage />}
+                                        />
+                                        <Route
+                                            path="/admin/seguridad/roles"
+                                            element={<SecurityRolesPage />}
+                                        />
+                                    </Route>
                                 </Route>
                             </Route>
 

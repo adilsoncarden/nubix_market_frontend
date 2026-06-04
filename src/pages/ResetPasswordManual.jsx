@@ -25,7 +25,7 @@ const ResetPasswordManual = () => {
             hasUpperCase: /[A-Z]/.test(pwd),
             hasLowerCase: /[a-z]/.test(pwd),
             hasNumber: /\d/.test(pwd),
-            hasSpecialChar: /[@$!%?&._#-]/ .test(pwd),
+            hasSpecialChar: /[@$!%?&._#-]/.test(pwd),
         };
     }, [password]);
 
@@ -125,7 +125,7 @@ const ResetPasswordManual = () => {
                                         onChange={(e) =>
                                             setEmail(e.target.value)
                                         }
-                                        placeholder="tu@email.com"
+                                        placeholder=""
                                         required
                                         disabled={loading}
                                     />
@@ -143,7 +143,7 @@ const ResetPasswordManual = () => {
                                         onChange={(e) =>
                                             setCode(e.target.value)
                                         }
-                                        placeholder="Introduce el código de 6 dígitos"
+                                        placeholder=""
                                         required
                                         disabled={loading}
                                     />
