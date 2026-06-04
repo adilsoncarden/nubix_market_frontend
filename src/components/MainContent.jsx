@@ -40,15 +40,6 @@ const BENEFICIOS = [
   { icono: "bi-chat-dots", titulo: "Soporte Inmediato", sub: "Atencion personalizada" },
 ];
 
-const ANUNCIOS_PROMO = [
-  "¡APROVECHA LAS GRANDES PROMOCIONES DE LA SEMANA EN TODA LA TIENDA!",
-  "DELIVERY TOTALMENTE GRATUITO POR COMPRAS SUPERIORES A S/ 100",
-  "OBTÉN 10% DE DESCUENTO DIRECTO EN TU PRIMER PEDIDO REGISTRÁNDOTE HOY",
-  "PAGA DE FORMA SEGURA CON CUALQUIER TARJETA O TU BILLETERA DIGITAL BIPAY",
-  "PARTICIPA AUTOMÁTICAMENTE EN NUESTROS SORTEOS MENSUALES POR COMPRAS DESDE S/ 50",
-  "ACUMULA PUNTOS NUBIX EN CADA COMPRA Y CANJÉALOS POR VALES DE DSCTO",
-];
-
 const CountdownDisplay = ({ seconds }) => {
   const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
   const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
@@ -83,8 +74,6 @@ const MainContent = () => {
   const featuredProducts = products.slice(0, 8);
 
   const [timeLeft, setTimeLeft] = useState(2 * 3600 + 45 * 60 + 12);
-  const [promoIndex, setPromoIndex] = useState(0);
-  const [promoVisible, setPromoVisible] = useState(true);
 
   const todayDealIds = useMemo(
     () => getTodayDealIdSet(products.map((p) => p.id)),
@@ -103,21 +92,6 @@ const MainContent = () => {
     const interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearInterval(interval);
   }, [timeLeft]);
-
-  useEffect(() => {
-    let swapTimeout;
-    const cycle = setInterval(() => {
-      setPromoVisible(false);
-      swapTimeout = setTimeout(() => {
-        setPromoIndex((prev) => (prev + 1) % ANUNCIOS_PROMO.length);
-        setPromoVisible(true);
-      }, 500);
-    }, 4500);
-    return () => {
-      clearInterval(cycle);
-      clearTimeout(swapTimeout);
-    };
-  }, []);
 
   const renderProductGrid = (items) => {
     if (productsLoading) {
@@ -254,7 +228,7 @@ const MainContent = () => {
         </div>
       </section>
 
-      <section className="container py-4 landing-product-sections">
+      <section className="container py-4 pb-4 pb-md-5 landing-product-sections">
         <ProductSectionHeader title="Los más pedidos" timeLeft={null} seeAllTo="/shop" />
         <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
           {renderProductGrid(
@@ -262,41 +236,6 @@ const MainContent = () => {
               ? popularProducts
               : featuredProducts.slice(0, 4),
           )}
-        </div>
-      </section>
-
-      <div className="container-fluid px-0 landing-promo-ticker-wrap">
-        <div className="landing-promo-ticker">
-          <p className={`landing-promo-ticker-text${promoVisible ? " visible" : ""}`}>
-            {ANUNCIOS_PROMO[promoIndex]}
-          </p>
-        </div>
-      </div>
-
-      <section className="container landing-offers-banner-section pb-4">
-        <div className="row justify-content-center">
-          <div className="col-12 d-flex justify-content-center">
-            <Link
-              to="/shop"
-              className="landing-offers-banner w-100 text-decoration-none d-flex justify-content-center align-items-center text-center"
-            >
-              <div className="landing-offers-banner-glow" aria-hidden="true" />
-              <div className="landing-offers-banner-inner d-flex flex-column justify-content-center align-items-center text-center w-100">
-                <span className="landing-offers-badge">Promoción</span>
-                <h3 className="landing-offers-title mb-2">
-                  ¡Grandes ofertas semanales!
-                </h3>
-                <p className="landing-offers-text mb-0">
-                  Descuentos de hasta el 30% en productos seleccionados.
-                  Compra hoy mismo.
-                </p>
-                <span className="landing-offers-cta">
-                  Ver ofertas <i className="bi bi-arrow-right-short" />
-                </span>
-              </div>
-              <i className="bi bi-percent landing-offers-deco" aria-hidden="true" />
-            </Link>
-          </div>
         </div>
       </section>
     </div>
