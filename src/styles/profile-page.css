@@ -1,0 +1,12 @@
+.profile-page {
+  background: #f8faf9;
+  min-height: 60vh;
+}
+
+.profile-page-title {
+  color: #134d27;
+}
+
+.profile-card {
+  border-radius: 20px;
+}

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { favoritesService } from "../features/favorites/services/favoritesService";
 import FlashProductCard from "../components/landing/FlashProductCard";
+import { getTodayDealIdSet } from "../utils/todayDealProducts";
 import { useAuth } from "../store/AuthContext";
 import { useFavorites } from "../store/FavoritesContext";
 import {
@@ -23,6 +24,11 @@ export default function FavoritesPage() {
     const items = useMemo(
         () => catalog.filter((p) => favoriteIds.includes(p.id)),
         [catalog, favoriteIds],
+    );
+
+    const todayDealIds = useMemo(
+        () => getTodayDealIdSet(catalog.map((p) => p.id)),
+        [catalog],
     );
 
     useEffect(() => {
@@ -151,7 +157,10 @@ export default function FavoritesPage() {
                     {items.map((p) => (
                         <div key={p.id} className="col d-flex">
                             <div className="favorites-card-wrap w-100">
-                                <FlashProductCard p={p} />
+                                <FlashProductCard
+                                    p={p}
+                                    showTodayDeal={todayDealIds.has(p.id)}
+                                />
                             </div>
                         </div>
                     ))}

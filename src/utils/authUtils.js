@@ -108,6 +108,28 @@ export const saveWebAuthData = (token, userData) => {
     }
 };
 
+/** Fusiona datos de perfil (dirección, teléfono) en la sesión web guardada. */
+export const mergeWebUserProfile = (profile) => {
+    if (!profile) return;
+    const current = getWebUser() || {};
+    const merged = {
+        ...current,
+        id: profile.id ?? current.id,
+        username: profile.username ?? current.username,
+        email: profile.email ?? current.email,
+        rol: profile.rolNombre ?? current.rol,
+        telefono: profile.telefono ?? "",
+        direccion: profile.direccion ?? "",
+        departamento: profile.departamento ?? "",
+        provincia: profile.provincia ?? "",
+        distrito: profile.distrito ?? "",
+        referencia: profile.referencia ?? "",
+    };
+    localStorage.setItem(STORAGE_KEYS.webUser, JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent("nubix:web-user-updated", { detail: merged }));
+    return merged;
+};
+
 export const saveAdminAuthData = (token, userData) => {
     localStorage.setItem(STORAGE_KEYS.adminToken, token);
     if (userData) {

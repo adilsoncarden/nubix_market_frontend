@@ -32,6 +32,8 @@ import ShopPage from "./pages/ShopPage";
 import CartPage from "./pages/CartPage";
 import ProductDetail from "./pages/ProductDetail";
 import FavoritesPage from "./pages/FavoritesPage";
+import ProfilePage from "./pages/ProfilePage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import ResetPasswordManual from "./pages/ResetPasswordManual";
@@ -110,6 +112,14 @@ export default function App() {
                                     <Route
                                         path="/favorites"
                                         element={<FavoritesPage />}
+                                    />
+                                    <Route
+                                        path="/perfil"
+                                        element={<ProfilePage />}
+                                    />
+                                    <Route
+                                        path="/mis-pedidos"
+                                        element={<MyOrdersPage />}
                                     />
                                 </Route>
 

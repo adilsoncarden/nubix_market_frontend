@@ -12,7 +12,7 @@ const PAYMENT_LOGOS = (
     </span>
 );
 
-export default function FlashProductCard({ p }) {
+export default function FlashProductCard({ p, showTodayDeal = false }) {
     const { items, addToCart, setQty, removeFromCart } = useCart();
     const { toggleFavorite, isFavorite } = useFavorites();
     const { token } = useAuth();
@@ -21,7 +21,6 @@ export default function FlashProductCard({ p }) {
     const priceOld = (currentPrice * 1.22).toFixed(2);
     const priceNormal = currentPrice.toFixed(2);
     const priceCard = (currentPrice * 0.94).toFixed(2);
-    const presentation = `CAJA ${p.unit === "kg" ? "1 KG" : "30 UN"}`;
     const vendor = p.category || "Nubix Market";
     const cartItem = items.find((i) => i.id === p.id);
     const cartQty = cartItem?.qty || 0;
@@ -73,13 +72,14 @@ export default function FlashProductCard({ p }) {
 
     return (
         <div className="flash-product-card">
-            <span className="flash-badge-today">🔔 ¡SOLO POR HOY!</span>
+            {showTodayDeal && (
+                <span className="flash-badge-today">🔔 ¡SOLO POR HOY!</span>
+            )}
 
             <Link to={`/producto/${p.id}`} className="flash-card-link">
                 <div className="flash-card-image">
                     <img src={p.img} alt={p.name || p.nombre} loading="lazy" />
                 </div>
-                <p className="flash-card-presentation">{presentation}</p>
                 <h6 className="flash-card-name">{p.name || p.nombre}</h6>
                 <span className="flash-tag-interest">Te puede interesar</span>
                 <span className="flash-card-vendor">{vendor}</span>

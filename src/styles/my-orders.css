@@ -1,0 +1,70 @@
+.my-orders-page {
+  background: #f8faf9;
+  min-height: 60vh;
+}
+
+.my-orders-tabs .nav-link {
+  color: #134d27;
+  font-weight: 600;
+}
+
+.my-orders-tabs .nav-link.active {
+  color: #134d27;
+  font-weight: 700;
+}
+
+.my-orders-period-select {
+  min-width: 11rem;
+}
+
+.order-tracking-stepper {
+  margin-top: 0.75rem;
+}
+
+.order-tracking-track {
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.order-tracking-step {
+  position: relative;
+  color: #94a3b8;
+}
+
+.order-tracking-step.is-done {
+  color: #16a34a;
+}
+
+.order-tracking-step.is-current {
+  color: #134d27;
+  font-weight: 600;
+}
+
+.order-tracking-dot {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  background: #fff;
+}
+
+.order-tracking-step.is-done .order-tracking-dot {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+
+.order-tracking-label {
+  font-size: 0.65rem;
+  line-height: 1.2;
+}
+
+@media (max-width: 767.98px) {
+  .order-tracking-label {
+    font-size: 0.6rem;
+  }
+}

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import FlashProductCard from "../components/landing/FlashProductCard";
+import { getTodayDealIdSet } from "../utils/todayDealProducts";
 import "../styles/landing.css";
 
 const AISLE_ICONS = {
@@ -91,6 +92,11 @@ export default function ShopPage() {
         }
         return list;
     }, [products, activeCat, activeTag, search, activeFilter]);
+
+    const todayDealIds = useMemo(
+        () => getTodayDealIdSet(products.map((p) => p.id)),
+        [products],
+    );
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -203,10 +209,15 @@ export default function ShopPage() {
                                 <p>No se encontraron productos.</p>
                             </div>
                         ) : (
-                            <div className="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 shop-product-grid">
+                            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 shop-product-grid">
                                 {paginated.map((product) => (
                                     <div key={product.id} className="col">
-                                        <FlashProductCard p={product} />
+                                        <FlashProductCard
+                                            p={product}
+                                            showTodayDeal={todayDealIds.has(
+                                                product.id,
+                                            )}
+                                        />
                                     </div>
                                 ))}
                             </div>

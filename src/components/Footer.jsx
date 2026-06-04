@@ -2,6 +2,11 @@
 import React, { useState } from "react";
 import "../styles/landing.css";
 
+const digitsOnly = (value, maxLen) =>
+    String(value ?? "")
+        .replace(/\D/g, "")
+        .slice(0, maxLen);
+
 const Footer = () => {
     // Estado para controlar la apertura del modal profesional
     const [showModal, setShowModal] = useState(false);
@@ -18,11 +23,36 @@ const Footer = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setReclamacionData(prev => ({ ...prev, [name]: value }));
+        if (name === "documento") {
+            setReclamacionData((prev) => ({
+                ...prev,
+                documento: digitsOnly(value, 8),
+            }));
+            return;
+        }
+        if (name === "telefono") {
+            setReclamacionData((prev) => ({
+                ...prev,
+                telefono: digitsOnly(value, 9),
+            }));
+            return;
+        }
+        setReclamacionData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleSubmitReclamacion = (e) => {
         e.preventDefault();
+        if (reclamacionData.documento.length !== 8) {
+            alert("El DNI debe contener exactamente 8 dígitos numéricos.");
+            return;
+        }
+        if (
+            reclamacionData.telefono.length < 1 ||
+            reclamacionData.telefono.length > 9
+        ) {
+            alert("El teléfono debe contener entre 1 y 9 dígitos numéricos.");
+            return;
+        }
         // Aquí puedes conectar el envío a tu backend en Spring Boot más adelante
         alert("Su hoja de reclamación ha sido registrada con éxito. Nos comunicaremos con usted.");
         setShowModal(false);
@@ -32,8 +62,8 @@ const Footer = () => {
     return (
         <footer className="footer-landing pt-5 pb-4 mt-auto">
             <div className="container">
-                <div className="row g-4 mb-4">
-                    <div className="col-12 col-md-4">
+                <div className="row g-4 mb-4 text-center text-md-start">
+                    <div className="col-12 col-sm-6 col-md-4">
                         <h6 className="mb-3 text-uppercase small">Empresa</h6>
                         <ul className="list-unstyled small">
                             <li className="mb-2">
@@ -59,7 +89,7 @@ const Footer = () => {
                         </ul>
                     </div>
 
-                    <div className="col-6 col-md-4">
+                    <div className="col-12 col-sm-6 col-md-4">
                         <h6 className="mb-3 text-uppercase small">Ayuda</h6>
                         <ul className="list-unstyled small">
                             <li className="mb-2">
@@ -89,7 +119,7 @@ const Footer = () => {
                         </ul>
                     </div>
 
-                    <div className="col-6 col-md-4">
+                    <div className="col-12 col-sm-12 col-md-4">
                         <h6 className="mb-3 text-uppercase small">Contacto</h6>
                         <div className="footer-contact-item">
                             <i className="bi bi-envelope" />
@@ -146,8 +176,14 @@ const Footer = () => {
 
                 </div>
 
-                <div className="mt-4 pt-3 text-center text-md-start" style={{ borderTop: "1px solid rgba(19, 77, 39, 0.08)" }}>
-                    <p className="mb-1 fw-semibold small" style={{ color: "#134d27", letterSpacing: "0.5px" }}>
+                <div
+                    className="footer-copyright-block mt-4 pt-3"
+                    style={{ borderTop: "1px solid rgba(19, 77, 39, 0.08)" }}
+                >
+                    <p
+                        className="mb-1 fw-semibold small"
+                        style={{ color: "#134d27", letterSpacing: "0.5px" }}
+                    >
                         © 2026 TODOS LOS DERECHOS RESERVADOS - NUBIX MARKET S.A.C.
                     </p>
                     <p className="mb-0 small text-muted">Lima, Perú.</p>
@@ -209,28 +245,34 @@ const Footer = () => {
                                     {/* Fila: DNI y Teléfono */}
                                     <div className="row g-2 mb-2">
                                         <div className="col-6">
-                                            <label className="form-label fw-semibold text-secondary mb-1">DNI / CE</label>
+                                            <label className="form-label fw-semibold text-secondary mb-1">DNI</label>
                                             <input 
-                                                type="text" 
+                                                type="text"
+                                                inputMode="numeric"
+                                                pattern="[0-9]{8}"
                                                 name="documento"
                                                 className="form-control border-0 py-2 px-3" 
                                                 style={{ backgroundColor: "#F1F3F5", borderRadius: "12px", fontSize: "0.9rem" }}
-                                                placeholder="Documento" 
+                                                placeholder="8 dígitos"
                                                 value={reclamacionData.documento}
                                                 onChange={handleInputChange}
+                                                maxLength={8}
                                                 required 
                                             />
                                         </div>
                                         <div className="col-6">
                                             <label className="form-label fw-semibold text-secondary mb-1">Teléfono</label>
                                             <input 
-                                                type="tel" 
+                                                type="tel"
+                                                inputMode="numeric"
+                                                pattern="[0-9]{1,9}"
                                                 name="telefono"
                                                 className="form-control border-0 py-2 px-3" 
                                                 style={{ backgroundColor: "#F1F3F5", borderRadius: "12px", fontSize: "0.9rem" }}
-                                                placeholder="999000999" 
+                                                placeholder="Hasta 9 dígitos"
                                                 value={reclamacionData.telefono}
                                                 onChange={handleInputChange}
+                                                maxLength={9}
                                                 required 
                                             />
                                         </div>
@@ -244,7 +286,7 @@ const Footer = () => {
                                             name="email"
                                             className="form-control border-0 py-2 px-3" 
                                             style={{ backgroundColor: "#F1F3F5", borderRadius: "12px", fontSize: "0.9rem" }}
-                                            placeholder="correo@ejemplo.com" 
+                                            placeholder="" 
                                             value={reclamacionData.email}
                                             onChange={handleInputChange}
                                             required 
@@ -274,7 +316,7 @@ const Footer = () => {
                                             className="form-control border-0 py-2 px-3" 
                                             rows="3" 
                                             style={{ backgroundColor: "#F1F3F5", borderRadius: "12px", fontSize: "0.9rem", resize: "none" }}
-                                            placeholder="Describe detalladamente lo sucedido..." 
+                                            placeholder="" 
                                             value={reclamacionData.detalle}
                                             onChange={handleInputChange}
                                             required

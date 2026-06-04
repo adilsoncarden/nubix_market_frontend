@@ -1,10 +1,11 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Carousel } from "bootstrap";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Link } from "react-router-dom";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import FlashProductCard from "./landing/FlashProductCard";
+import { getTodayDealIdSet } from "../utils/todayDealProducts";
 import "../styles/landing.css";
 
 import slide1 from "../assets/imagen1.png";
@@ -75,23 +76,20 @@ const ProductSectionHeader = ({ title, timeLeft, seeAllTo = "/shop" }) => (
   </div>
 );
 
-const DISTRITOS_LIMA = ["Ancón", "Ate", "Barranco", "Breña", "Carabayllo", "Chaclacayo", "Chorrillos", "Cieneguilla", "Comas", "El Agustino", "Independencia", "Jesús María", "La Molina", "La Victoria", "Lima", "Lince", "Los Olivos", "Lurigancho-Chosica", "Lurín", "Magdalena del Mar", "Miraflores", "Pachacámac", "Pucusana", "Pueblo Libre", "Puente Piedra", "Punta Hermosa", "Punta Negra", "Rímac", "San Bartolo", "San Borja", "San Isidro", "San Juan de Lurigancho", "San Juan de Miraflores", "San Luis", "San Martín de Porres", "San Miguel", "Santa Anita", "Santa María del Mar", "Santa Rosa", "Santiago de Surco", "Surquillo", "Villa El Salvador", "Villa María del Triunfo"];
-const DISTRITOS_CALLAO = ["Bellavista", "Callao", "Carmen de la Legua-Reynoso", "La Perla", "La Punta", "Mi Perú", "Ventanilla"];
-
 const MainContent = () => {
   const { products, loading: productsLoading } = useShopProducts();
   const flashProducts = products.slice(0, 4);
   const popularProducts = products.slice(4, 8);
   const featuredProducts = products.slice(0, 8);
 
-  const [subscribeEmail, setSubscribeEmail] = useState("");
   const [timeLeft, setTimeLeft] = useState(2 * 3600 + 45 * 60 + 12);
   const [promoIndex, setPromoIndex] = useState(0);
   const [promoVisible, setPromoVisible] = useState(true);
-  const [locationModalOpen, setLocationModalOpen] = useState(false);
-  const [direccionForm, setDireccionForm] = useState({ departamento: "", provincia: "", distrito: "", calle: "", numero: "", adicional: "" });
-  const [provincias, setProvincias] = useState([]);
-  const [distritos, setDistritos] = useState([]);
+
+  const todayDealIds = useMemo(
+    () => getTodayDealIdSet(products.map((p) => p.id)),
+    [products],
+  );
 
   useEffect(() => {
     const mainEl = document.querySelector("#heroCarousel");
@@ -121,34 +119,6 @@ const MainContent = () => {
     };
   }, []);
 
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    console.log("Suscripción:", subscribeEmail);
-    setSubscribeEmail("");
-  };
-
-  const handleDepartamentoChange = (e) => {
-    const selectedDepartamento = e.target.value;
-    setDireccionForm({ ...direccionForm, departamento: selectedDepartamento, provincia: "", distrito: "" });
-    if (selectedDepartamento === "Lima") setProvincias(["Lima"]);
-    else if (selectedDepartamento === "Callao") setProvincias(["Callao"]);
-    else setProvincias([]);
-  };
-
-  const handleProvinciaChange = (e) => {
-    const selectedProvincia = e.target.value;
-    setDireccionForm({ ...direccionForm, provincia: selectedProvincia, distrito: "" });
-    if (selectedProvincia === "Lima") setDistritos(DISTRITOS_LIMA);
-    else if (selectedProvincia === "Callao") setDistritos(DISTRITOS_CALLAO);
-    else setDistritos([]);
-  };
-
-  const handleLocationSubmit = (e) => {
-    e.preventDefault();
-    console.log("Ubicación guardada:", direccionForm);
-    setLocationModalOpen(false);
-  };
-
   const renderProductGrid = (items) => {
     if (productsLoading) {
       return (
@@ -160,7 +130,10 @@ const MainContent = () => {
     if (items.length > 0) {
       return items.map((p) => (
         <div key={p.id} className="col">
-          <FlashProductCard p={p} />
+          <FlashProductCard
+            p={p}
+            showTodayDeal={todayDealIds.has(p.id)}
+          />
         </div>
       ));
     }
@@ -173,92 +146,6 @@ const MainContent = () => {
 
   return (
     <div className="landing-page">
-      <div className="wrapper-barra-ubicacion-top">
-        <div className="container-fluid px-4">
-          <div className="d-flex justify-content-start">
-            <button
-              type="button"
-              className="bar-ubicacion-trigger"
-              onClick={() => setLocationModalOpen(true)}
-            >
-              <i className="bi bi-geo-alt" />
-              <span className="bar-ubicacion-text">Ingresa tu ubicación</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {locationModalOpen && (
-        <div className="modal-location-overlay" onClick={() => setLocationModalOpen(false)}>
-          <div className="modal-location-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-location-header justify-content-between">
-              <div className="d-flex align-items-start gap-2">
-                <i className="bi bi-geo-alt" />
-                <h3 className="modal-location-title">¿Dónde quieres recibir tu compra?</h3>
-              </div>
-              <button type="button" className="modal-location-close" onClick={() => setLocationModalOpen(false)}>
-                <i className="bi bi-x-lg" />
-              </button>
-            </div>
-            <div className="modal-location-body">
-              <p className="modal-location-subtitle">
-                Ingresa tu dirección y te mostraremos los productos disponibles para envío
-              </p>
-              <form onSubmit={handleLocationSubmit}>
-                <div className="mb-3">
-                  <label className="form-label-custom">Departamento</label>
-                  <select className="form-select-custom" value={direccionForm.departamento} onChange={handleDepartamentoChange}>
-                    <option value="">Ingresa un departamento</option>
-                    <option value="Lima">Lima</option>
-                    <option value="Callao">Callao</option>
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label-custom">Provincia</label>
-                  <select className="form-select-custom" value={direccionForm.provincia} disabled={provincias.length === 0} onChange={handleProvinciaChange}>
-                    <option value="">Ingresa una provincia</option>
-                    {provincias.map((provincia) => (
-                      <option key={provincia} value={provincia}>{provincia}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label-custom">Distrito</label>
-                  <select
-                    className="form-select-custom"
-                    value={direccionForm.distrito}
-                    disabled={distritos.length === 0}
-                    onChange={(e) => setDireccionForm({ ...direccionForm, distrito: e.target.value })}
-                  >
-                    <option value="">Ingresa un distrito</option>
-                    {distritos.map((distrito) => (
-                      <option key={distrito} value={distrito}>{distrito}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="mb-3">
-                  <label className="form-label-custom">Calle</label>
-                  <input type="text" className="form-input-underline" placeholder="2 de Mayo" value={direccionForm.calle} onChange={(e) => setDireccionForm({ ...direccionForm, calle: e.target.value })} />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label-custom">Número</label>
-                  <input type="text" className="form-input-underline" placeholder="123" value={direccionForm.numero} onChange={(e) => setDireccionForm({ ...direccionForm, numero: e.target.value })} />
-                </div>
-                <div className="mb-4">
-                  <label className="form-label-custom">Dpto./Casa/Oficina/Condominio (opcional)</label>
-                  <input type="text" className="form-input-underline" placeholder="Ej: Casa 10" value={direccionForm.adicional} onChange={(e) => setDireccionForm({ ...direccionForm, adicional: e.target.value })} />
-                </div>
-                <div className="text-end">
-                  <button type="submit" className={`btn-modal-continuar ${direccionForm.distrito && direccionForm.calle ? "active-ready" : ""}`}>
-                    Continuar
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
-
       <section className="container landing-hero-section">
         <div className="landing-hero">
           <div className="landing-hero-overlay" aria-hidden="true" />
@@ -362,14 +249,14 @@ const MainContent = () => {
 
       <section className="container py-4 landing-product-sections">
         <ProductSectionHeader title="Ofertas Flash" timeLeft={timeLeft} seeAllTo="/shop" />
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
           {renderProductGrid(flashProducts)}
         </div>
       </section>
 
       <section className="container py-4 landing-product-sections">
         <ProductSectionHeader title="Los más pedidos" timeLeft={null} seeAllTo="/shop" />
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-3">
+        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
           {renderProductGrid(
             popularProducts.length > 0
               ? popularProducts
@@ -386,47 +273,30 @@ const MainContent = () => {
         </div>
       </div>
 
-      <section className="container landing-newsletter-section">
-        <div className="landing-newsletter">
-          <i className="bi bi-bag landing-newsletter-deco" aria-hidden="true" />
-          <div className="row align-items-center g-4">
-            <div className="col-lg-6">
-              <h3>Únete a nuestra comunidad</h3>
-              <p>Recibe ofertas exclusivas, novedades y tips de compra directo en tu correo.</p>
-            </div>
-            <div className="col-lg-6">
-              <form className="landing-newsletter-form" onSubmit={handleSubscribe}>
-                <input
-                  type="email"
-                  className="landing-newsletter-input"
-                  placeholder="tu@correo.com"
-                  value={subscribeEmail}
-                  onChange={(e) => setSubscribeEmail(e.target.value)}
-                  required
-                />
-                <button type="submit" className="btn-newsletter">Suscribirse</button>
-              </form>
-            </div>
+      <section className="container landing-offers-banner-section pb-4">
+        <div className="row justify-content-center">
+          <div className="col-12 d-flex justify-content-center">
+            <Link
+              to="/shop"
+              className="landing-offers-banner w-100 text-decoration-none d-flex justify-content-center align-items-center text-center"
+            >
+              <div className="landing-offers-banner-glow" aria-hidden="true" />
+              <div className="landing-offers-banner-inner d-flex flex-column justify-content-center align-items-center text-center w-100">
+                <span className="landing-offers-badge">Promoción</span>
+                <h3 className="landing-offers-title mb-2">
+                  ¡Grandes ofertas semanales!
+                </h3>
+                <p className="landing-offers-text mb-0">
+                  Descuentos de hasta el 30% en productos seleccionados.
+                  Compra hoy mismo.
+                </p>
+                <span className="landing-offers-cta">
+                  Ver ofertas <i className="bi bi-arrow-right-short" />
+                </span>
+              </div>
+              <i className="bi bi-percent landing-offers-deco" aria-hidden="true" />
+            </Link>
           </div>
-        </div>
-      </section>
-
-      <section className="container pb-5 pt-3">
-        <div className="garantia-wrapper">
-          <div className="garantia-box p-4 rounded-4 shadow-sm d-flex align-items-start gap-3">
-            <div className="garantia-icon-wrap">
-              <i className="bi bi-shield-check" />
-            </div>
-            <div>
-              <h4 className="garantia-title mb-1">Garantía de mejor precio</h4>
-              <p className="garantia-desc">
-                Si encuentras un precio más bajo, te devolvemos la diferencia. Compra con total seguridad.
-              </p>
-            </div>
-          </div>
-          <button type="button" className="garantia-chat-btn" aria-label="Abrir chat">
-            <i className="bi bi-chat-square-text" />
-          </button>
         </div>
       </section>
     </div>

@@ -1,5 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { saleService } from "../../features/sales/services/saleService";
+import { profileService } from "../../features/profile/services/profileService";
+import { mergeWebUserProfile } from "../../utils/authUtils";
 import { calcOrderTotals, formatSoles } from "../../utils/pricing";
 import api from "../../config/axios";
 import "../../styles/checkout-modal.css";
@@ -287,6 +289,36 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         distrito: "",
         referencia: "",
     });
+
+    useEffect(() => {
+        let cancelled = false;
+        const autofillFromProfile = async () => {
+            try {
+                const profile = await profileService.getPerfil();
+                if (cancelled) return;
+                mergeWebUserProfile(profile);
+                setForm((prev) => ({
+                    ...prev,
+                    nombre: prev.nombre || profile.username || "",
+                    email: prev.email || profile.email || "",
+                    telefono: prev.telefono || profile.telefono || "",
+                    direccion:
+                        prev.direccion || profile.direccion || "",
+                    direccionEntrega:
+                        prev.direccionEntrega || profile.direccion || "",
+                    distrito: prev.distrito || profile.distrito || "",
+                    referencia:
+                        prev.referencia || profile.referencia || "",
+                }));
+            } catch {
+                /* checkout puede continuar sin perfil */
+            }
+        };
+        autofillFromProfile();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 

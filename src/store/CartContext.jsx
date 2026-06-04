@@ -19,9 +19,18 @@ import {
     cartToastRemovedComplete,
 } from "../utils/swalConfig";
 import { setRedirectUrl } from "../utils/authUtils";
+import {
+    hasWebSessionToken,
+    loadCartFromLocalStorage,
+} from "../utils/cartStorage";
 
 const CartContext = createContext(null);
 const KEY = "nubix_cart";
+
+function readInitialCartItems() {
+    if (!hasWebSessionToken()) return [];
+    return loadCartFromLocalStorage();
+}
 
 const PLACEHOLDER_IMAGE =
     "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80";
@@ -105,7 +114,7 @@ function reducer(state, { type, product, id, qty, synced, items }) {
 export function CartProvider({ children }) {
     const { version } = useProductCatalog();
     const { token } = useAuth();
-    const [items, dispatch] = useReducer(reducer, [], () => []);
+    const [items, dispatch] = useReducer(reducer, [], readInitialCartItems);
     const [cartAnimationTick, setCartAnimationTick] = useState(0);
 
     const bumpCartIcon = () => setCartAnimationTick((t) => t + 1);

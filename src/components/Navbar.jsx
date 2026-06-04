@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import LocationAddressModal from "./profile/LocationAddressModal";
 import { useCart } from "../store/CartContext";
 import { useFavorites } from "../store/FavoritesContext";
 import { useAuth } from "../store/AuthContext";
@@ -8,12 +9,6 @@ import api from "../config/axios";
 import logoImage from "../assets/logo.png";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import "../styles/landing.css";
-
-function productFormatLabel(product) {
-    if (product.unit === "kg") return "FRASCO";
-    if (product.tag) return "SUPER PACK";
-    return "CAJA 30 UN";
-}
 
 export default function Navbar() {
     const navigate = useNavigate();
@@ -44,6 +39,7 @@ export default function Navbar() {
     const [searchLoading, setSearchLoading] = useState(false);
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [locationModalOpen, setLocationModalOpen] = useState(false);
 
     const searchPanelOpen = searchFocused || searchValue.trim().length > 0;
     const searchQuery = searchValue.trim().toLowerCase();
@@ -363,9 +359,6 @@ export default function Navbar() {
                                                                 className="search-suggestion-img flex-shrink-0 me-3"
                                                             />
                                                             <div className="search-suggestion-info text-start">
-                                                                <span className="search-suggestion-format">
-                                                                    {productFormatLabel(p)}
-                                                                </span>
                                                                 <span className="search-suggestion-name">
                                                                     {p.name}
                                                                 </span>
@@ -432,16 +425,17 @@ export default function Navbar() {
                         <div
                             className={`d-flex align-items-center gap-1 flex-shrink-0 navbar-actions-slot${searchPanelOpen ? " navbar-actions-slot--dimmed" : ""}`}
                         >
-                            <button
-                                type="button"
-                                className="landing-icon-btn"
-                                aria-label="Ingresa tu ubicación"
-                                onClick={() =>
-                                    document.querySelector(".bar-ubicacion-trigger")?.click()
-                                }
-                            >
-                                <i className="bi bi-geo-alt" />
-                            </button>
+                            {token && (
+                                <button
+                                    type="button"
+                                    className="landing-icon-btn border-0 bg-transparent"
+                                    aria-label="Mi dirección de envío"
+                                    title="Mi dirección"
+                                    onClick={() => setLocationModalOpen(true)}
+                                >
+                                    <i className="bi bi-geo-alt" />
+                                </button>
+                            )}
                             {token ? (
                                 <div className="position-relative" ref={userMenuRef}>
                                     <button
@@ -464,6 +458,22 @@ export default function Navbar() {
                                             className="position-absolute end-0 dropdown-menu-wow bg-white mt-2 p-2"
                                             style={{ minWidth: "150px" }}
                                         >
+                                            <Link
+                                                className="dropdown-item mb-2"
+                                                to="/perfil"
+                                                onClick={() => setUserMenuOpen(false)}
+                                            >
+                                                <i className="bi bi-person me-2" />
+                                                Mi Perfil
+                                            </Link>
+                                            <Link
+                                                className="dropdown-item mb-2"
+                                                to="/mis-pedidos"
+                                                onClick={() => setUserMenuOpen(false)}
+                                            >
+                                                <i className="bi bi-box-seam me-2" />
+                                                Mis Pedidos
+                                            </Link>
                                             {showPanelAdminLink && (
                                                 <Link className="dropdown-item mb-2" to="/admin/dashboard">
                                                     Panel Admin
@@ -572,6 +582,12 @@ export default function Navbar() {
                 </div>
             </nav>
             <div style={{ marginTop: "75px" }} />
+            {token && (
+                <LocationAddressModal
+                    show={locationModalOpen}
+                    onClose={() => setLocationModalOpen(false)}
+                />
+            )}
         </>
     );
 }

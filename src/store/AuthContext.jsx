@@ -15,11 +15,16 @@ import { authService } from "../features/auth/services/authService";
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [webToken, setWebToken] = useState(null);
-    const [webUser, setWebUser] = useState(null);
-    const [adminToken, setAdminToken] = useState(null);
-    const [adminUser, setAdminUser] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [webToken, setWebToken] = useState(() => {
+        migrateLegacyAuth();
+        return localStorage.getItem("userToken");
+    });
+    const [webUser, setWebUser] = useState(() => getWebUser());
+    const [adminToken, setAdminToken] = useState(() =>
+        localStorage.getItem("adminToken"),
+    );
+    const [adminUser, setAdminUser] = useState(() => getAdminUser());
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         document.documentElement.removeAttribute("data-bs-theme");
@@ -28,7 +33,15 @@ export const AuthProvider = ({ children }) => {
         setWebUser(getWebUser());
         setAdminToken(localStorage.getItem("adminToken"));
         setAdminUser(getAdminUser());
-        setLoading(false);
+    }, []);
+
+    useEffect(() => {
+        const onProfileUpdated = (e) => {
+            if (e.detail) setWebUser(e.detail);
+        };
+        window.addEventListener("nubix:web-user-updated", onProfileUpdated);
+        return () =>
+            window.removeEventListener("nubix:web-user-updated", onProfileUpdated);
     }, []);
 
     const loginWeb = (userData, token) => {
@@ -48,6 +61,16 @@ export const AuthProvider = ({ children }) => {
         setWebToken(null);
         setWebUser(null);
     };
+
+    const patchWebUser = useCallback((partial) => {
+        setWebUser((prev) => {
+            const next = { ...(prev || getWebUser() || {}), ...partial };
+            if (webToken) {
+                saveWebAuthData(webToken, next);
+            }
+            return next;
+        });
+    }, [webToken]);
 
     const logoutAdmin = () => {
         clearAdminAuthData();
@@ -116,6 +139,7 @@ export const AuthProvider = ({ children }) => {
                 loginAdmin,
                 logoutWeb,
                 logoutAdmin,
+                patchWebUser,
                 isWebLoggedIn: !!webToken,
                 isAdminLoggedIn: !!adminToken,
                 canAccessAdmin,

@@ -8,6 +8,7 @@ import {
 import { useAuth } from "./AuthContext";
 import { favoritesService } from "../features/favorites/services/favoritesService";
 import { favToastAdded, favToastRemoved } from "../utils/swalConfig";
+import { getWebUser } from "../utils/authUtils";
 import {
     resolveUserId,
     loadUserFavoriteIds,
@@ -35,10 +36,16 @@ function reducer(state, { type, productoId, ids }) {
     }
 }
 
+function readInitialFavoriteIds() {
+    const userId = resolveUserId(getWebUser());
+    if (!userId || !localStorage.getItem("userToken")) return [];
+    return loadUserFavoriteIds(userId);
+}
+
 export function FavoritesProvider({ children }) {
     const { webToken, webUser } = useAuth();
     const userId = resolveUserId(webUser);
-    const [favoriteIds, dispatch] = useReducer(reducer, []);
+    const [favoriteIds, dispatch] = useReducer(reducer, [], readInitialFavoriteIds);
 
     const loadServerFavorites = useCallback(async (activeUserId) => {
         if (!activeUserId) return;
