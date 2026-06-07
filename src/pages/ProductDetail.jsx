@@ -2,7 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useCart } from "../store/CartContext";
-import { productService } from "../features/products/services/productService";
+import {
+    productService,
+    handleProductImageError,
+} from "../features/products/services/productService";
 import { mapProductoToShopItem } from "../features/products/utils/mapProducto";
 
 const ProductDetail = () => {
@@ -93,7 +96,14 @@ const ProductDetail = () => {
               backgroundSize: "220%",
             }}
           >
-            <img src={producto.img} alt={producto.name} loading="lazy" className="img-fluid w-100 h-100 p-4" style={{ objectFit: "contain", opacity: isZooming ? 0 : 1, transition: "opacity 0.15s ease" }} />
+            <img
+              src={producto.img}
+              alt={producto.name}
+              loading="lazy"
+              className="img-fluid w-100 h-100 p-4"
+              style={{ objectFit: "contain", opacity: isZooming ? 0 : 1, transition: "opacity 0.15s ease" }}
+              onError={handleProductImageError}
+            />
           </div>
         </div>
 

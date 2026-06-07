@@ -2,14 +2,23 @@ import api from "../../../config/axios";
 import { unwrapApiList } from "../../../config/apiUtils";
 import { mapProductPayload } from "../../../utils/productPayload";
 
-const API_ORIGIN = (
+export const API_ORIGIN = (
     import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
     "https://nubix-market-backend.onrender.com"
 ).replace(/\/$/, "");
 
+export const PRODUCT_PLACEHOLDER_IMAGE =
+    "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80";
+
 export const getProductImageUrl = (imagen) => {
     if (!imagen?.archivo) return null;
-    return `${API_ORIGIN}/uploads/${imagen.archivo}`;
+    const path = String(imagen.archivo).replace(/^\/+/, "");
+    return `${API_ORIGIN}/${path}`;
+};
+
+export const handleProductImageError = (event) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = PRODUCT_PLACEHOLDER_IMAGE;
 };
 
 const noCacheConfig = (bustCache) =>

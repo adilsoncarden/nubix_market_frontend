@@ -4,6 +4,7 @@ import { useFavorites } from "../../store/FavoritesContext";
 import { useAuth } from "../../store/AuthContext";
 import { setRedirectUrl } from "../../utils/authUtils";
 import ProductQtyControl from "../shared/ProductQtyControl";
+import { handleProductImageError } from "../../features/products/services/productService";
 
 const PAYMENT_LOGOS = (
     <span className="flash-card-payments" aria-hidden="true">
@@ -78,7 +79,12 @@ export default function FlashProductCard({ p, showTodayDeal = false }) {
 
             <Link to={`/producto/${p.id}`} className="flash-card-link">
                 <div className="flash-card-image">
-                    <img src={p.img} alt={p.name || p.nombre} loading="lazy" />
+                    <img
+                        src={p.img}
+                        alt={p.name || p.nombre}
+                        loading="lazy"
+                        onError={handleProductImageError}
+                    />
                 </div>
                 <h6 className="flash-card-name">{p.name || p.nombre}</h6>
                 <span className="flash-tag-interest">Te puede interesar</span>

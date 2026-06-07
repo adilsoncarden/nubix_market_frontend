@@ -10,7 +10,10 @@ import { useProductCatalog } from "./ProductCatalogContext";
 import { useAuth } from "./AuthContext";
 import api from "../config/axios";
 import { productService } from "../features/products/services/productService";
-import { getProductImageUrl } from "../features/products/services/productService";
+import {
+    getProductImageUrl,
+    PRODUCT_PLACEHOLDER_IMAGE,
+} from "../features/products/services/productService";
 import { mapProductosToShopItems } from "../features/products/utils/mapProducto";
 import { priceWithIgv, normalizeCartItem } from "../utils/pricing";
 import {
@@ -31,9 +34,6 @@ function readInitialCartItems() {
     if (!hasWebSessionToken()) return [];
     return loadCartFromLocalStorage();
 }
-
-const PLACEHOLDER_IMAGE =
-    "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80";
 
 /** Conserva el orden visual del cliente al sincronizar respuesta del servidor. */
 function mergeCartPreservingOrder(prevItems, carritoResponse) {
@@ -62,7 +62,7 @@ function mapCarritoToItems(carrito) {
             unit: "und",
             stock: p.stock ?? 0,
             codigo: p.codigo ?? "",
-            img: getProductImageUrl(p.imagen) || PLACEHOLDER_IMAGE,
+            img: getProductImageUrl(p.imagen) || PRODUCT_PLACEHOLDER_IMAGE,
             qty: it.cantidad ?? 1,
         };
     });

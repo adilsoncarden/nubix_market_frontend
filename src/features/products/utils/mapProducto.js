@@ -1,8 +1,8 @@
-import { getProductImageUrl } from "../services/productService";
+import {
+    getProductImageUrl,
+    PRODUCT_PLACEHOLDER_IMAGE,
+} from "../services/productService";
 import { priceWithIgv } from "../../../utils/pricing";
-
-const PLACEHOLDER_IMAGE =
-    "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80";
 
 /**
  * Normaliza ProductoResponse (admin/catalogo) al shape usado por la tienda.
@@ -26,7 +26,7 @@ export function mapProductoToShopItem(producto) {
                 : null,
         tagColor:
             producto.stock != null && producto.stock < 10 ? "tag-red" : null,
-        img: getProductImageUrl(producto.imagen) || PLACEHOLDER_IMAGE,
+        img: getProductImageUrl(producto.imagen) || PRODUCT_PLACEHOLDER_IMAGE,
     };
 }
 
