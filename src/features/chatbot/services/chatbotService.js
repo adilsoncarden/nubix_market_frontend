@@ -404,7 +404,7 @@ const systemResponse = (message) => {
         "Nubix Market: tienda web (React) + API Spring Boot (JWT).",
         "• Clientes: catálogo, carrito local, checkout autenticado",
         "• Admin: inventario, ventas, proveedores y usuarios",
-        "• API base: http://localhost:8080/api",
+        "• API base: https://nubix-market-backend.onrender.com/api",
         "",
         "Escribe «limitaciones» para ver qué aún no está implementado.",
     ].join("\n");

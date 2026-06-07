@@ -16,7 +16,7 @@ import { Toast } from "../utils/swalConfig";
 const api = axios.create({
     baseURL:
         import.meta.env.VITE_API_URL?.replace(/\/?$/, "") ||
-        "http://localhost:8080/api",
+        "https://nubix-market-backend.onrender.com/api",
     headers: {
         "Content-Type": "application/json",
     },

@@ -4,7 +4,7 @@ import { mapProductPayload } from "../../../utils/productPayload";
 
 const API_ORIGIN = (
     import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
-    "http://localhost:8080"
+    "https://nubix-market-backend.onrender.com"
 ).replace(/\/$/, "");
 
 export const getProductImageUrl = (imagen) => {
