@@ -19,6 +19,13 @@
   --transition-landing: all 0.3s ease;
 }
 
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   background: var(--landing-bg) !important;
 }
@@ -610,8 +617,20 @@ body.search-overlay-active {
   color: #0f3d1f;
 }
 
+/* ─── Layout público ─────────────────────────────────────── */
+.public-layout-shell {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 /* ─── Footer landing ─────────────────────────────────────── */
 .footer-landing {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin-top: auto;
   background: var(--footer-bg) !important;
   color: var(--text-body) !important;
   border-top: 1px solid rgba(19, 77, 39, 0.08);
@@ -734,6 +753,79 @@ body.search-overlay-active {
 
 .landing-nav-links--hidden {
   display: none !important;
+}
+
+.navbar-hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0.45rem;
+  border: 1px solid rgba(19, 77, 39, 0.12);
+  border-radius: 0.65rem;
+  background: #ffffff;
+  color: var(--green-dark);
+  cursor: pointer;
+  transition: var(--transition-landing);
+}
+
+.navbar-hamburger:hover,
+.navbar-hamburger:focus-visible {
+  background: var(--green-light-soft);
+  border-color: rgba(19, 77, 39, 0.2);
+  outline: none;
+}
+
+.navbar-hamburger--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.navbar-hamburger-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.navbar-mobile-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0 0.5rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(19, 77, 39, 0.08);
+  animation: navbarMobileIn 0.2s ease;
+}
+
+@keyframes navbarMobileIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar-mobile-link {
+  display: block;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  color: var(--text-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition-landing);
+}
+
+.navbar-mobile-link:hover {
+  color: var(--green-dark);
+  background: var(--green-light-soft);
 }
 
 /* Colapsado: ocupa el espacio central del navbar */
