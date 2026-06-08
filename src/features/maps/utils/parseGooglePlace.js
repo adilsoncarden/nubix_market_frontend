@@ -18,12 +18,21 @@ export function parseGooglePlace(place) {
     const components = place.address_components ?? [];
     const geometry = place.geometry?.location;
 
+    const departamento = findComponent(
+        components,
+        "administrative_area_level_1",
+    );
+
+    const provincia = findComponent(
+        components,
+        "administrative_area_level_2",
+    );
+
     const distrito = findComponent(
         components,
         "sublocality_level_1",
         "sublocality",
         "administrative_area_level_3",
-        "administrative_area_level_2",
         "locality",
     );
 
@@ -55,6 +64,8 @@ export function parseGooglePlace(place) {
             place.formatted_address?.trim() ||
             place.name?.trim() ||
             "",
+        departamento,
+        provincia,
         distrito,
         referencia,
         latitud: lat != null ? Number(lat) : null,
