@@ -5,6 +5,7 @@ import { categoryService } from "../features/categories/services/categoryService
 import CategoryForm from "../features/categories/components/CategoryForm";
 import { Toast } from "../utils/swalConfig";
 import { reportService } from "../features/reports/services/reportService";
+import { exportCategoriesPdf } from "../features/categories/utils/exportCategoriesPdf";
 
 const CategoriesPage = () => {
     const { categories, loading, handleDelete, setCategories } =
@@ -12,6 +13,8 @@ const CategoriesPage = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    const [formKey, setFormKey] = useState(() => Date.now());
+    const [exportingPdf, setExportingPdf] = useState(false);
 
     // --- FILTRADO POR NOMBRE Y DESCRIPCIÓN ---
     const filteredCategories = useMemo(() => {
@@ -53,12 +56,39 @@ const CategoriesPage = () => {
     useEffect(() => {
         if (modalRef.current) {
             bsModal.current = new Modal(modalRef.current);
+            modalRef.current.addEventListener("hidden.bs.modal", () => {
+                setSelectedCategory(null);
+                setFormKey(Date.now());
+            });
         }
     }, []);
 
     const openModal = (category = null) => {
-        setSelectedCategory(category ? { ...category } : null);
-        bsModal.current.show();
+        setSelectedCategory(null);
+        setFormKey(Date.now());
+        setTimeout(() => {
+            setSelectedCategory(category ? { ...category } : null);
+            bsModal.current.show();
+        }, 10);
+    };
+
+    const exportarPDF = async () => {
+        setExportingPdf(true);
+        try {
+            await exportCategoriesPdf(filteredCategories);
+            Toast.fire({
+                icon: "success",
+                title: "PDF generado correctamente",
+            });
+        } catch (error) {
+            console.error(error);
+            Toast.fire({
+                icon: "error",
+                title: "No se pudo exportar el PDF",
+            });
+        } finally {
+            setExportingPdf(false);
+        }
     };
 
     const handleSave = async (formData) => {
@@ -114,14 +144,29 @@ const CategoriesPage = () => {
                     <button
                         type="button"
                         className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
-                        onClick={() =>                             reportService.exportCategories().catch(() =>
+                        onClick={() =>
+                            reportService.exportCategories().catch(() =>
                                 Toast.fire({
                                     icon: "error",
                                     title: "No se pudo exportar categorías",
                                 }),
-                            )}
+                            )
+                        }
                     >
                         <i className="bi bi-file-earmark-excel me-2"></i> Excel
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-outline-danger shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
+                        onClick={exportarPDF}
+                        disabled={exportingPdf || filteredCategories.length === 0}
+                    >
+                        {exportingPdf ? (
+                            <span className="spinner-border spinner-border-sm me-2" />
+                        ) : (
+                            <i className="bi bi-file-earmark-pdf me-2" />
+                        )}
+                        PDF
                     </button>
                     <button
                         className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center admin-btn-primary"
@@ -364,6 +409,7 @@ const CategoriesPage = () => {
                         </div>
                         <div className="modal-body p-4">
                             <CategoryForm
+                                key={formKey}
                                 category={selectedCategory}
                                 onSave={handleSave}
                                 loading={saving}

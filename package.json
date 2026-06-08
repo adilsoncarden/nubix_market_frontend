@@ -15,6 +15,7 @@
         "bootstrap": "^5.3.8",
         "browser-image-compression": "^2.0.2",
         "jspdf": "^4.2.1",
+        "jspdf-autotable": "^5.0.8",
         "lucide-react": "^1.11.0",
         "react": "^19.2.4",
         "react-apexcharts": "^2.1.0",
