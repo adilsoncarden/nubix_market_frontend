@@ -157,7 +157,7 @@ const CategoriesPage = () => {
                     </button>
                     <button
                         type="button"
-                        className="btn btn-outline-danger shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
                         onClick={exportarPDF}
                         disabled={exportingPdf || filteredCategories.length === 0}
                     >
