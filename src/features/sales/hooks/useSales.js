@@ -8,13 +8,15 @@ import {
 
 export const useSales = () => {
     const [sales, setSales] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const fetchSales = async () => {
+        setLoading(true);
         try {
             const data = await saleService.getAll();
-            setSales(data);
+            setSales(Array.isArray(data) ? data : []);
         } catch (err) {
+            setSales([]);
             console.error(
                 "[Admin] Error al cargar ventas:",
                 err.response?.status,

@@ -1,11 +1,20 @@
 import { useEffect, useState } from "react";
 import { profileService } from "../../features/profile/services/profileService";
+import { mapsConfigService } from "../../features/maps/services/mapsConfigService";
+import AddressAutocompleteInput from "../../features/maps/components/AddressAutocompleteInput";
+import AddressMapPreview from "../../features/maps/components/AddressMapPreview";
+import GoogleMapsLoader from "../../features/maps/components/GoogleMapsLoader";
 import { mergeWebUserProfile } from "../../utils/authUtils";
 
 const emptyForm = {
     direccion: "",
+    departamento: "",
+    provincia: "",
     distrito: "",
     referencia: "",
+    latitud: null,
+    longitud: null,
+    googlePlaceId: "",
 };
 
 export default function LocationAddressModal({ show, onClose, onSaved }) {
@@ -13,30 +22,63 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
+    const [mapsWarning, setMapsWarning] = useState("");
+    const [mapsApiKey, setMapsApiKey] = useState("");
+    const [mapsKeyLoading, setMapsKeyLoading] = useState(false);
 
     useEffect(() => {
         if (!show) return;
         let cancelled = false;
+
         const load = async () => {
             setLoading(true);
+            setMapsKeyLoading(true);
             setError("");
+            setMapsWarning("");
+
             try {
-                const data = await profileService.getPerfil();
-                if (!cancelled) {
+                const [profileResult, mapsResult] = await Promise.allSettled([
+                    profileService.getPerfil(),
+                    mapsConfigService.getGoogleMapsApiKey(),
+                ]);
+
+                if (cancelled) return;
+
+                if (profileResult.status === "fulfilled") {
+                    const data = profileResult.value;
                     setForm({
                         direccion: data.direccion ?? "",
+                        departamento: data.departamento ?? "",
+                        provincia: data.provincia ?? "",
                         distrito: data.distrito ?? "",
                         referencia: data.referencia ?? "",
+                        latitud: data.latitud ?? null,
+                        longitud: data.longitud ?? null,
+                        googlePlaceId: data.googlePlaceId ?? "",
                     });
-                }
-            } catch {
-                if (!cancelled) {
+                } else {
                     setError("No se pudo cargar tu dirección guardada.");
                 }
+
+                if (
+                    mapsResult.status === "fulfilled" &&
+                    mapsResult.value.apiKey
+                ) {
+                    setMapsApiKey(mapsResult.value.apiKey);
+                } else {
+                    setMapsApiKey("");
+                    setMapsWarning(
+                        "El autocompletado de Google no está configurado. Puedes ingresar la dirección manualmente.",
+                    );
+                }
             } finally {
-                if (!cancelled) setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                    setMapsKeyLoading(false);
+                }
             }
         };
+
         load();
         return () => {
             cancelled = true;
@@ -46,6 +88,29 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
+        if (name === "direccion") {
+            setMapsWarning("");
+        }
+    };
+
+    const handlePlaceSelected = (parsed) => {
+        setForm((prev) => ({
+            ...prev,
+            direccion: parsed.direccion || prev.direccion,
+            departamento: parsed.departamento || prev.departamento,
+            provincia: parsed.provincia || prev.provincia,
+            distrito: parsed.distrito || prev.distrito,
+            referencia: parsed.referencia || prev.referencia,
+            latitud: parsed.latitud,
+            longitud: parsed.longitud,
+            googlePlaceId: parsed.googlePlaceId || "",
+        }));
+        setMapsWarning("");
+        setError("");
+    };
+
+    const handleMapsError = (message) => {
+        setMapsWarning(message);
     };
 
     const handleSubmit = async (e) => {
@@ -57,11 +122,21 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
         setSaving(true);
         setError("");
         try {
-            const updated = await profileService.updatePerfil({
+            const payload = {
                 direccion: form.direccion.trim(),
+                departamento: form.departamento.trim(),
+                provincia: form.provincia.trim(),
                 distrito: form.distrito.trim(),
                 referencia: form.referencia.trim(),
-            });
+            };
+
+            if (form.latitud != null) payload.latitud = form.latitud;
+            if (form.longitud != null) payload.longitud = form.longitud;
+            if (form.googlePlaceId?.trim()) {
+                payload.googlePlaceId = form.googlePlaceId.trim();
+            }
+
+            const updated = await profileService.updatePerfil(payload);
             mergeWebUserProfile(updated);
             onSaved?.(updated);
             onClose();
@@ -74,9 +149,12 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
 
     if (!show) return null;
 
+    const showAutocomplete =
+        !mapsKeyLoading && mapsApiKey && !loading;
+
     return (
         <div
-            className="modal fade show d-block"
+            className="modal fade show d-block location-address-modal"
             tabIndex={-1}
             style={{ backgroundColor: "rgba(0,0,0,0.55)" }}
             onClick={onClose}
@@ -109,10 +187,82 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
                                     {error}
                                 </div>
                             )}
+                            {mapsWarning && (
+                                <div className="alert alert-warning py-2 small">
+                                    {mapsWarning}
+                                </div>
+                            )}
                             {loading ? (
                                 <div className="text-center py-4">
                                     <div className="spinner-border spinner-border-sm text-success" />
                                 </div>
+                            ) : showAutocomplete ? (
+                                <GoogleMapsLoader apiKey={mapsApiKey}>
+                                    {({ isLoaded, loadError }) => (
+                                        <div className="row g-3">
+                                            <div className="col-12">
+                                                <label className="form-label small fw-semibold">
+                                                    Dirección
+                                                </label>
+                                                <AddressAutocompleteInput
+                                                    isMapsLoaded={isLoaded}
+                                                    mapsLoadError={loadError}
+                                                    value={form.direccion}
+                                                    onChange={handleChange}
+                                                    onPlaceSelected={
+                                                        handlePlaceSelected
+                                                    }
+                                                    onMapsError={
+                                                        handleMapsError
+                                                    }
+                                                    disabled={saving}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="col-12 col-md-6">
+                                                <label className="form-label small fw-semibold">
+                                                    Distrito
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="distrito"
+                                                    className="form-control"
+                                                    value={form.distrito}
+                                                    onChange={handleChange}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="col-12 col-md-6">
+                                                <label className="form-label small fw-semibold">
+                                                    Referencia
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="referencia"
+                                                    className="form-control"
+                                                    value={form.referencia}
+                                                    onChange={handleChange}
+                                                    placeholder="Opcional"
+                                                />
+                                            </div>
+                                            <div className="col-12">
+                                                <label className="form-label small fw-semibold">
+                                                    Ubicación en el mapa
+                                                </label>
+                                                {isLoaded && !loadError ? (
+                                                    <AddressMapPreview
+                                                        latitud={form.latitud}
+                                                        longitud={form.longitud}
+                                                    />
+                                                ) : (
+                                                    <div className="address-map-preview address-map-preview--loading d-flex align-items-center justify-content-center">
+                                                        <div className="spinner-border spinner-border-sm text-success" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </GoogleMapsLoader>
                             ) : (
                                 <div className="row g-3">
                                     <div className="col-12">
@@ -126,6 +276,9 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
                                             value={form.direccion}
                                             onChange={handleChange}
                                             required
+                                            disabled={
+                                                saving || mapsKeyLoading
+                                            }
                                         />
                                     </div>
                                     <div className="col-12 col-md-6">

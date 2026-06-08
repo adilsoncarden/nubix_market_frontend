@@ -93,8 +93,6 @@ const AdminLayout = () => {
             foreColor: theme === "dark" ? "#94a3b8" : "#64748b",
             gridColor: theme === "dark" ? "#334155" : "#e2e8f0",
             labelColor: theme === "dark" ? "#e2e8f0" : "#334155",
-            goalLabelColor: theme === "dark" ? "#94a3b8" : "#64748b",
-            goalValueColor: theme === "dark" ? "#f8fafc" : "#1e293b",
         }),
         [theme],
     );
@@ -189,59 +187,6 @@ const AdminLayout = () => {
         [metrics.supplierSeries],
     );
 
-    const heatMapOptions = useMemo(
-        () => ({
-            chart: { toolbar: { show: false } },
-            dataLabels: { enabled: false },
-            colors: ["#198754"],
-            xaxis: {
-                categories: [
-                    "08am",
-                    "10am",
-                    "12pm",
-                    "02pm",
-                    "04pm",
-                    "06pm",
-                    "08pm",
-                ],
-                labels: { style: { colors: chartTheme.foreColor } },
-            },
-            yaxis: {
-                labels: { style: { colors: chartTheme.foreColor } },
-            },
-            tooltip: { theme },
-        }),
-        [chartTheme.foreColor, theme],
-    );
-
-    const goalOptions = useMemo(
-        () => ({
-            plotOptions: {
-                radialBar: {
-                    startAngle: -135,
-                    endAngle: 135,
-                    dataLabels: {
-                        name: {
-                            fontSize: "14px",
-                            color: chartTheme.goalLabelColor,
-                            offsetY: 100,
-                        },
-                        value: {
-                            offsetY: 60,
-                            fontSize: "22px",
-                            color: chartTheme.goalValueColor,
-                            formatter: (val) => val + "%",
-                        },
-                    },
-                },
-            },
-            fill: { colors: ["#198754"] },
-            labels: ["Meta Mensual"],
-            tooltip: { theme },
-        }),
-        [chartTheme, theme],
-    );
-
     return (
         <div
             className="d-flex vh-100 overflow-hidden bg-body-secondary admin-shell"
@@ -289,23 +234,6 @@ const AdminLayout = () => {
                                         day: "numeric",
                                     })}
                                 </div>
-                            </div>
-                            <div className="vr d-none d-md-block opacity-25" />
-                            <div className="small text-muted">
-                                Ventas hoy:{" "}
-                                <span className="fw-bold text-body">
-                                    {dashboardLoading
-                                        ? "..."
-                                        : metrics.ventasHoy}
-                                </span>
-                            </div>
-                            <div className="small text-muted">
-                                Pendientes:{" "}
-                                <span className="fw-bold text-body">
-                                    {dashboardLoading
-                                        ? "..."
-                                        : metrics.pedidosPendientes}
-                                </span>
                             </div>
                         </div>
 
@@ -438,40 +366,6 @@ const AdminLayout = () => {
                                                 type="radar"
                                                 height={300}
                                             />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="row g-4 mb-4">
-                                    <div className="col-lg-8">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-4">
-                                                Densidad de Ventas por Hora
-                                            </h6>
-                                            <Chart
-                                                options={heatMapOptions}
-                                                series={metrics.heatMapSeries}
-                                                type="heatmap"
-                                                height={280}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="col-lg-4">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100 text-center">
-                                            <h6 className="chart-title mb-4">
-                                                Cumplimiento de Objetivos
-                                            </h6>
-                                            <Chart
-                                                options={goalOptions}
-                                                series={[metrics.goalPercent]}
-                                                type="radialBar"
-                                                height={280}
-                                            />
-                                            <p className="small text-muted mt-n2">
-                                                {dashboardLoading
-                                                    ? "Calculando meta..."
-                                                    : `Faltan ${metrics.goalRemaining}% para llegar a la meta`}
-                                            </p>
                                         </div>
                                     </div>
                                 </div>

@@ -12,6 +12,7 @@ import ProductForm from "../features/products/components/ProductForm";
 import ProductImageField from "../features/products/components/ProductImageField";
 import { useProductCatalog } from "../store/ProductCatalogContext";
 import { reportService } from "../features/reports/services/reportService";
+import { exportProductsPdf } from "../features/products/utils/exportProductsPdf";
 import { Toast, confirmDelete } from "../utils/swalConfig";
 import Swal from "sweetalert2";
 
@@ -31,6 +32,7 @@ const ProductsPage = () => {
     });
     const [formUrlImagen, setFormUrlImagen] = useState(null);
     const [formkey, setFormKey] = useState(Date.now());
+    const [exportingPdf, setExportingPdf] = useState(false);
 
     const filteredProducts = useMemo(() => {
         return products.filter((prod) => {
@@ -137,6 +139,25 @@ const ProductsPage = () => {
         }
     };
 
+    const exportarPDF = async () => {
+        setExportingPdf(true);
+        try {
+            await exportProductsPdf(filteredProducts);
+            Toast.fire({
+                icon: "success",
+                title: "PDF generado correctamente",
+            });
+        } catch (error) {
+            console.error(error);
+            Toast.fire({
+                icon: "error",
+                title: "No se pudo exportar el PDF",
+            });
+        } finally {
+            setExportingPdf(false);
+        }
+    };
+
     const confirmDeleteProduct = (id) => {
         confirmDelete("¿Eliminar producto?").then(async (result) => {
             if (result.isConfirmed) {
@@ -207,6 +228,19 @@ const ProductsPage = () => {
                         }
                     >
                         <i className="bi bi-file-earmark-excel me-2"></i> Excel
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
+                        onClick={exportarPDF}
+                        disabled={exportingPdf || filteredProducts.length === 0}
+                    >
+                        {exportingPdf ? (
+                            <span className="spinner-border spinner-border-sm me-2" />
+                        ) : (
+                            <i className="bi bi-file-earmark-pdf me-2" />
+                        )}
+                        PDF
                     </button>
                     <button
                         className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center admin-btn-primary"
@@ -312,8 +346,8 @@ const ProductsPage = () => {
                         <thead className="bg-light">
                             <tr>
                                 <th
-                                    className="px-4 py-3 text-secondary small fw-bold"
-                                    style={{ width: "60px" }}
+                                    className="px-4 py-3 text-secondary small fw-bold text-center"
+                                    style={{ width: "80px" }}
                                 >
                                     #
                                 </th>
@@ -363,8 +397,14 @@ const ProductsPage = () => {
                                         PRODUCT_PLACEHOLDER_IMAGE;
                                     return (
                                         <tr key={prod.id}>
-                                            <td className="px-4">
-                                                <span className="text-muted small fw-bold">
+                                            <td className="px-4 text-center">
+                                                <span
+                                                    className="badge bg-emerald-100 text-emerald-600 fw-bold"
+                                                    style={{
+                                                        borderRadius: "6px",
+                                                        fontSize: "0.85rem",
+                                                    }}
+                                                >
                                                     {indexOfFirstItem +
                                                         index +
                                                         1}

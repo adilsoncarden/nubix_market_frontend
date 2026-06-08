@@ -25,6 +25,8 @@ import {
     TIPO_ENTREGA_OPTIONS,
     TIPO_ENTREGA_LABELS,
 } from "../features/sales/utils/saleFilters";
+import { exportSalesPdf } from "../features/sales/utils/exportSalesPdf";
+import { printSaleReceipt } from "../features/sales/utils/printSaleReceipt";
 
 const SalesPage = () => {
     const {
@@ -46,6 +48,7 @@ const SalesPage = () => {
 
     const [formkey, setFormKey] = useState(Date.now());
     const [ventaFormActive, setVentaFormActive] = useState(false);
+    const [exportingPdf, setExportingPdf] = useState(false);
 
     useEffect(() => {
         clientService
@@ -230,6 +233,81 @@ const SalesPage = () => {
         }
     }, []);
 
+    const exportarPDF = async () => {
+        setExportingPdf(true);
+        try {
+            await exportSalesPdf(filteredSales);
+            Toast.fire({
+                icon: "success",
+                title: "PDF generado correctamente",
+            });
+        } catch (error) {
+            console.error(error);
+            Toast.fire({
+                icon: "error",
+                title: "No se pudo exportar el PDF",
+            });
+        } finally {
+            setExportingPdf(false);
+        }
+    };
+
+    const fetchSaleWithDetails = async (sale) => {
+        if (sale?.detalles?.length) return sale;
+        return saleService.getById(sale.id);
+    };
+
+    const handlePrintSale = async (sale) => {
+        try {
+            const fullSale = await fetchSaleWithDetails(sale);
+            await printSaleReceipt(fullSale);
+        } catch (error) {
+            console.error(error);
+            Toast.fire({
+                icon: "error",
+                title: "No se pudo imprimir el comprobante",
+            });
+        }
+    };
+
+    const handleViewSaleDetails = async (sale) => {
+        try {
+            const fullSale = await fetchSaleWithDetails(sale);
+            const clienteLabel = getSaleClientLabel(fullSale);
+            const vendedorLabel = getSaleVendorLabel(fullSale);
+            const fechaLabel = formatSaleDateTime(fullSale);
+            const detallesHtml = (fullSale.detalles || [])
+                .map(
+                    (d) =>
+                        `<li>${d.producto?.nombre || "Producto"} x${d.cantidad} = S/ ${Number(d.subtotal || 0).toFixed(2)}</li>`,
+                )
+                .join("");
+
+            Swal.fire({
+                title: `Venta #${fullSale.id}`,
+                html: `
+                    <div class="text-start">
+                        <p><strong>Cliente:</strong> ${clienteLabel}</p>
+                        <p><strong>Vendedor:</strong> ${vendedorLabel}</p>
+                        <p><strong>Fecha:</strong> ${fechaLabel}</p>
+                        <p><strong>Total:</strong> S/ ${Number(fullSale.total || 0).toFixed(2)}</p>
+                        <p><strong>Estado:</strong> ${fullSale.estadoPedido}</p>
+                        <hr>
+                        <strong>Detalles:</strong>
+                        <ul>${detallesHtml || "<li>Sin líneas registradas</li>"}</ul>
+                    </div>
+                `,
+                icon: "info",
+            });
+        } catch (error) {
+            console.error(error);
+            Toast.fire({
+                icon: "error",
+                title: "No se pudieron cargar los detalles",
+            });
+        }
+    };
+
     const openModal = () => {
         setSelectedSale(null);
         setFormKey(Date.now());
@@ -297,14 +375,32 @@ const SalesPage = () => {
                     <button
                         type="button"
                         onClick={openExportModal}
-                        className="btn btn-outline-success fw-bold"
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
                         disabled={loading}
                     >
                         <i className="bi bi-file-earmark-excel me-2"></i>Excel
                     </button>
                     <button
+                        type="button"
+                        onClick={exportarPDF}
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
+                        disabled={
+                            loading ||
+                            exportingPdf ||
+                            filteredSales.length === 0
+                        }
+                    >
+                        {exportingPdf ? (
+                            <span className="spinner-border spinner-border-sm me-2" />
+                        ) : (
+                            <i className="bi bi-file-earmark-pdf me-2" />
+                        )}
+                        PDF
+                    </button>
+                    <button
+                        type="button"
                         onClick={openModal}
-                        className="btn btn-success fw-bold"
+                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center admin-btn-primary"
                         disabled={loading}
                     >
                         <i className="bi bi-plus-circle me-2"></i>Nueva Venta
@@ -628,52 +724,25 @@ const SalesPage = () => {
                                                     role="group"
                                                 >
                                                     <button
+                                                        type="button"
+                                                        className="btn btn-outline-secondary"
+                                                        title="Imprimir comprobante"
+                                                        onClick={() =>
+                                                            handlePrintSale(sale)
+                                                        }
+                                                    >
+                                                        <i className="bi bi-printer"></i>
+                                                    </button>
+
+                                                    <button
+                                                        type="button"
                                                         className="btn btn-outline-info"
                                                         title="Ver detalles"
-                                                        onClick={() => {
-                                                            const clienteLabel =
-                                                                getSaleClientLabel(
-                                                                    sale,
-                                                                );
-                                                            const vendedorLabel =
-                                                                getSaleVendorLabel(
-                                                                    sale,
-                                                                );
-                                                            const fechaLabel =
-                                                                formatSaleDateTime(
-                                                                    sale,
-                                                                );
-                                                            Swal.fire({
-                                                                title: `Venta #${sale.id}`,
-                                                                html: `
-                                                                    <div class="text-start">
-                                                                        <p><strong>Cliente:</strong> ${clienteLabel}</p>
-                                                                        <p><strong>Vendedor:</strong> ${vendedorLabel}</p>
-                                                                        <p><strong>Fecha:</strong> ${fechaLabel}</p>
-                                                                        <p><strong>Total:</strong> S/ ${sale.total.toFixed(2)}</p>
-                                                                        <p><strong>Estado:</strong> ${sale.estadoPedido}</p>
-                                                                        <hr>
-                                                                        <strong>Detalles:</strong>
-                                                                        <ul>
-                                                                            ${(
-                                                                                sale.detalles ||
-                                                                                []
-                                                                            )
-                                                                                .map(
-                                                                                    (
-                                                                                        d,
-                                                                                    ) =>
-                                                                                        `<li>${d.producto?.nombre || "Producto"} x${d.cantidad} = S/ ${Number(d.subtotal || 0).toFixed(2)}</li>`,
-                                                                                )
-                                                                                .join(
-                                                                                    "",
-                                                                                )}
-                                                                        </ul>
-                                                                    </div>
-                                                                `,
-                                                                icon: "info",
-                                                            });
-                                                        }}
+                                                        onClick={() =>
+                                                            handleViewSaleDetails(
+                                                                sale,
+                                                            )
+                                                        }
                                                     >
                                                         <i className="bi bi-eye"></i>
                                                     </button>
@@ -838,7 +907,7 @@ const SalesPage = () => {
                 aria-labelledby="ventaModalLabel"
                 aria-hidden="true"
             >
-                <div className="modal-dialog modal-lg">
+                <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                     <div className="modal-content">
                         <div className="modal-header bg-success text-white">
                             <h5 className="modal-title" id="ventaModalLabel">

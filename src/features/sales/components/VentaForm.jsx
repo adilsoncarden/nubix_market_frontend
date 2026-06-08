@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { calcOrderTotals } from "../../../utils/pricing";
 import { clientService } from "../../users/services/clientService";
 import { productService } from "../../products/services/productService";
@@ -33,6 +33,7 @@ const VentaForm = ({ onSave, loading, active = false }) => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [selectedQuantity, setSelectedQuantity] = useState(1);
     const [loadingData, setLoadingData] = useState(false);
+    const productSearchRef = useRef(null);
 
     useEffect(() => {
         if (!active) return;
@@ -77,9 +78,97 @@ const VentaForm = ({ onSave, loading, active = false }) => {
         loadData();
     }, [active]);
 
+    useEffect(() => {
+        if (active) {
+            requestAnimationFrame(() => productSearchRef.current?.focus());
+        }
+    }, [active]);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
+    };
+
+    const resolveProductFromQuery = (query) => {
+        const trimmed = String(query ?? "").trim();
+        if (!trimmed) return selectedProduct;
+
+        const lower = trimmed.toLowerCase();
+        const byExactCode = products.find(
+            (p) => String(p.codigo ?? "").toLowerCase() === lower,
+        );
+        if (byExactCode) return byExactCode;
+
+        const byExactId = products.find((p) => String(p.id) === trimmed);
+        if (byExactId) return byExactId;
+
+        const matches = products.filter((p) => {
+            const nombre = String(p.nombre ?? "").toLowerCase();
+            const codigo = String(p.codigo ?? "").toLowerCase();
+            return nombre.includes(lower) || codigo.includes(lower);
+        });
+
+        if (matches.length === 1) return matches[0];
+        return selectedProduct;
+    };
+
+    const clearProductSearch = () => {
+        setSelectedProduct(null);
+        setProductQuery("");
+        setSelectedQuantity(1);
+    };
+
+    const addProductToDetails = (product, quantity = 1) => {
+        if (!product) {
+            Swal.fire("Validación", "Producto no encontrado", "warning");
+            return false;
+        }
+
+        const qty = Math.max(1, parseInt(quantity, 10) || 1);
+        const existingDetail = formData.detalles.find(
+            (d) => d.productoId === product.id,
+        );
+        const nextQty = existingDetail ? existingDetail.cantidad + qty : qty;
+
+        if (product.stock < nextQty) {
+            Swal.fire(
+                "Error",
+                `Stock insuficiente. Disponible: ${product.stock}`,
+                "error",
+            );
+            return false;
+        }
+
+        if (existingDetail) {
+            setFormData((prev) => ({
+                ...prev,
+                detalles: prev.detalles.map((d) =>
+                    d.productoId === product.id
+                        ? {
+                              ...d,
+                              cantidad: nextQty,
+                              subtotal: d.precio * nextQty,
+                          }
+                        : d,
+                ),
+            }));
+        } else {
+            const newDetail = {
+                productoId: product.id,
+                productName: product.nombre,
+                precio: product.precioVenta,
+                cantidad: qty,
+                subtotal: product.precioVenta * qty,
+            };
+            setFormData((prev) => ({
+                ...prev,
+                detalles: [...prev.detalles, newDetail],
+            }));
+        }
+
+        clearProductSearch();
+        requestAnimationFrame(() => productSearchRef.current?.focus());
+        return true;
     };
 
     const handleAddDetail = () => {
@@ -91,48 +180,33 @@ const VentaForm = ({ onSave, loading, active = false }) => {
             );
             return;
         }
+        addProductToDetails(selectedProduct, selectedQuantity);
+    };
 
-        const product = selectedProduct;
+    const handleProductSearchKeyDown = (e) => {
+        if (e.key !== "Enter") return;
+        e.preventDefault();
+        e.stopPropagation();
+
+        const product = resolveProductFromQuery(productQuery);
         if (!product) {
-            Swal.fire("Error", "Producto no encontrado", "error");
-            return;
-        }
-
-        if (product.stock < selectedQuantity) {
             Swal.fire(
-                "Error",
-                `Stock insuficiente. Disponible: ${product.stock}`,
-                "error",
+                "No encontrado",
+                "No se encontró un producto con ese código o nombre",
+                "warning",
             );
             return;
         }
 
-        // Verificar si el producto ya existe en detalles
-        const existingDetail = formData.detalles.find(
-            (d) => d.productoId === product.id,
-        );
+        addProductToDetails(product, selectedQuantity);
+    };
 
-        if (existingDetail) {
-            Swal.fire("Validación", "Este producto ya fue agregado", "warning");
-            return;
-        }
-
-        const newDetail = {
-            productoId: product.id,
-            productName: product.nombre,
-            precio: product.precioVenta,
-            cantidad: parseInt(selectedQuantity),
-            subtotal: product.precioVenta * parseInt(selectedQuantity),
-        };
-
-        setFormData((prev) => ({
-            ...prev,
-            detalles: [...prev.detalles, newDetail],
-        }));
-
-        setSelectedProduct(null);
-        setProductQuery("");
-        setSelectedQuantity(1);
+    const handleFormKeyDown = (e) => {
+        if (e.key !== "Enter") return;
+        if (e.target.id === "venta-product-search") return;
+        if (e.target.type === "submit") return;
+        if (e.target.tagName === "TEXTAREA") return;
+        e.preventDefault();
     };
 
     const handleRemoveDetail = (productoId) => {
@@ -242,7 +316,11 @@ const VentaForm = ({ onSave, loading, active = false }) => {
                   .slice(0, 8);
 
     return (
-        <form onSubmit={handleSubmit} id="ventaForm">
+        <form
+            onSubmit={handleSubmit}
+            onKeyDown={handleFormKeyDown}
+            id="ventaForm"
+        >
             <div className="row g-3">
                 {/* Tipo comprobante */}
                 <div className="col-md-6">
@@ -325,89 +403,113 @@ const VentaForm = ({ onSave, loading, active = false }) => {
                 </div>
 
                 {formData.tipoComprobante === "BOLETA" && (
-                    <>
-                        <div className="col-md-4">
-                            <label className="form-label fw-bold">Nombre</label>
-                            <input
-                                type="text"
-                                name="nombreComprobante"
-                                className="form-control"
-                                value={formData.nombreComprobante}
-                                onChange={handleChange}
-                            />
+                    <div className="col-12">
+                        <div className="border rounded-3 p-3 bg-light-subtle">
+                            <p className="small fw-bold text-muted text-uppercase mb-3">
+                                Datos de boleta
+                            </p>
+                            <div className="row g-3">
+                                <div className="col-md-4">
+                                    <label className="form-label fw-bold">
+                                        Nombre
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="nombreComprobante"
+                                        className="form-control"
+                                        value={formData.nombreComprobante}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="form-label fw-bold">
+                                        DNI
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="dni"
+                                        maxLength={8}
+                                        className="form-control"
+                                        value={formData.dni}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="col-md-4">
+                                    <label className="form-label fw-bold">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="emailComprobante"
+                                        className="form-control"
+                                        value={formData.emailComprobante}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
                         </div>
-                        <div className="col-md-4">
-                            <label className="form-label fw-bold">DNI</label>
-                            <input
-                                type="text"
-                                name="dni"
-                                maxLength={8}
-                                className="form-control"
-                                value={formData.dni}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="col-md-4">
-                            <label className="form-label fw-bold">Email</label>
-                            <input
-                                type="email"
-                                name="emailComprobante"
-                                className="form-control"
-                                value={formData.emailComprobante}
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </>
+                    </div>
                 )}
 
                 {formData.tipoComprobante === "FACTURA" && (
-                    <>
-                        <div className="col-md-6">
-                            <label className="form-label fw-bold">
-                                Razón social
-                            </label>
-                            <input
-                                type="text"
-                                name="razonSocial"
-                                className="form-control"
-                                value={formData.razonSocial}
-                                onChange={handleChange}
-                            />
+                    <div className="col-12">
+                        <div className="border rounded-3 p-3 bg-light-subtle">
+                            <p className="small fw-bold text-muted text-uppercase mb-3">
+                                Datos de factura
+                            </p>
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <label className="form-label fw-bold">
+                                        Razón social
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="razonSocial"
+                                        className="form-control"
+                                        value={formData.razonSocial}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="col-md-3">
+                                    <label className="form-label fw-bold">
+                                        RUC
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="ruc"
+                                        maxLength={11}
+                                        className="form-control"
+                                        value={formData.ruc}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="col-md-3">
+                                    <label className="form-label fw-bold">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        name="emailComprobante"
+                                        className="form-control"
+                                        value={formData.emailComprobante}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="col-12">
+                                    <label className="form-label fw-bold">
+                                        Dirección fiscal
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="direccionFiscal"
+                                        className="form-control"
+                                        value={formData.direccionFiscal}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </div>
                         </div>
-                        <div className="col-md-3">
-                            <label className="form-label fw-bold">RUC</label>
-                            <input
-                                type="text"
-                                name="ruc"
-                                maxLength={11}
-                                className="form-control"
-                                value={formData.ruc}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="col-md-3">
-                            <label className="form-label fw-bold">Email</label>
-                            <input
-                                type="email"
-                                name="emailComprobante"
-                                className="form-control"
-                                value={formData.emailComprobante}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="col-md-12">
-                            <label className="form-label fw-bold">
-                                Dirección fiscal
-                            </label>
-                            <input
-                                type="text"
-                                name="direccionFiscal"
-                                className="form-control"
-                                value={formData.direccionFiscal}
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </>
+                    </div>
                 )}
 
                 {/* Dirección de Entrega: no aplica para cajero presencial */}
@@ -419,9 +521,13 @@ const VentaForm = ({ onSave, loading, active = false }) => {
 
                 {/* Agregar Productos */}
                 <div className="col-md-6">
-                    <label className="form-label fw-bold">Producto</label>
+                    <label className="form-label fw-bold">
+                        Código de barras / Producto
+                    </label>
                     <div className="position-relative">
                         <input
+                            ref={productSearchRef}
+                            id="venta-product-search"
                             type="text"
                             className="form-control"
                             value={productQuery}
@@ -429,7 +535,8 @@ const VentaForm = ({ onSave, loading, active = false }) => {
                                 setProductQuery(e.target.value);
                                 setSelectedProduct(null);
                             }}
-                            placeholder="Buscar por nombre o código (mín. 2 caracteres)"
+                            onKeyDown={handleProductSearchKeyDown}
+                            placeholder="Escanee o busque por código / nombre (Enter agrega)"
                             disabled={loadingData}
                             autoComplete="off"
                         />

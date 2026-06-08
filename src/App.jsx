@@ -50,7 +50,7 @@ import SecurityPermisosPage from "./pages/security/SecurityPermisosPage";
 import SecurityRolesPage from "./pages/security/SecurityRolesPage";
 
 const PublicLayoutShell = () => (
-    <div className="d-flex flex-column min-vh-100" data-bs-theme="light">
+    <div className="public-layout-shell d-flex flex-column min-vh-100" data-bs-theme="light">
         <Navbar />
         <main className="flex-grow-1">
             <Outlet />

@@ -3,6 +3,7 @@ import { Modal } from "bootstrap";
 import { useSuppliers } from "../features/suppliers/hooks/useSuppliers";
 import SupplierForm from "../features/suppliers/components/SupplierForm";
 import { reportService } from "../features/reports/services/reportService";
+import { exportSuppliersPdf } from "../features/suppliers/utils/exportSuppliersPdf";
 import { Toast } from "../utils/swalConfig";
 
 const SuppliersPage = () => {
@@ -18,27 +19,25 @@ const SuppliersPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
     const [saving, setSaving] = useState(false);
-    const [formkey, setFormKey] = useState(Date.now());
+    const [exportingPdf, setExportingPdf] = useState(false);
+    const [formkey, setFormKey] = useState(() => Date.now());
     const itemsPerPage = 10;
 
     useEffect(() => {
         refreshSuppliers();
     }, []);
 
-    // --- FILTRADO ---
     const filteredSuppliers = useMemo(() => {
-        const filtered = suppliers.filter(
+        return suppliers.filter(
             (s) =>
                 s.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 s.ruc?.includes(searchTerm) ||
                 s.telefono?.includes(searchTerm),
         );
-        setCurrentPage(1); // Resetear a pag 1 al buscar
-        return filtered;
     }, [suppliers, searchTerm]);
 
-    // --- LÓGICA DE PAGINACIÓN ---
-    const totalPages = Math.ceil(filteredSuppliers.length / itemsPerPage);
+    const totalResultados = filteredSuppliers.length;
+    const totalPages = Math.ceil(totalResultados / itemsPerPage);
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentSuppliers = filteredSuppliers.slice(
@@ -48,6 +47,16 @@ const SuppliersPage = () => {
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            setCurrentPage(totalPages);
+        }
+    }, [filteredSuppliers.length, totalPages, currentPage]);
+
     const modalRef = useRef();
     const bsModal = useRef();
 
@@ -56,17 +65,37 @@ const SuppliersPage = () => {
             bsModal.current = new Modal(modalRef.current);
             modalRef.current.addEventListener("hidden.bs.modal", () => {
                 setSelectedSupplier(null);
+                setFormKey(Date.now());
             });
         }
     }, []);
 
     const handleOpenModal = (supplier = null) => {
-        setSelectedSupplier(supplier ? { ...supplier } : null);
-
-        // REINICIAR FORMULARIO
+        setSelectedSupplier(null);
         setFormKey(Date.now());
+        setTimeout(() => {
+            setSelectedSupplier(supplier ? { ...supplier } : null);
+            bsModal.current.show();
+        }, 10);
+    };
 
-        bsModal.current.show();
+    const exportarPDF = async () => {
+        setExportingPdf(true);
+        try {
+            await exportSuppliersPdf(filteredSuppliers);
+            Toast.fire({
+                icon: "success",
+                title: "PDF generado correctamente",
+            });
+        } catch (error) {
+            console.error(error);
+            Toast.fire({
+                icon: "error",
+                title: "No se pudo exportar el PDF",
+            });
+        } finally {
+            setExportingPdf(false);
+        }
     };
 
     const handleSave = async (data) => {
@@ -86,10 +115,10 @@ const SuppliersPage = () => {
     };
 
     return (
-        <div className="admin-page" style={{ fontSize: "0.9rem" }}>
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-2">
+        <div className="admin-page animate__animated animate__fadeIn">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
                 <div>
-                    <h2 className="admin-page-title fw-bold mb-0">
+                    <h2 className="admin-page-title fw-bold mb-1">
                         Nubix Market <span className="admin-accent-slash">/</span>{" "}
                         Proveedores
                     </h2>
@@ -100,137 +129,155 @@ const SuppliersPage = () => {
                 <div className="d-flex flex-wrap gap-2 admin-page-header-actions">
                     <button
                         type="button"
-                        className="btn btn-outline-success shadow-sm px-3 fw-bold"
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
                         onClick={() =>
                             reportService.exportSuppliers().catch(() =>
-                                Toast.fire({ icon: "error", title: "Error al exportar" }),
+                                Toast.fire({
+                                    icon: "error",
+                                    title: "No se pudo exportar proveedores",
+                                }),
                             )
                         }
                     >
                         <i className="bi bi-file-earmark-excel me-2"></i> Excel
                     </button>
                     <button
-                        className="btn btn-success shadow-sm px-4 fw-bold admin-btn-primary"
+                        type="button"
+                        className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
+                        onClick={exportarPDF}
+                        disabled={
+                            exportingPdf || filteredSuppliers.length === 0
+                        }
+                    >
+                        {exportingPdf ? (
+                            <span className="spinner-border spinner-border-sm me-2" />
+                        ) : (
+                            <i className="bi bi-file-earmark-pdf me-2" />
+                        )}
+                        PDF
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-success shadow-sm px-4 py-2 fw-bold d-flex align-items-center admin-btn-primary"
                         onClick={() => handleOpenModal()}
-                        style={{ fontSize: "0.85rem" }}
-                >
-                    <i className="bi bi-person-plus-fill me-2"></i> Nuevo
-                    Proveedor
+                    >
+                        <i className="bi bi-plus-lg me-2"></i> Nuevo Proveedor
                     </button>
                 </div>
             </div>
 
-            {/* BUSCADOR Y MÉTRICA */}
-            <div className="row g-3 mb-4">
+            <div className="row g-4 mb-4">
                 <div className="col-md-3">
                     <div
                         className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "12px" }}
+                        style={{ borderRadius: "15px" }}
                     >
                         <div className="d-flex align-items-center">
                             <div
-                                className="bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "40px", height: "40px" }}
+                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
+                                style={{ width: "48px", height: "48px" }}
                             >
-                                <i className="bi bi-people-fill fs-5"></i>
+                                <i className="bi bi-people-fill fs-4"></i>
                             </div>
                             <div className="ms-3">
-                                <small
-                                    className="text-muted d-block fw-bold"
-                                    style={{ fontSize: "10px" }}
-                                >
-                                    TOTAL
-                                </small>
-                                <h4 className="fw-bold mb-0">
-                                    {suppliers.length}
-                                </h4>
+                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
+                                    Resultados
+                                </h6>
+                                <h3 className="fw-bold mb-0">{totalResultados}</h3>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div className="col-md-9">
                     <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3"
-                        style={{ borderRadius: "12px", height: "100%" }}
+                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
+                        style={{ borderRadius: "15px", height: "100%" }}
                     >
-                        <i className="bi bi-search text-muted me-3"></i>
+                        <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
                         <input
                             type="text"
                             className="form-control border-0 shadow-none bg-transparent"
                             placeholder="Buscar por RUC, razón social o teléfono..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ fontSize: "0.9rem" }}
                         />
                     </div>
                 </div>
             </div>
 
-            {/* TABLA */}
             <div
                 className="card shadow-sm border-0 overflow-hidden"
-                style={{ borderRadius: "12px" }}
+                style={{ borderRadius: "15px" }}
             >
                 <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0">
                         <thead className="bg-light">
-                            <tr style={{ fontSize: "0.75rem" }}>
+                            <tr>
                                 <th
-                                    className="px-4 py-3 text-secondary fw-bold"
-                                    style={{ width: "50px" }}
+                                    className="px-4 py-3 text-secondary small fw-bold text-center"
+                                    style={{ width: "80px" }}
                                 >
                                     #
                                 </th>
                                 <th
-                                    className="py-3 text-secondary fw-bold"
+                                    className="py-3 text-secondary small fw-bold text-center"
                                     style={{ width: "130px" }}
                                 >
                                     RUC / ID
                                 </th>
-                                <th className="py-3 text-secondary fw-bold">
+                                <th className="py-3 text-secondary small fw-bold">
                                     RAZÓN SOCIAL
                                 </th>
                                 <th
-                                    className="py-3 text-secondary fw-bold text-end"
+                                    className="py-3 text-secondary small fw-bold text-end"
                                     style={{ width: "140px" }}
                                 >
                                     TELÉFONO
                                 </th>
                                 <th
-                                    className="py-3 text-secondary fw-bold text-center"
+                                    className="py-3 text-secondary small fw-bold text-center"
                                     style={{ width: "220px" }}
                                 >
                                     CORREO
                                 </th>
-                                <th
-                                    className="text-end px-4 py-3 text-secondary fw-bold"
-                                    style={{ width: "110px" }}
-                                >
+                                <th className="text-end px-4 py-3 text-secondary small fw-bold">
                                     ACCIONES
                                 </th>
                             </tr>
                         </thead>
-                        <tbody style={{ fontSize: "0.85rem" }}>
+                        <tbody>
                             {loading ? (
                                 <tr>
                                     <td
                                         colSpan="6"
                                         className="text-center py-5"
                                     >
-                                        <div className="spinner-border spinner-border-sm text-emerald-600"></div>
+                                        <div
+                                            className="spinner-border text-emerald-600"
+                                            role="status"
+                                        >
+                                            <span className="visually-hidden">
+                                                Cargando...
+                                            </span>
+                                        </div>
                                     </td>
                                 </tr>
                             ) : currentSuppliers.length > 0 ? (
                                 currentSuppliers.map((s, index) => (
                                     <tr key={s.id}>
-                                        <td className="px-4 text-muted">
-                                            {indexOfFirstItem + index + 1}
-                                        </td>
-                                        <td>
+                                        <td className="px-4 text-center">
                                             <span
-                                                className="badge bg-light text-muted border fw-normal px-2 py-1"
-                                                style={{ borderRadius: "6px" }}
+                                                className="badge bg-emerald-100 text-emerald-600 fw-bold"
+                                                style={{
+                                                    borderRadius: "6px",
+                                                    fontSize: "0.85rem",
+                                                }}
                                             >
+                                                {indexOfFirstItem + index + 1}
+                                            </span>
+                                        </td>
+                                        <td className="text-center">
+                                            <span className="fw-bold text-dark">
                                                 {s.ruc || s.id}
                                             </span>
                                         </td>
@@ -238,42 +285,32 @@ const SuppliersPage = () => {
                                             {s.nombre}
                                         </td>
                                         <td className="text-end text-muted">
-                                            {s.telefono || "---"}
+                                            {s.telefono || "—"}
                                         </td>
-                                        <td className="text-center">
-                                            {s.email ? (
-                                                <span
-                                                    className="badge border text-muted fw-normal bg-white px-2 py-1"
-                                                    style={{
-                                                        borderRadius: "4px",
-                                                        fontSize: "0.75rem",
-                                                    }}
-                                                >
-                                                    {s.email}
-                                                </span>
-                                            ) : (
-                                                "---"
-                                            )}
+                                        <td className="text-center text-muted small">
+                                            {s.email || "—"}
                                         </td>
                                         <td className="text-end px-4">
-                                            <div className="d-flex justify-content-end gap-1">
-                                                <button
-                                                    className="btn-table-action edit"
-                                                    onClick={() =>
-                                                        handleOpenModal(s)
-                                                    }
-                                                >
-                                                    <i className="bi bi-pencil-square"></i>
-                                                </button>
-                                                <button
-                                                    className="btn-table-action delete"
-                                                    onClick={() =>
-                                                        handleDelete(s.id)
-                                                    }
-                                                >
-                                                    <i className="bi bi-trash"></i>
-                                                </button>
-                                            </div>
+                                            <button
+                                                type="button"
+                                                className="btn-action btn-edit me-2"
+                                                onClick={() =>
+                                                    handleOpenModal(s)
+                                                }
+                                                title="Editar"
+                                            >
+                                                <i className="bi bi-pencil-square"></i>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn-action btn-delete"
+                                                onClick={() =>
+                                                    handleDelete(s.id)
+                                                }
+                                                title="Eliminar"
+                                            >
+                                                <i className="bi bi-trash3-fill"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -283,7 +320,9 @@ const SuppliersPage = () => {
                                         colSpan="6"
                                         className="text-center py-5 text-muted"
                                     >
-                                        No hay resultados.
+                                        {searchTerm
+                                            ? `No se encontraron coincidencias para "${searchTerm}"`
+                                            : "No hay proveedores registrados."}
                                     </td>
                                 </tr>
                             )}
@@ -291,18 +330,18 @@ const SuppliersPage = () => {
                     </table>
                 </div>
 
-                {/* PAGINACIÓN ESTILO image_2adcbc.png */}
-                {!loading && totalPages > 1 && (
+                {totalPages > 1 && (
                     <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">
                         <div className="text-muted small admin-pagination-info">
-                            Mostrando <b>{indexOfFirstItem + 1}</b> a{" "}
-                            <b>
-                                {Math.min(
-                                    indexOfLastItem,
-                                    filteredSuppliers.length,
-                                )}
-                            </b>{" "}
-                            de {filteredSuppliers.length}
+                            Mostrando{" "}
+                            <span className="fw-bold">
+                                {indexOfFirstItem + 1}
+                            </span>{" "}
+                            -{" "}
+                            <span className="fw-bold">
+                                {Math.min(indexOfLastItem, totalResultados)}
+                            </span>{" "}
+                            de {totalResultados}
                         </div>
                         <nav>
                             <ul className="pagination pagination-sm mb-0 gap-1">
@@ -310,10 +349,12 @@ const SuppliersPage = () => {
                                     className={`page-item ${currentPage === 1 ? "disabled" : ""}`}
                                 >
                                     <button
+                                        type="button"
                                         className="page-link border-0 rounded-2"
                                         onClick={() =>
                                             paginate(currentPage - 1)
                                         }
+                                        disabled={currentPage === 1}
                                     >
                                         <i className="bi bi-chevron-left"></i>
                                     </button>
@@ -321,14 +362,12 @@ const SuppliersPage = () => {
                                 {[...Array(totalPages).keys()].map((num) => (
                                     <li key={num + 1}>
                                         <button
-                                            className={`page-link border-0 rounded-2 fw-bold ${currentPage === num + 1 ? "active-page" : "text-dark bg-light"}`}
+                                            type="button"
+                                            className={`page-link border-0 rounded-2 fw-bold ${currentPage === num + 1 ? "active-pagination" : "text-dark bg-light"}`}
                                             onClick={() => paginate(num + 1)}
                                             style={{
                                                 width: "32px",
                                                 height: "32px",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
                                             }}
                                         >
                                             {num + 1}
@@ -339,10 +378,12 @@ const SuppliersPage = () => {
                                     className={`page-item ${currentPage === totalPages ? "disabled" : ""}`}
                                 >
                                     <button
+                                        type="button"
                                         className="page-link border-0 rounded-2"
                                         onClick={() =>
                                             paginate(currentPage + 1)
                                         }
+                                        disabled={currentPage === totalPages}
                                     >
                                         <i className="bi bi-chevron-right"></i>
                                     </button>
@@ -353,20 +394,23 @@ const SuppliersPage = () => {
                 )}
             </div>
 
-            {/* MODAL */}
             <div
                 className="modal fade"
                 ref={modalRef}
                 tabIndex="-1"
                 data-bs-backdrop="static"
             >
-                <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                     <div
-                        className="modal-content border-0 shadow-lg modal-custom-identity"
+                        className="modal-content border-0 shadow-lg"
                         style={{ borderRadius: "15px" }}
                     >
                         <div className="modal-header border-0 pt-4 px-4 pb-0">
-                            <h5 className="fw-bold text-dark mb-0">
+                            <h5 className="modal-title fw-bold text-dark d-flex align-items-center">
+                                <span
+                                    className="bg-emerald-600 rounded-circle d-inline-block me-2"
+                                    style={{ width: "10px", height: "10px" }}
+                                ></span>
                                 {selectedSupplier
                                     ? "Editar Proveedor"
                                     : "Nuevo Proveedor"}
@@ -376,6 +420,7 @@ const SuppliersPage = () => {
                                 className="btn-close shadow-none"
                                 onClick={() => bsModal.current.hide()}
                                 disabled={saving}
+                                aria-label="Cerrar"
                             ></button>
                         </div>
                         <div className="modal-body p-4">
@@ -399,7 +444,7 @@ const SuppliersPage = () => {
                                 <button
                                     type="submit"
                                     form="supplierForm"
-                                    className="btn btn-success px-4 fw-bold shadow-sm admin-btn-primary"
+                                    className="btn btn-success px-4 py-2 fw-bold shadow-sm admin-btn-primary"
                                     disabled={saving}
                                 >
                                     {saving ? (
@@ -416,7 +461,6 @@ const SuppliersPage = () => {
                     </div>
                 </div>
             </div>
-
         </div>
     );
 };

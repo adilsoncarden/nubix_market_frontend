@@ -29,6 +29,9 @@ export default function Navbar() {
     const userMenuRef = useRef(null);
     const notifRef = useRef(null);
     const searchWrapRef = useRef(null);
+    const mobileNavRef = useRef(null);
+
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     const { products, loading: catalogLoading } = useShopProducts();
     const [scrolled, setScrolled] = useState(false);
@@ -65,6 +68,8 @@ export default function Navbar() {
                 setSearchFocused(false);
             if (notifRef.current && !notifRef.current.contains(e.target))
                 setNotifOpen(false);
+            if (mobileNavRef.current && !mobileNavRef.current.contains(e.target))
+                setMobileNavOpen(false);
         };
         window.addEventListener("scroll", handleScroll);
         document.addEventListener("mousedown", handleClickOutside);
@@ -161,6 +166,7 @@ export default function Navbar() {
     useEffect(() => {
         if (searchPanelOpen) {
             document.body.classList.add("search-overlay-active");
+            setMobileNavOpen(false);
         } else {
             document.body.classList.remove("search-overlay-active");
         }
@@ -251,6 +257,19 @@ export default function Navbar() {
                         >
                             <img src={logoImage} alt="Nubix Market" className="navbar-logo-only" />
                         </Link>
+
+                        <button
+                            type="button"
+                            className={`navbar-hamburger d-xl-none flex-shrink-0${searchPanelOpen ? " navbar-hamburger--hidden" : ""}`}
+                            aria-label={mobileNavOpen ? "Cerrar menú" : "Abrir menú"}
+                            aria-expanded={mobileNavOpen}
+                            aria-controls="navbar-mobile-menu"
+                            onClick={() => setMobileNavOpen((open) => !open)}
+                        >
+                            <span className="navbar-hamburger-bar" />
+                            <span className="navbar-hamburger-bar" />
+                            <span className="navbar-hamburger-bar" />
+                        </button>
 
                         <nav
                             className={`landing-nav-links d-none d-xl-flex${searchPanelOpen ? " landing-nav-links--hidden" : ""}`}
@@ -423,7 +442,7 @@ export default function Navbar() {
                         </form>
 
                         <div
-                            className={`d-flex align-items-center gap-1 flex-shrink-0 navbar-actions-slot${searchPanelOpen ? " navbar-actions-slot--dimmed" : ""}`}
+                            className={`d-flex align-items-center gap-1 flex-shrink-0 ms-auto navbar-actions-slot${searchPanelOpen ? " navbar-actions-slot--dimmed" : ""}`}
                         >
                             {token && (
                                 <button
@@ -579,6 +598,44 @@ export default function Navbar() {
                             </Link>
                         </div>
                     </div>
+
+                    {mobileNavOpen && !searchPanelOpen && (
+                        <nav
+                            id="navbar-mobile-menu"
+                            ref={mobileNavRef}
+                            className="navbar-mobile-menu d-xl-none"
+                            aria-label="Menú principal"
+                        >
+                            <Link
+                                to="/"
+                                className="navbar-mobile-link"
+                                onClick={() => setMobileNavOpen(false)}
+                            >
+                                Inicio
+                            </Link>
+                            <Link
+                                to="/shop"
+                                className="navbar-mobile-link"
+                                onClick={() => setMobileNavOpen(false)}
+                            >
+                                Tienda
+                            </Link>
+                            <Link
+                                to="/shop"
+                                className="navbar-mobile-link"
+                                onClick={() => setMobileNavOpen(false)}
+                            >
+                                Ofertas
+                            </Link>
+                            <Link
+                                to="/shop"
+                                className="navbar-mobile-link"
+                                onClick={() => setMobileNavOpen(false)}
+                            >
+                                Categorías
+                            </Link>
+                        </nav>
+                    )}
                 </div>
             </nav>
             <div style={{ marginTop: "75px" }} />

@@ -4,7 +4,8 @@ import { unwrapApiList } from "../../../config/apiUtils";
 export const saleService = {
     getAll: async () => {
         const response = await api.get("/admin/ventas");
-        return unwrapApiList(response.data);
+        const list = unwrapApiList(response?.data);
+        return Array.isArray(list) ? list : [];
     },
 
     getById: async (id) => {
