@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { saleService } from "../../features/sales/services/saleService";
 import { profileService } from "../../features/profile/services/profileService";
+import { identityService } from "../../features/identity/services/identityService";
+import {
+    getDocumentoError,
+    isValidDocumentoLength,
+    sanitizeDocumento,
+} from "../../features/identity/utils/documentUtils";
 import { mergeWebUserProfile } from "../../utils/authUtils";
 import { calcOrderTotals, formatSoles } from "../../utils/pricing";
 import api from "../../config/axios";
@@ -262,7 +268,6 @@ function CheckoutStepIndicator({ step }) {
 }
 
 export default function CheckoutModal({ items, onClose, onSuccess }) {
-    const [tipo, setTipo] = useState("boleta");
     const [tipoEntrega, setTipoEntrega] = useState("FAST_LANE");
     const totals = useMemo(
         () => calcOrderTotals(items, tipoEntrega),
@@ -276,19 +281,25 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const [ventaCreada, setVentaCreada] = useState(null);
     const [errorCheckout, setErrorCheckout] = useState(null);
     const [emailTouched, setEmailTouched] = useState(false);
+    const [documentoTouched, setDocumentoTouched] = useState(false);
+    const [documentoLookupLoading, setDocumentoLookupLoading] = useState(false);
+    const [documentoLookupError, setDocumentoLookupError] = useState("");
 
     const [form, setForm] = useState({
-        nombre: "",
-        dni: "",
+        documento: "",
+        nombreRazonSocial: "",
         email: "",
         telefono: "",
-        razonSocial: "",
-        ruc: "",
         direccion: "",
+        departamento: "",
+        provincia: "",
         direccionEntrega: "",
         distrito: "",
         referencia: "",
     });
+
+    const documentoDigits = sanitizeDocumento(form.documento);
+    const tipo = documentoDigits.length === 11 ? "factura" : "boleta";
 
     useEffect(() => {
         let cancelled = false;
@@ -299,11 +310,19 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                 mergeWebUserProfile(profile);
                 setForm((prev) => ({
                     ...prev,
-                    nombre: prev.nombre || profile.username || "",
+                    documento: prev.documento || profile.dniRuc || "",
+                    nombreRazonSocial:
+                        prev.nombreRazonSocial ||
+                        profile.nombreRazonSocial ||
+                        profile.username ||
+                        "",
                     email: prev.email || profile.email || "",
                     telefono: prev.telefono || profile.telefono || "",
                     direccion:
                         prev.direccion || profile.direccion || "",
+                    departamento:
+                        prev.departamento || profile.departamento || "",
+                    provincia: prev.provincia || profile.provincia || "",
                     direccionEntrega:
                         prev.direccionEntrega || profile.direccion || "",
                     distrito: prev.distrito || profile.distrito || "",
@@ -334,12 +353,14 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         return null;
     })();
 
+    const documentoError = documentoTouched
+        ? getDocumentoError(form.documento)
+        : null;
+
     const valido =
-        tipo === "boleta"
-            ? form.nombre.trim() && form.dni.trim().length === 8
-            : form.razonSocial.trim() &&
-              form.ruc.trim().length === 11 &&
-              form.direccion.trim();
+        isValidDocumentoLength(form.documento) &&
+        form.nombreRazonSocial.trim() &&
+        (documentoDigits.length !== 11 || form.direccion.trim());
 
     const emailValido = !emailError;
 
@@ -356,6 +377,46 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         }));
     };
 
+    const handleDocumentoChange = (e) => {
+        setDocumentoLookupError("");
+        setForm((f) => ({
+            ...f,
+            documento: sanitizeDocumento(e.target.value),
+        }));
+    };
+
+    const handleDocumentoBlur = async () => {
+        setDocumentoTouched(true);
+        const digits = sanitizeDocumento(form.documento);
+        if (!isValidDocumentoLength(digits)) return;
+
+        setDocumentoLookupLoading(true);
+        setDocumentoLookupError("");
+        try {
+            const data = await identityService.consultar(digits);
+            setForm((f) => ({
+                ...f,
+                nombreRazonSocial:
+                    data.nombreRazonSocial || f.nombreRazonSocial,
+                ...(digits.length === 11
+                    ? {
+                          direccion: data.direccion || f.direccion,
+                          departamento: data.departamento || f.departamento,
+                          provincia: data.provincia || f.provincia,
+                          distrito: data.distrito || f.distrito,
+                      }
+                    : {}),
+            }));
+        } catch (err) {
+            setDocumentoLookupError(
+                err.response?.data?.message ||
+                    "No se pudo validar el documento. Verifica el número.",
+            );
+        } finally {
+            setDocumentoLookupLoading(false);
+        }
+    };
+
     const handleContinueToPayment = () => {
         setEmailTouched(true);
         if (canContinueStep1) {
@@ -363,9 +424,8 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         }
     };
 
-    const displayName =
-        tipo === "boleta" ? form.nombre : form.razonSocial;
-    const displayDoc = tipo === "boleta" ? form.dni : form.ruc;
+    const displayName = form.nombreRazonSocial;
+    const displayDoc = form.documento;
 
     const handleConfirmar = async () => {
         setLoading(true);
@@ -378,16 +438,17 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         const metodoPago = selectedPayment?.metodoPago ?? "TRANSFERENCIA";
 
         try {
+            const isFactura = documentoDigits.length === 11;
             const venta = await saleService.checkout({
-                tipoComprobante: tipo === "boleta" ? "BOLETA" : "FACTURA",
+                tipoComprobante: isFactura ? "FACTURA" : "BOLETA",
                 metodoPago,
                 tipoEntrega,
-                nombreComprobante: form.nombre,
-                dni: form.dni,
-                ruc: form.ruc,
-                razonSocial: form.razonSocial,
+                nombreComprobante: isFactura ? null : form.nombreRazonSocial,
+                dni: isFactura ? null : documentoDigits,
+                ruc: isFactura ? documentoDigits : null,
+                razonSocial: isFactura ? form.nombreRazonSocial : null,
                 emailComprobante: form.email,
-                direccionFiscal: form.direccion,
+                direccionFiscal: isFactura ? form.direccion : null,
                 direccionEntrega:
                     tipoEntrega === "DELIVERY" ? form.direccionEntrega : null,
                 distrito: tipoEntrega === "DELIVERY" ? form.distrito : null,
@@ -406,15 +467,15 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                 fecha,
                 codigoRecojo: venta.codigoRecojo,
                 cliente:
-                    tipo === "boleta"
+                    documentoDigits.length === 8
                         ? {
-                              nombre: form.nombre,
-                              dni: form.dni,
+                              nombre: form.nombreRazonSocial,
+                              dni: documentoDigits,
                               email: form.email,
                           }
                         : {
-                              razonSocial: form.razonSocial,
-                              ruc: form.ruc,
+                              razonSocial: form.nombreRazonSocial,
+                              ruc: documentoDigits,
                               direccion: form.direccion,
                               email: form.email,
                           },
@@ -470,70 +531,54 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                 {step === 1 && (
                     <div className="modal-pago-body">
                         <div className="row g-3">
-                            <div className="col-12">
+                            <div className="col-md-6">
                                 <label className="checkout-form-label">
-                                    Nombre y Apellido / Razón Social
+                                    DNI / RUC
                                 </label>
                                 <input
                                     type="text"
-                                    className="form-control checkout-input w-100"
-                                    value={
-                                        tipo === "boleta"
-                                            ? form.nombre
-                                            : form.razonSocial
-                                    }
-                                    onChange={(e) => {
-                                        const v = e.target.value;
-                                        if (tipo === "boleta") {
-                                            setForm((f) => ({
-                                                ...f,
-                                                nombre: v,
-                                            }));
-                                        } else {
-                                            setForm((f) => ({
-                                                ...f,
-                                                razonSocial: v,
-                                            }));
-                                        }
-                                    }}
+                                    inputMode="numeric"
+                                    className={`form-control checkout-input w-100${documentoError || documentoLookupError ? " checkout-input-invalid" : ""}`}
+                                    maxLength={11}
+                                    value={form.documento}
+                                    onChange={handleDocumentoChange}
+                                    onBlur={handleDocumentoBlur}
                                 />
+                                {documentoLookupLoading && (
+                                    <span className="field-hint">
+                                        Validando documento...
+                                    </span>
+                                )}
+                                {(documentoError || documentoLookupError) && (
+                                    <span className="checkout-field-error">
+                                        {documentoError || documentoLookupError}
+                                    </span>
+                                )}
+                                {!documentoError &&
+                                    !documentoLookupError &&
+                                    documentoDigits && (
+                                        <span className="field-hint">
+                                            {tipo === "factura"
+                                                ? "Factura (RUC — 11 dígitos)"
+                                                : "Boleta (DNI — 8 dígitos)"}
+                                        </span>
+                                    )}
                             </div>
 
                             <div className="col-md-6">
                                 <label className="checkout-form-label">
-                                    Tipo de comprobante
-                                </label>
-                                <select
-                                    className="form-select checkout-input checkout-select"
-                                    value={tipo}
-                                    onChange={(e) => setTipo(e.target.value)}
-                                >
-                                    <option value="boleta">Boleta</option>
-                                    <option value="factura">Factura</option>
-                                </select>
-                            </div>
-
-                            <div className="col-md-6">
-                                <label className="checkout-form-label">
-                                    {tipo === "boleta" ? "DNI" : "RUC"}
+                                    Nombre y Apellidos / Razón Social
                                 </label>
                                 <input
                                     type="text"
                                     className="form-control checkout-input w-100"
-                                    maxLength={tipo === "boleta" ? 8 : 11}
-                                    value={
-                                        tipo === "boleta"
-                                            ? form.dni
-                                            : form.ruc
+                                    value={form.nombreRazonSocial}
+                                    onChange={(e) =>
+                                        setForm((f) => ({
+                                            ...f,
+                                            nombreRazonSocial: e.target.value,
+                                        }))
                                     }
-                                    onChange={(e) => {
-                                        const v = e.target.value;
-                                        if (tipo === "boleta") {
-                                            setForm((f) => ({ ...f, dni: v }));
-                                        } else {
-                                            setForm((f) => ({ ...f, ruc: v }));
-                                        }
-                                    }}
                                 />
                             </div>
 
@@ -607,7 +652,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                 )}
                             </div>
 
-                            {tipo === "factura" && (
+                            {documentoDigits.length === 11 && (
                                 <div className="col-12">
                                     <label className="checkout-form-label">
                                         Dirección fiscal
@@ -793,7 +838,9 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                 </div>
                                 <div className="confirm-row">
                                     <span>
-                                        {tipo === "boleta" ? "DNI" : "RUC"}
+                                        {documentoDigits.length === 8
+                                            ? "DNI"
+                                            : "RUC"}
                                     </span>
                                     <strong>{displayDoc}</strong>
                                 </div>

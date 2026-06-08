@@ -8,6 +8,8 @@ import { mergeWebUserProfile } from "../../utils/authUtils";
 
 const emptyForm = {
     direccion: "",
+    departamento: "",
+    provincia: "",
     distrito: "",
     referencia: "",
     latitud: null,
@@ -46,6 +48,8 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
                     const data = profileResult.value;
                     setForm({
                         direccion: data.direccion ?? "",
+                        departamento: data.departamento ?? "",
+                        provincia: data.provincia ?? "",
                         distrito: data.distrito ?? "",
                         referencia: data.referencia ?? "",
                         latitud: data.latitud ?? null,
@@ -93,6 +97,8 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
         setForm((prev) => ({
             ...prev,
             direccion: parsed.direccion || prev.direccion,
+            departamento: parsed.departamento || prev.departamento,
+            provincia: parsed.provincia || prev.provincia,
             distrito: parsed.distrito || prev.distrito,
             referencia: parsed.referencia || prev.referencia,
             latitud: parsed.latitud,
@@ -118,6 +124,8 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
         try {
             const payload = {
                 direccion: form.direccion.trim(),
+                departamento: form.departamento.trim(),
+                provincia: form.provincia.trim(),
                 distrito: form.distrito.trim(),
                 referencia: form.referencia.trim(),
             };
