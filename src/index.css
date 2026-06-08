@@ -142,3 +142,36 @@
 .swal2-popup.nubix-toast.nubix-toast-hide {
     animation: nubix-toast-out 0.15s cubic-bezier(0.4, 0, 0.8, 0.6) forwards !important;
 }
+
+/* Google Places Autocomplete — sugerencias por encima de modales/overlays */
+.pac-container {
+    z-index: 9999 !important;
+    pointer-events: auto !important;
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    font-family: inherit;
+}
+
+.pac-item {
+    cursor: pointer;
+    padding: 0.5rem 0.75rem;
+    line-height: 1.35;
+}
+
+.pac-item:hover,
+.pac-item-selected {
+    background-color: #e8f5e9;
+}
+
+/* Contenedor del input — referencia de posicionamiento para el dropdown */
+.address-autocomplete-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+/* Modal de dirección: evita recorte del dropdown respecto al input */
+.location-address-modal .modal-content,
+.location-address-modal .modal-body {
+    overflow: visible;
+}

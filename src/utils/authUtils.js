@@ -124,6 +124,9 @@ export const mergeWebUserProfile = (profile) => {
         provincia: profile.provincia ?? "",
         distrito: profile.distrito ?? "",
         referencia: profile.referencia ?? "",
+        latitud: profile.latitud ?? null,
+        longitud: profile.longitud ?? null,
+        googlePlaceId: profile.googlePlaceId ?? "",
     };
     localStorage.setItem(STORAGE_KEYS.webUser, JSON.stringify(merged));
     window.dispatchEvent(new CustomEvent("nubix:web-user-updated", { detail: merged }));
