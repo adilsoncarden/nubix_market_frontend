@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { profileService } from "../../features/profile/services/profileService";
 import { mapsConfigService } from "../../features/maps/services/mapsConfigService";
 import AddressAutocompleteInput from "../../features/maps/components/AddressAutocompleteInput";
+import AddressMapPreview from "../../features/maps/components/AddressMapPreview";
+import GoogleMapsLoader from "../../features/maps/components/GoogleMapsLoader";
 import { mergeWebUserProfile } from "../../utils/authUtils";
 
 const emptyForm = {
@@ -186,37 +188,90 @@ export default function LocationAddressModal({ show, onClose, onSaved }) {
                                 <div className="text-center py-4">
                                     <div className="spinner-border spinner-border-sm text-success" />
                                 </div>
+                            ) : showAutocomplete ? (
+                                <GoogleMapsLoader apiKey={mapsApiKey}>
+                                    {({ isLoaded, loadError }) => (
+                                        <div className="row g-3">
+                                            <div className="col-12">
+                                                <label className="form-label small fw-semibold">
+                                                    Dirección
+                                                </label>
+                                                <AddressAutocompleteInput
+                                                    isMapsLoaded={isLoaded}
+                                                    mapsLoadError={loadError}
+                                                    value={form.direccion}
+                                                    onChange={handleChange}
+                                                    onPlaceSelected={
+                                                        handlePlaceSelected
+                                                    }
+                                                    onMapsError={
+                                                        handleMapsError
+                                                    }
+                                                    disabled={saving}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="col-12 col-md-6">
+                                                <label className="form-label small fw-semibold">
+                                                    Distrito
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="distrito"
+                                                    className="form-control"
+                                                    value={form.distrito}
+                                                    onChange={handleChange}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="col-12 col-md-6">
+                                                <label className="form-label small fw-semibold">
+                                                    Referencia
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="referencia"
+                                                    className="form-control"
+                                                    value={form.referencia}
+                                                    onChange={handleChange}
+                                                    placeholder="Opcional"
+                                                />
+                                            </div>
+                                            <div className="col-12">
+                                                <label className="form-label small fw-semibold">
+                                                    Ubicación en el mapa
+                                                </label>
+                                                {isLoaded && !loadError ? (
+                                                    <AddressMapPreview
+                                                        latitud={form.latitud}
+                                                        longitud={form.longitud}
+                                                    />
+                                                ) : (
+                                                    <div className="address-map-preview address-map-preview--loading d-flex align-items-center justify-content-center">
+                                                        <div className="spinner-border spinner-border-sm text-success" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </GoogleMapsLoader>
                             ) : (
                                 <div className="row g-3">
                                     <div className="col-12">
                                         <label className="form-label small fw-semibold">
                                             Dirección
                                         </label>
-                                        {showAutocomplete ? (
-                                            <AddressAutocompleteInput
-                                                apiKey={mapsApiKey}
-                                                value={form.direccion}
-                                                onChange={handleChange}
-                                                onPlaceSelected={
-                                                    handlePlaceSelected
-                                                }
-                                                onMapsError={handleMapsError}
-                                                disabled={saving}
-                                                required
-                                            />
-                                        ) : (
-                                            <input
-                                                type="text"
-                                                name="direccion"
-                                                className="form-control"
-                                                value={form.direccion}
-                                                onChange={handleChange}
-                                                required
-                                                disabled={
-                                                    saving || mapsKeyLoading
-                                                }
-                                            />
-                                        )}
+                                        <input
+                                            type="text"
+                                            name="direccion"
+                                            className="form-control"
+                                            value={form.direccion}
+                                            onChange={handleChange}
+                                            required
+                                            disabled={
+                                                saving || mapsKeyLoading
+                                            }
+                                        />
                                     </div>
                                     <div className="col-12 col-md-6">
                                         <label className="form-label small fw-semibold">

@@ -1,11 +1,10 @@
 import { useRef } from "react";
-import { Autocomplete, useJsApiLoader } from "@react-google-maps/api";
+import { Autocomplete } from "@react-google-maps/api";
 import { parseGooglePlace } from "../utils/parseGooglePlace";
 
-const GOOGLE_MAPS_LIBRARIES = ["places"];
-
 export default function AddressAutocompleteInput({
-    apiKey,
+    isMapsLoaded = false,
+    mapsLoadError = null,
     value,
     onChange,
     onPlaceSelected,
@@ -15,12 +14,6 @@ export default function AddressAutocompleteInput({
     onMapsError,
 }) {
     const autocompleteRef = useRef(null);
-
-    const { isLoaded, loadError } = useJsApiLoader({
-        id: "nubix-google-maps-script",
-        googleMapsApiKey: apiKey,
-        libraries: GOOGLE_MAPS_LIBRARIES,
-    });
 
     const handlePlaceChanged = () => {
         const autocomplete = autocompleteRef.current;
@@ -43,7 +36,7 @@ export default function AddressAutocompleteInput({
         onPlaceSelected(parsed);
     };
 
-    if (loadError) {
+    if (mapsLoadError) {
         return (
             <>
                 <input
@@ -63,7 +56,7 @@ export default function AddressAutocompleteInput({
         );
     }
 
-    if (!isLoaded) {
+    if (!isMapsLoaded) {
         return (
             <input
                 type="text"
