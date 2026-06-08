@@ -4,7 +4,9 @@ import { useProducts } from "../features/products/hooks/useProducts";
 import { useCategories } from "../features/categories/hooks/useCategories";
 import {
     productService,
-    getProductImageUrl,
+    resolveProductImageUrl,
+    handleProductImageError,
+    PRODUCT_PLACEHOLDER_IMAGE,
 } from "../features/products/services/productService";
 import ProductForm from "../features/products/components/ProductForm";
 import ProductImageField from "../features/products/components/ProductImageField";
@@ -27,7 +29,7 @@ const ProductsPage = () => {
         precioMin: "",
         precioMax: "",
     });
-    const [pendingImageFile, setPendingImageFile] = useState(null);
+    const [formUrlImagen, setFormUrlImagen] = useState(null);
     const [formkey, setFormKey] = useState(Date.now());
 
     const filteredProducts = useMemo(() => {
@@ -73,30 +75,20 @@ const ProductsPage = () => {
             bsModal.current = new Modal(modalRef.current);
             modalRef.current.addEventListener("hidden.bs.modal", () => {
                 setSelectedProduct(null);
-                setPendingImageFile(null);
+                setFormUrlImagen(null);
             });
         }
     }, []);
 
     const openModal = (product = null) => {
         setSelectedProduct(null);
-        setPendingImageFile(null);
+        setFormUrlImagen(product?.urlImagen ?? null);
         setFormKey(Date.now());
 
         setTimeout(() => {
             setSelectedProduct(product ? { ...product } : null);
             bsModal.current.show();
         }, 10);
-    };
-
-    const updateProductInList = (updated) => {
-        setProducts((prev) =>
-            prev.map((p) => (p.id === updated.id ? updated : p)),
-        );
-        setSelectedProduct((prev) =>
-            prev?.id === updated.id ? { ...prev, ...updated } : prev,
-        );
-        invalidateCatalog();
     };
 
     const handleSave = async (formData) => {
@@ -106,7 +98,7 @@ const ProductsPage = () => {
             if (selectedProduct) {
                 const updated = await productService.update(
                     selectedProduct.id,
-                    formData,
+                    { ...formData, urlImagen: formUrlImagen },
                 );
                 setProducts((prev) =>
                     prev.map((p) =>
@@ -119,17 +111,12 @@ const ProductsPage = () => {
                     title: "Producto actualizado",
                 });
             } else {
-                const created = await productService.create(formData);
+                const created = await productService.create({
+                    ...formData,
+                    urlImagen: formUrlImagen,
+                });
 
-                let finalProduct = created;
-                if (pendingImageFile) {
-                    finalProduct = await productService.uploadProductImage(
-                        created.id,
-                        pendingImageFile,
-                    );
-                }
-
-                setProducts((prev) => [...prev, finalProduct]);
+                setProducts((prev) => [...prev, created]);
                 invalidateCatalog();
                 Toast.fire({
                     icon: "success",
@@ -371,9 +358,9 @@ const ProductsPage = () => {
                                 </tr>
                             ) : currentItems.length > 0 ? (
                                 currentItems.map((prod, index) => {
-                                    const imageUrl = getProductImageUrl(
-                                        prod.imagen,
-                                    );
+                                    const imageUrl =
+                                        resolveProductImageUrl(prod) ||
+                                        PRODUCT_PLACEHOLDER_IMAGE;
                                     return (
                                         <tr key={prod.id}>
                                             <td className="px-4">
@@ -384,29 +371,18 @@ const ProductsPage = () => {
                                                 </span>
                                             </td>
                                             <td>
-                                                {imageUrl ? (
-                                                    <img
-                                                        src={imageUrl}
-                                                        alt={prod.nombre}
-                                                        loading="lazy"
-                                                        className="rounded border"
-                                                        style={{
-                                                            width: "44px",
-                                                            height: "44px",
-                                                            objectFit: "cover",
-                                                        }}
-                                                    />
-                                                ) : (
-                                                    <div
-                                                        className="rounded border bg-light d-flex align-items-center justify-content-center text-muted"
-                                                        style={{
-                                                            width: "44px",
-                                                            height: "44px",
-                                                        }}
-                                                    >
-                                                        <i className="bi bi-image"></i>
-                                                    </div>
-                                                )}
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={prod.nombre}
+                                                    loading="lazy"
+                                                    className="rounded border"
+                                                    style={{
+                                                        width: "44px",
+                                                        height: "44px",
+                                                        objectFit: "cover",
+                                                    }}
+                                                    onError={handleProductImageError}
+                                                />
                                             </td>
                                             <td>
                                                 <span className="badge bg-light text-dark border fw-medium">
@@ -562,10 +538,8 @@ const ProductsPage = () => {
                         <div className="modal-body p-4">
                             <ProductImageField
                                 key={`img-${formkey}-${selectedProduct?.id ?? "new"}`}
-                                productId={selectedProduct?.id}
-                                imagen={selectedProduct?.imagen}
-                                onImageUpdated={updateProductInList}
-                                onPendingFile={setPendingImageFile}
+                                urlImagen={formUrlImagen}
+                                onUrlImagenChange={setFormUrlImagen}
                                 disabled={saving}
                             />
                             <ProductForm

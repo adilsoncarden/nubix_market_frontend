@@ -11,7 +11,7 @@ import { useAuth } from "./AuthContext";
 import api from "../config/axios";
 import { productService } from "../features/products/services/productService";
 import {
-    getProductImageUrl,
+    resolveProductImageUrl,
     PRODUCT_PLACEHOLDER_IMAGE,
 } from "../features/products/services/productService";
 import { mapProductosToShopItems } from "../features/products/utils/mapProducto";
@@ -62,7 +62,7 @@ function mapCarritoToItems(carrito) {
             unit: "und",
             stock: p.stock ?? 0,
             codigo: p.codigo ?? "",
-            img: getProductImageUrl(p.imagen) || PRODUCT_PLACEHOLDER_IMAGE,
+            img: resolveProductImageUrl(p) || PRODUCT_PLACEHOLDER_IMAGE,
             qty: it.cantidad ?? 1,
         };
     });

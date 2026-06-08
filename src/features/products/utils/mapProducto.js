@@ -1,5 +1,5 @@
 import {
-    getProductImageUrl,
+    resolveProductImageUrl,
     PRODUCT_PLACEHOLDER_IMAGE,
 } from "../services/productService";
 import { priceWithIgv } from "../../../utils/pricing";
@@ -26,7 +26,7 @@ export function mapProductoToShopItem(producto) {
                 : null,
         tagColor:
             producto.stock != null && producto.stock < 10 ? "tag-red" : null,
-        img: getProductImageUrl(producto.imagen) || PRODUCT_PLACEHOLDER_IMAGE,
+        img: resolveProductImageUrl(producto) || PRODUCT_PLACEHOLDER_IMAGE,
     };
 }
 

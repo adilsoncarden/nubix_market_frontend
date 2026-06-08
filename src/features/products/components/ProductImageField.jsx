@@ -1,22 +1,21 @@
 import React, { useState, useRef, useEffect } from "react";
 import imageCompression from "browser-image-compression";
+import { uploadImageToCloudinary } from "../services/cloudinaryService";
 import {
-    productService,
-    getProductImageUrl,
+    resolveProductImageUrl,
+    handleProductImageError,
 } from "../services/productService";
 
 const ProductImageField = ({
-    productId,
-    imagen,
-    onImageUpdated,
-    onPendingFile,
+    urlImagen,
+    onUrlImagenChange,
     disabled = false,
 }) => {
     const [previewUrl, setPreviewUrl] = useState(null);
     const [uploading, setUploading] = useState(false);
     const inputRef = useRef(null);
 
-    const currentImageUrl = getProductImageUrl(imagen);
+    const currentImageUrl = resolveProductImageUrl({ urlImagen });
     const displayUrl = previewUrl || currentImageUrl;
 
     useEffect(() => {
@@ -34,7 +33,7 @@ const ProductImageField = ({
         let processedFile = file;
         try {
             processedFile = await imageCompression(file, {
-                maxSizeMB: 0.1, // ~100KB objetivo
+                maxSizeMB: 0.1,
                 maxWidthOrHeight: 1280,
                 useWebWorker: true,
                 initialQuality: 0.8,
@@ -52,53 +51,30 @@ const ProductImageField = ({
 
         if (previewUrl) URL.revokeObjectURL(previewUrl);
         setPreviewUrl(URL.createObjectURL(processedFile));
+        setUploading(true);
 
-        if (productId) {
-            setUploading(true);
-            try {
-                const updated = await productService.uploadProductImage(
-                    productId,
-                    processedFile,
-                );
-                setPreviewUrl(null);
-                onImageUpdated?.(updated);
-            } catch (error) {
-                console.error(error);
-                alert("Error al subir la imagen");
-                setPreviewUrl(null);
-            } finally {
-                setUploading(false);
-                if (inputRef.current) inputRef.current.value = "";
-            }
-        } else {
-            onPendingFile?.(processedFile);
+        try {
+            const secureUrl = await uploadImageToCloudinary(processedFile);
+            setPreviewUrl(null);
+            onUrlImagenChange?.(secureUrl);
+        } catch (error) {
+            console.error(error);
+            alert(error.message || "Error al subir la imagen a Cloudinary");
+            setPreviewUrl(null);
+            onUrlImagenChange?.(urlImagen ?? null);
+        } finally {
+            setUploading(false);
+            if (inputRef.current) inputRef.current.value = "";
         }
     };
 
-    const handleDelete = async () => {
+    const handleDelete = () => {
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
             setPreviewUrl(null);
-            onPendingFile?.(null);
-            if (inputRef.current) inputRef.current.value = "";
-            return;
         }
-
-        if (productId && imagen) {
-            setUploading(true);
-            try {
-                const updated =
-                    await productService.deleteProductImage(productId);
-                onImageUpdated?.(updated);
-            } catch (error) {
-                console.error(error);
-                alert("Error al eliminar la imagen");
-            } finally {
-                setUploading(false);
-            }
-        } else {
-            onPendingFile?.(null);
-        }
+        onUrlImagenChange?.(null);
+        if (inputRef.current) inputRef.current.value = "";
     };
 
     return (
@@ -112,6 +88,7 @@ const ProductImageField = ({
                         loading="lazy"
                         className="img-fluid rounded"
                         style={{ maxHeight: "180px", objectFit: "contain" }}
+                        onError={handleProductImageError}
                     />
                     {!disabled && (
                         <div className="d-flex justify-content-center gap-2 mt-3">
@@ -138,7 +115,9 @@ const ProductImageField = ({
                     {uploading && (
                         <div className="mt-2">
                             <span className="spinner-border spinner-border-sm text-success me-2"></span>
-                            <small className="text-muted">Procesando imagen...</small>
+                            <small className="text-muted">
+                                Subiendo a Cloudinary...
+                            </small>
                         </div>
                     )}
                 </div>
@@ -154,9 +133,10 @@ const ProductImageField = ({
                 >
                     <i className="bi bi-image text-muted fs-2 d-block mb-2"></i>
                     <p className="mb-0 text-muted small">
-                        {productId
-                            ? "Haz clic para subir la imagen del producto"
-                            : "Selecciona una imagen (se subirá al guardar el producto)"}
+                        Haz clic para subir la imagen (se guardará en Cloudinary)
+                    </p>
+                    <p className="mb-0 text-muted small mt-1">
+                        Sin imagen se mostrará un placeholder en la tienda
                     </p>
                 </div>
             )}

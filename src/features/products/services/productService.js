@@ -2,18 +2,12 @@ import api from "../../../config/axios";
 import { unwrapApiList } from "../../../config/apiUtils";
 import { mapProductPayload } from "../../../utils/productPayload";
 
-export const API_ORIGIN = (
-    import.meta.env.VITE_API_URL?.replace(/\/api\/?$/, "") ||
-    "https://nubix-market-backend.onrender.com"
-).replace(/\/$/, "");
-
 export const PRODUCT_PLACEHOLDER_IMAGE =
     "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80";
 
-export const getProductImageUrl = (imagen) => {
-    if (!imagen?.archivo) return null;
-    const path = String(imagen.archivo).replace(/^\/+/, "");
-    return `${API_ORIGIN}/${path}`;
+export const resolveProductImageUrl = (producto) => {
+    const url = producto?.urlImagen;
+    return url ? String(url).trim() : null;
 };
 
 export const handleProductImageError = (event) => {
@@ -72,23 +66,5 @@ export const productService = {
 
     delete: async (id) => {
         await api.delete(`/admin/productos/${id}/delete`);
-    },
-
-    uploadProductImage: async (productoId, file) => {
-        const formData = new FormData();
-        formData.append("archivo", file);
-        const response = await api.post(
-            `/admin/productos/${productoId}/imagen`,
-            formData,
-            { headers: { "Content-Type": "multipart/form-data" } },
-        );
-        return response.data;
-    },
-
-    deleteProductImage: async (productoId) => {
-        const response = await api.delete(
-            `/admin/productos/${productoId}/imagen`,
-        );
-        return response.data;
     },
 };

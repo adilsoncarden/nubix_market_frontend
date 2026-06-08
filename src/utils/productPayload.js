@@ -12,6 +12,6 @@ export const mapProductPayload = (form) => {
         precio_compra: Number(form.precioCompra) || 0,
         precio_venta: Number(form.precioVenta) || 0,
         stock: Number(form.stock) || 0,
-        ...(form.imagenId ? { id_imagen: Number(form.imagenId) } : {}),
+        url_imagen: form.urlImagen ? String(form.urlImagen).trim() : null,
     };
 };
