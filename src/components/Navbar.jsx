@@ -276,8 +276,8 @@ export default function Navbar() {
                         >
                             <Link to="/" className="landing-nav-link">Inicio</Link>
                             <Link to="/shop" className="landing-nav-link">Tienda</Link>
-                            <Link to="/shop" className="landing-nav-link">Ofertas</Link>
-                            <Link to="/shop" className="landing-nav-link">Categorías</Link>
+                            {/* <Link to="/shop" className="landing-nav-link">Ofertas</Link> */}
+                            {/* <Link to="/shop" className="landing-nav-link">Categorías</Link> */}
                         </nav>
 
                         {searchPanelOpen && (
@@ -620,20 +620,20 @@ export default function Navbar() {
                             >
                                 Tienda
                             </Link>
-                            <Link
+                            {/* <Link
                                 to="/shop"
                                 className="navbar-mobile-link"
                                 onClick={() => setMobileNavOpen(false)}
                             >
                                 Ofertas
-                            </Link>
-                            <Link
+                            </Link> */}
+                            {/* <Link
                                 to="/shop"
                                 className="navbar-mobile-link"
                                 onClick={() => setMobileNavOpen(false)}
                             >
                                 Categorías
-                            </Link>
+                            </Link> */}
                         </nav>
                     )}
                 </div>
