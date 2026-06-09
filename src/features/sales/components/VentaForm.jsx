@@ -536,7 +536,7 @@ const VentaForm = ({ onSave, loading, active = false }) => {
                                 setSelectedProduct(null);
                             }}
                             onKeyDown={handleProductSearchKeyDown}
-                            placeholder="Escanee o busque por código / nombre (Enter agrega)"
+                            placeholder=""
                             disabled={loadingData}
                             autoComplete="off"
                         />

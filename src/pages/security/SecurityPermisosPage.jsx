@@ -156,57 +156,47 @@ export default function SecurityPermisosPage() {
                 </button>
             </div>
 
-            <div className="row g-4 mb-4">
-                <div className="col-md-4">
-                    <div
-                        className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div
-                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "48px", height: "48px" }}
-                            >
-                                <i className="bi bi-shield-check fs-4"></i>
-                            </div>
-                            <div className="ms-3">
-                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
-                                    Permisos
-                                </h6>
-                                <h3 className="fw-bold mb-0">{totalItems}</h3>
-                            </div>
-                        </div>
+            <div className="admin-toolbar-panel admin-permisos-toolbar mb-4">
+                <div className="admin-toolbar-stats">
+                    <div className="admin-toolbar-stats-icon bg-emerald-100 text-emerald-600">
+                        <i className="bi bi-shield-check fs-4"></i>
+                    </div>
+                    <div>
+                        <p className="admin-toolbar-stats-label mb-0">
+                            Permisos registrados
+                        </p>
+                        <p className="admin-toolbar-stats-value mb-0">
+                            {totalItems}
+                        </p>
                     </div>
                 </div>
-                <div className="col-md-8">
-                    <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row flex-wrap align-items-center gap-2 px-3 admin-search-card"
-                        style={{ borderRadius: "15px", minHeight: "72px" }}
-                    >
-                        <i className="bi bi-search text-emerald-600 fs-5"></i>
+                <div className="admin-toolbar-divider" aria-hidden="true" />
+                <div className="admin-toolbar-search">
+                    <label className="admin-search-field flex-grow-1 mb-0">
+                        <i className="bi bi-search" aria-hidden="true"></i>
                         <input
                             type="search"
-                            className="form-control border-0 shadow-none bg-transparent flex-grow-1"
+                            className="admin-search-input"
                             placeholder="Buscar por nombre, descripción o módulo..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <select
-                            className="form-select admin-filter-select shadow-sm"
-                            value={filterModulo}
-                            onChange={(e) => setFilterModulo(e.target.value)}
-                            aria-label="Filtrar por módulo"
-                        >
-                            <option value={MODULO_FILTER_ALL}>
-                                Todos los módulos
+                    </label>
+                    <select
+                        className="form-select admin-filter-select admin-toolbar-select"
+                        value={filterModulo}
+                        onChange={(e) => setFilterModulo(e.target.value)}
+                        aria-label="Filtrar por módulo"
+                    >
+                        <option value={MODULO_FILTER_ALL}>
+                            Todos los módulos
+                        </option>
+                        {modulos.map((m) => (
+                            <option key={m} value={m}>
+                                {m}
                             </option>
-                            {modulos.map((m) => (
-                                <option key={m} value={m}>
-                                    {m}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                        ))}
+                    </select>
                 </div>
             </div>
 
@@ -361,7 +351,7 @@ export default function SecurityPermisosPage() {
                                     <input
                                         type="text"
                                         className="form-control"
-                                        placeholder="ej: crear:productos"
+                                        placeholder=""
                                         value={form.nombre}
                                         onChange={(e) =>
                                             setForm((f) => ({
@@ -379,7 +369,7 @@ export default function SecurityPermisosPage() {
                                     <textarea
                                         className="form-control"
                                         rows={3}
-                                        placeholder="Qué permite hacer este permiso"
+                                        placeholder=""
                                         value={form.descripcion}
                                         onChange={(e) =>
                                             setForm((f) => ({
