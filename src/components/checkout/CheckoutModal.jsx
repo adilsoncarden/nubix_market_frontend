@@ -231,9 +231,13 @@ const enviarEmailConfirmacion = async (orden) => {
     try {
         const res = await api.post("/email/confirmacion", {
             email: orden?.cliente?.email,
+            ventaId: orden?.ventaId,
             numero: orden?.numero,
             tipo: orden?.tipo,
             codigoRecojo: orden?.codigoRecojo,
+            subtotal: orden?.subtotalBase,
+            igv: orden?.igv,
+            costoEnvio: orden?.delivery,
             total: orden?.total,
         });
         return res.status === 200;
@@ -462,6 +466,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
             setVentaCreada(venta);
             const numero = `V-${String(venta.id).padStart(5, "0")}`;
             const orden = {
+                ventaId: venta.id,
                 tipo,
                 numero,
                 fecha,
