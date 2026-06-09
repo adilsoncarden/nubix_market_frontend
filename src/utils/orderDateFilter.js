@@ -20,10 +20,30 @@ const OPEN_ORDER_STATUSES = new Set([
     "EN_CAMINO",
 ]);
 
+export function normalizeOrderStatus(estado) {
+    return String(estado ?? "").trim().toUpperCase();
+}
+
+export function isOrderDelivered(estado) {
+    return normalizeOrderStatus(estado) === "ENTREGADO";
+}
+
 export function isOrderOpen(estado) {
-    const normalized = String(estado ?? "").trim().toUpperCase();
+    const normalized = normalizeOrderStatus(estado);
     if (!normalized) return false;
     return OPEN_ORDER_STATUSES.has(normalized);
+}
+
+/** Pedidos activos: cualquier estado distinto de ENTREGADO. */
+export function filterActiveOrders(orders) {
+    if (!Array.isArray(orders)) return [];
+    return orders.filter((order) => !isOrderDelivered(order.estado));
+}
+
+/** Historial: solo pedidos ENTREGADO. */
+export function filterDeliveredOrders(orders) {
+    if (!Array.isArray(orders)) return [];
+    return orders.filter((order) => isOrderDelivered(order.estado));
 }
 
 /** Parámetro `mes` para GET /api/ventas/mis-pedidos */

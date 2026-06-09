@@ -45,7 +45,10 @@ export default function OrderCard({ order, showStepper = true }) {
                         </p>
                     )}
                     {showStepper && (
-                        <OrderTrackingStepper estado={order.estado} />
+                        <OrderTrackingStepper
+                            estado={order.estado}
+                            tipoEntrega={order.tipoEntrega}
+                        />
                     )}
                 </div>
                 <div className="col-12 col-md-4 text-center text-md-end">
