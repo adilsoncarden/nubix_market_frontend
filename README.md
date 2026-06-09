@@ -52,8 +52,8 @@ Nubix Market digitaliza los procesos manuales tradicionales:
 | **Lenguaje** | JavaScript (ES6+) | - |
 | **Estilos** | CSS3 / Tailwind CSS | - |
 | **Gestión de Estado** | Redux / Context API | - |
-| **Backend** | Spring Boot | 3.x+ |
-| **Base de Datos** | MySQL | 8.0+ |
+| **Backend** | Spring Boot | 4.0.5 |
+| **Base de Datos** | PostgreSQL | 15+ |
 | **Control de Versiones** | Git / GitHub | - |
 
 ---
