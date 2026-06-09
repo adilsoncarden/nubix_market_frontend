@@ -28,6 +28,14 @@ import {
 } from "../features/sales/utils/saleFilters";
 import { exportSalesPdf } from "../features/sales/utils/exportSalesPdf";
 import { printSaleReceipt } from "../features/sales/utils/printSaleReceipt";
+import DateInput from "../components/ui/DateInput";
+import {
+    addDaysIso,
+    displayToIso,
+    isoToDisplay,
+    looksLikeUsDateFormat,
+    todayIso,
+} from "../utils/dateInputUtils";
 
 const SalesPage = () => {
     const {
@@ -113,11 +121,10 @@ const SalesPage = () => {
         searchTerm;
 
     const openExportModal = useCallback(() => {
-        const hastaDefault =
-            filterHasta || new Date().toISOString().slice(0, 10);
-        const desdeDefault =
-            filterDesde ||
-            new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+        const hastaDefault = filterHasta || todayIso();
+        const desdeDefault = filterDesde || addDaysIso(hastaDefault, -30);
+        const desdeDisplay = isoToDisplay(desdeDefault);
+        const hastaDisplay = isoToDisplay(hastaDefault);
 
         const clienteOptions = clients
             .map(
@@ -131,9 +138,9 @@ const SalesPage = () => {
             html: `
               <div class="text-start">
                 <label class="form-label small">Desde</label>
-                <input type="date" id="exp-desde" class="form-control mb-2" value="${desdeDefault}">
+                <input type="text" id="exp-desde" class="form-control mb-2" placeholder="dd/mm/aaaa" maxlength="10" value="${desdeDisplay}">
                 <label class="form-label small">Hasta</label>
-                <input type="date" id="exp-hasta" class="form-control mb-2" value="${hastaDefault}">
+                <input type="text" id="exp-hasta" class="form-control mb-2" placeholder="dd/mm/aaaa" maxlength="10" value="${hastaDisplay}">
                 <label class="form-label small">Tipo de entrega</label>
                 <select id="exp-entrega" class="form-select mb-2">
                   <option value="">Todos</option>
@@ -168,10 +175,27 @@ const SalesPage = () => {
             confirmButtonText: "Descargar",
             confirmButtonColor: "#10b981",
             preConfirm: () => {
-                const desde = document.getElementById("exp-desde").value;
-                const hasta = document.getElementById("exp-hasta").value;
-                if (!desde || !hasta) {
+                const desdeRaw = document.getElementById("exp-desde").value;
+                const hastaRaw = document.getElementById("exp-hasta").value;
+                if (!desdeRaw || !hastaRaw) {
                     Swal.showValidationMessage("Indique el rango de fechas");
+                    return false;
+                }
+                if (
+                    looksLikeUsDateFormat(desdeRaw) ||
+                    looksLikeUsDateFormat(hastaRaw)
+                ) {
+                    Swal.showValidationMessage(
+                        "Use el formato dd/mm/aaaa (día/mes/año), no mm/dd/aaaa",
+                    );
+                    return false;
+                }
+                const desde = displayToIso(desdeRaw);
+                const hasta = displayToIso(hastaRaw);
+                if (desde === null || hasta === null) {
+                    Swal.showValidationMessage(
+                        "Use fechas válidas en formato dd/mm/aaaa",
+                    );
                     return false;
                 }
                 if (hasta < desde) {
@@ -599,22 +623,22 @@ const SalesPage = () => {
                         <label className="form-label small text-muted fw-bold mb-1">
                             Desde
                         </label>
-                        <input
-                            type="date"
+                        <DateInput
                             className="form-control form-control-sm"
                             value={filterDesde}
-                            onChange={(e) => setFilterDesde(e.target.value)}
+                            onChange={setFilterDesde}
+                            aria-label="Fecha desde"
                         />
                     </div>
                     <div className="col-md-2">
                         <label className="form-label small text-muted fw-bold mb-1">
                             Hasta
                         </label>
-                        <input
-                            type="date"
+                        <DateInput
                             className="form-control form-control-sm"
                             value={filterHasta}
-                            onChange={(e) => setFilterHasta(e.target.value)}
+                            onChange={setFilterHasta}
+                            aria-label="Fecha hasta"
                         />
                     </div>
                     <div className="col-md-2">

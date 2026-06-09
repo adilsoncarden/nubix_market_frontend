@@ -3,7 +3,8 @@ import { saleService } from "../features/sales/services/saleService";
 import OrderCard from "../components/orders/OrderCard";
 import {
     ORDER_PERIOD_OPTIONS,
-    isOrderOpen,
+    filterActiveOrders,
+    filterDeliveredOrders,
     periodToApiParam,
 } from "../utils/orderDateFilter";
 import "../styles/my-orders.css";
@@ -22,8 +23,7 @@ export default function MyOrdersPage() {
         if (!isPoll) setLoadingOpen(true);
         try {
             const data = await saleService.getMyOrders({ mes: "todos" });
-            const list = Array.isArray(data) ? data : [];
-            setOpenOrders(list.filter((o) => isOrderOpen(o.estado)));
+            setOpenOrders(filterActiveOrders(data));
             setErrorOpen("");
         } catch {
             if (!isPoll) {
@@ -40,7 +40,7 @@ export default function MyOrdersPage() {
             const data = await saleService.getMyOrders({
                 mes: periodToApiParam(periodFilter),
             });
-            setHistoryOrders(Array.isArray(data) ? data : []);
+            setHistoryOrders(filterDeliveredOrders(data));
             setErrorHistory("");
         } catch {
             setErrorHistory("No se pudo cargar el historial de pedidos.");
@@ -172,8 +172,7 @@ export default function MyOrdersPage() {
                         <section role="tabpanel">
                             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                                 <p className="text-muted small mb-0">
-                                    Todos tus pedidos registrados en la tienda
-                                    web.
+                                    Solo pedidos entregados en la tienda web.
                                 </p>
                                 <div className="ms-md-auto float-md-end">
                                     <label
@@ -231,8 +230,8 @@ export default function MyOrdersPage() {
                                     </p>
                                     {historyOrders.length === 0
                                         ? renderEmpty(
-                                              "Sin pedidos en este período",
-                                              `No hay compras registradas para ${periodLabel.toLowerCase()}. Prueba otro rango de fechas.`,
+                                              "Sin pedidos entregados en este período",
+                                              `No hay pedidos entregados para ${periodLabel.toLowerCase()}. Prueba otro rango de fechas.`,
                                           )
                                         : renderList(historyOrders, false)}
                                 </>
