@@ -25,6 +25,22 @@ export function isoToDisplay(iso) {
     return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
 }
 
+/** Convierte yyyy-mm-dd → Date (hora local, sin desfase UTC). */
+export function isoToDate(iso) {
+    if (!iso) return null;
+    const [year, month, day] = String(iso).split("T")[0].split("-").map(Number);
+    if (!year || !month || !day) return null;
+    const date = new Date(year, month - 1, day);
+    if (!isValidCalendarDate(day, month, year)) return null;
+    return date;
+}
+
+/** Convierte Date → yyyy-mm-dd para API/backend. */
+export function dateToIso(date) {
+    if (!(date instanceof Date) || Number.isNaN(date.getTime())) return "";
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 function isValidCalendarDate(day, month, year) {
     const date = new Date(year, month - 1, day);
     return (
