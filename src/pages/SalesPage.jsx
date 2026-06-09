@@ -14,6 +14,7 @@ import {
     getSaleVendorLabel,
 } from "../features/sales/services/saleService";
 import VentaForm from "../features/sales/components/VentaForm";
+import SaleOrderStatusSelect from "../features/sales/components/SaleOrderStatusSelect";
 import Swal from "sweetalert2";
 import { useProductCatalog } from "../store/ProductCatalogContext";
 import { reportService } from "../features/reports/services/reportService";
@@ -27,6 +28,8 @@ import {
 } from "../features/sales/utils/saleFilters";
 import { exportSalesPdf } from "../features/sales/utils/exportSalesPdf";
 import { printSaleReceipt } from "../features/sales/utils/printSaleReceipt";
+import DateInput from "../components/ui/DateInput";
+import ExportSalesModal from "../features/sales/components/ExportSalesModal";
 
 const SalesPage = () => {
     const {
@@ -49,6 +52,7 @@ const SalesPage = () => {
     const [formkey, setFormKey] = useState(Date.now());
     const [ventaFormActive, setVentaFormActive] = useState(false);
     const [exportingPdf, setExportingPdf] = useState(false);
+    const [showExportModal, setShowExportModal] = useState(false);
 
     useEffect(() => {
         clientService
@@ -111,104 +115,18 @@ const SalesPage = () => {
         filterHasta ||
         searchTerm;
 
-    const openExportModal = useCallback(() => {
-        const hastaDefault =
-            filterHasta || new Date().toISOString().slice(0, 10);
-        const desdeDefault =
-            filterDesde ||
-            new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
-
-        const clienteOptions = clients
-            .map(
-                (c) =>
-                    `<option value="${c.id}" ${String(c.id) === String(filterClienteId) ? "selected" : ""}>${c.username || c.email || `Cliente #${c.id}`}</option>`,
-            )
-            .join("");
-
-        Swal.fire({
-            title: "Exportar ventas",
-            html: `
-              <div class="text-start">
-                <label class="form-label small">Desde</label>
-                <input type="date" id="exp-desde" class="form-control mb-2" value="${desdeDefault}">
-                <label class="form-label small">Hasta</label>
-                <input type="date" id="exp-hasta" class="form-control mb-2" value="${hastaDefault}">
-                <label class="form-label small">Tipo de entrega</label>
-                <select id="exp-entrega" class="form-select mb-2">
-                  <option value="">Todos</option>
-                  <option value="PRESENCIAL" ${filterTipoEntrega === "PRESENCIAL" ? "selected" : ""}>Presencial</option>
-                  <option value="FAST_LANE" ${filterTipoEntrega === "FAST_LANE" ? "selected" : ""}>Fast Lane</option>
-                  <option value="DELIVERY" ${filterTipoEntrega === "DELIVERY" ? "selected" : ""}>Delivery</option>
-                </select>
-                <label class="form-label small">Cliente</label>
-                <select id="exp-cliente" class="form-select mb-2">
-                  <option value="">Todos</option>
-                  ${clienteOptions}
-                </select>
-                <label class="form-label small">Estado pedido</label>
-                <select id="exp-estado-pedido" class="form-select mb-2">
-                  <option value="">Todos</option>
-                  <option value="PENDIENTE">Pendiente</option>
-                  <option value="EN_PROCESO">En proceso</option>
-                  <option value="LISTO_PARA_RECOJO">Listo para recojo</option>
-                  <option value="EN_CAMINO">En camino</option>
-                  <option value="ENTREGADO">Entregado</option>
-                </select>
-                <label class="form-label small">Estado pago</label>
-                <select id="exp-estado-pago" class="form-select">
-                  <option value="">Todos</option>
-                  <option value="PAGADO">Pagado</option>
-                  <option value="APROBADO">Aprobado</option>
-                  <option value="PENDIENTE">Pendiente</option>
-                  <option value="RECHAZADO">Rechazado</option>
-                </select>
-              </div>`,
-            showCancelButton: true,
-            confirmButtonText: "Descargar",
-            confirmButtonColor: "#10b981",
-            preConfirm: () => {
-                const desde = document.getElementById("exp-desde").value;
-                const hasta = document.getElementById("exp-hasta").value;
-                if (!desde || !hasta) {
-                    Swal.showValidationMessage("Indique el rango de fechas");
-                    return false;
-                }
-                if (hasta < desde) {
-                    Swal.showValidationMessage(
-                        "La fecha hasta debe ser posterior o igual a desde",
-                    );
-                    return false;
-                }
-                return {
-                    desde,
-                    hasta,
-                    tipoEntrega:
-                        document.getElementById("exp-entrega").value ||
-                        undefined,
-                    clienteId:
-                        document.getElementById("exp-cliente").value ||
-                        undefined,
-                    estadoPedido:
-                        document.getElementById("exp-estado-pedido").value ||
-                        undefined,
-                    estadoPago:
-                        document.getElementById("exp-estado-pago").value ||
-                        undefined,
-                };
-            },
-        }).then((r) => {
-            if (r.isConfirmed) {
-                reportService
-                    .exportSales(r.value)
-                    .catch(() =>
-                        Toast.fire({
-                            icon: "error",
-                            title: "Error al exportar",
-                        }),
-                    );
-            }
-        });
-    }, [clients, filterClienteId, filterDesde, filterHasta, filterTipoEntrega]);
+    const handleExportSales = useCallback(
+        (params) => {
+            setShowExportModal(false);
+            reportService.exportSales(params).catch(() =>
+                Toast.fire({
+                    icon: "error",
+                    title: "Error al exportar",
+                }),
+            );
+        },
+        [],
+    );
 
     // Métricas
     const totalVentas = useMemo(
@@ -253,7 +171,9 @@ const SalesPage = () => {
     };
 
     const fetchSaleWithDetails = async (sale) => {
-        if (sale?.detalles?.length) return sale;
+        if (!sale?.id) {
+            throw new Error("Venta sin identificador");
+        }
         return saleService.getById(sale.id);
     };
 
@@ -374,7 +294,7 @@ const SalesPage = () => {
                 <div className="col-12 col-md-4 d-flex flex-wrap gap-2 justify-content-md-end admin-page-header-actions">
                     <button
                         type="button"
-                        onClick={openExportModal}
+                        onClick={() => setShowExportModal(true)}
                         className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
                         disabled={loading}
                     >
@@ -596,22 +516,24 @@ const SalesPage = () => {
                         <label className="form-label small text-muted fw-bold mb-1">
                             Desde
                         </label>
-                        <input
-                            type="date"
+                        <DateInput
                             className="form-control form-control-sm"
                             value={filterDesde}
-                            onChange={(e) => setFilterDesde(e.target.value)}
+                            onChange={setFilterDesde}
+                            maxDate={filterHasta || undefined}
+                            aria-label="Fecha desde"
                         />
                     </div>
                     <div className="col-md-2">
                         <label className="form-label small text-muted fw-bold mb-1">
                             Hasta
                         </label>
-                        <input
-                            type="date"
+                        <DateInput
                             className="form-control form-control-sm"
                             value={filterHasta}
-                            onChange={(e) => setFilterHasta(e.target.value)}
+                            onChange={setFilterHasta}
+                            minDate={filterDesde || undefined}
+                            aria-label="Fecha hasta"
                         />
                     </div>
                     <div className="col-md-2">
@@ -785,44 +707,18 @@ const SalesPage = () => {
                                                             </button>
                                                         )}
 
-                                                    <select
-                                                        className="btn btn-outline-warning"
-                                                        value={
+                                                    <SaleOrderStatusSelect
+                                                        saleId={sale.id}
+                                                        estadoPedido={
                                                             sale.estadoPedido
                                                         }
-                                                        onChange={(e) => {
-                                                            if (
-                                                                e.target
-                                                                    .value !==
-                                                                sale.estadoPedido
-                                                            ) {
-                                                                handleStatusUpdate(
-                                                                    sale.id,
-                                                                    e.target
-                                                                        .value,
-                                                                );
-                                                            }
-                                                        }}
-                                                        style={{
-                                                            cursor: "pointer",
-                                                        }}
-                                                    >
-                                                        <option value="PENDIENTE">
-                                                            PENDIENTE
-                                                        </option>
-                                                        <option value="EN_PROCESO">
-                                                            EN PROCESO
-                                                        </option>
-                                                        <option value="LISTO_PARA_RECOJO">
-                                                            LISTO PARA RECOJO
-                                                        </option>
-                                                        <option value="EN_CAMINO">
-                                                            EN CAMINO
-                                                        </option>
-                                                        <option value="ENTREGADO">
-                                                            ENTREGADO
-                                                        </option>
-                                                    </select>
+                                                        tipoEntrega={
+                                                            sale.tipoEntrega
+                                                        }
+                                                        onStatusChange={
+                                                            handleStatusUpdate
+                                                        }
+                                                    />
                                                 </div>
                                             </td>
                                         </tr>
@@ -932,6 +828,19 @@ const SalesPage = () => {
                     </div>
                 </div>
             </div>
+
+            <ExportSalesModal
+                show={showExportModal}
+                onClose={() => setShowExportModal(false)}
+                onExport={handleExportSales}
+                clients={clients}
+                filters={{
+                    desde: filterDesde,
+                    hasta: filterHasta,
+                    tipoEntrega: filterTipoEntrega,
+                    clienteId: filterClienteId,
+                }}
+            />
         </div>
     );
 };

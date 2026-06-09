@@ -1,0 +1,122 @@
+/* Datepicker Nubix — calendario gráfico alineado al tema verde */
+.nubix-date-input {
+    width: 100%;
+    position: relative;
+}
+
+.nubix-date-input .react-datepicker-wrapper {
+    width: 100%;
+    display: block;
+}
+
+.nubix-date-input .react-datepicker__input-container {
+    width: 100%;
+    position: relative;
+    display: block;
+}
+
+.nubix-date-input .react-datepicker__input-container input {
+    width: 100%;
+    padding-right: 0.75rem;
+}
+
+/* Botón limpiar (×) de react-datepicker, contenido dentro del input */
+.nubix-date-input .react-datepicker__input-container .react-datepicker__close-icon {
+    right: 0.35rem;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 0;
+    height: 1rem;
+    width: 1rem;
+}
+
+.nubix-date-input
+    .react-datepicker__input-container:has(.react-datepicker__close-icon)
+    input {
+    padding-right: 1.75rem;
+}
+
+/* Por si el navegador inyecta indicador nativo en inputs de fecha */
+.nubix-date-input input::-webkit-calendar-picker-indicator {
+    display: none;
+    -webkit-appearance: none;
+}
+
+.nubix-datepicker-popper {
+    z-index: 1060 !important;
+}
+
+.nubix-datepicker-calendar {
+    font-family: inherit;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+    overflow: hidden;
+}
+
+.nubix-datepicker-calendar .react-datepicker__header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    padding-top: 0.75rem;
+}
+
+.nubix-datepicker-calendar .react-datepicker__current-month,
+.nubix-datepicker-calendar .react-datepicker-year-header {
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 0.95rem;
+}
+
+.nubix-datepicker-calendar .react-datepicker__day-name {
+    color: #64748b;
+    font-weight: 600;
+    width: 2.1rem;
+    line-height: 2.1rem;
+}
+
+.nubix-datepicker-calendar .react-datepicker__day {
+    width: 2.1rem;
+    line-height: 2.1rem;
+    border-radius: 8px;
+    margin: 0.1rem;
+    color: #334155;
+}
+
+.nubix-datepicker-calendar .react-datepicker__day:hover {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.nubix-datepicker-calendar .react-datepicker__day--selected,
+.nubix-datepicker-calendar .react-datepicker__day--keyboard-selected {
+    background: #198754 !important;
+    color: #fff !important;
+    font-weight: 700;
+}
+
+.nubix-datepicker-calendar .react-datepicker__day--today {
+    font-weight: 700;
+    color: #198754;
+}
+
+.nubix-datepicker-calendar .react-datepicker__day--outside-month {
+    color: #cbd5e1;
+}
+
+.nubix-datepicker-calendar .react-datepicker__navigation-icon::before {
+    border-color: #64748b;
+}
+
+.nubix-datepicker-calendar .react-datepicker__month-select,
+.nubix-datepicker-calendar .react-datepicker__year-select {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    padding: 0.2rem 0.35rem;
+    font-size: 0.85rem;
+}
+
+.nubix-date-input .react-datepicker__input-container .react-datepicker__close-icon::after {
+    background-color: #94a3b8;
+    font-size: 1rem;
+    line-height: 1rem;
+}

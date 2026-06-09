@@ -1,6 +1,7 @@
 import {
     formatSaleDateTime,
     getSaleClientLabel,
+    mapSaleDetailLine,
 } from "../services/saleService";
 
 const VERDE = [25, 135, 84];
@@ -41,12 +42,15 @@ export async function printSaleReceipt(sale) {
 
     const doc = new jsPDF();
     const tipo = sale.tipoComprobante || "TICKET";
-    const items = (sale.detalles || []).map((d) => ({
-        name: d.producto?.nombre || "Producto",
-        qty: d.cantidad ?? 0,
-        price: Number(d.subtotal ?? 0) / Math.max(1, Number(d.cantidad ?? 1)),
-        subtotal: Number(d.subtotal ?? 0),
-    }));
+    const items = (sale.detalles || []).map((raw) => {
+        const d = mapSaleDetailLine(raw);
+        return {
+            name: d.producto?.nombre || "Producto",
+            qty: d.cantidad,
+            price: d.precioUnitario,
+            subtotal: d.subtotal,
+        };
+    });
 
     doc.setFillColor(...VERDE);
     doc.rect(0, 0, 210, 48, "F");

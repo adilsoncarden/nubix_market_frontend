@@ -50,25 +50,25 @@ export default function PermissionCheckboxPanel({
     }
 
     return (
-        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+        <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 permission-modules-grid">
             {grouped.map((group) => (
                 <div key={group.title} className="col">
-                    <div className="card h-100 border shadow-sm permission-module-card">
-                        <div className="card-header py-2 px-3 bg-light border-bottom">
-                            <div className="d-flex align-items-center justify-content-between">
-                                <h6 className="mb-0 small fw-bold text-emerald-600 text-uppercase">
+                    <div className="card h-100 permission-module-card">
+                        <div className="card-header permission-module-card-header">
+                            <div className="d-flex align-items-center justify-content-between gap-2">
+                                <h6 className="permission-module-title mb-0">
                                     {group.title}
                                 </h6>
-                                <span className="badge rounded-pill bg-emerald-100 text-emerald-600">
+                                <span className="permission-module-count badge rounded-pill bg-emerald-100 text-emerald-600">
                                     {group.items.length}
                                 </span>
                             </div>
                         </div>
-                        <div className="card-body p-2 d-flex flex-column gap-2">
+                        <div className="card-body permission-module-card-body d-flex flex-column">
                             {group.items.map((permiso) => (
                                 <label
                                     key={permiso.id}
-                                    className="form-check d-flex align-items-start gap-2 p-2 rounded-3 border bg-body mb-0 permission-check-item"
+                                    className="form-check d-flex align-items-start permission-check-item mb-0"
                                 >
                                     <input
                                         className="form-check-input mt-1 flex-shrink-0"

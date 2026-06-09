@@ -260,12 +260,6 @@ export default function ProfilePage() {
                                                     value={form.direccion}
                                                     onChange={handleChange}
                                                 />
-                                                <div className="form-text small">
-                                                    Departamento y provincia se
-                                                    completan al guardar tu
-                                                    dirección desde el icono de
-                                                    ubicación en el menú.
-                                                </div>
                                             </div>
                                             <div className="col-12 col-md-6">
                                                 <label className="form-label small fw-semibold">

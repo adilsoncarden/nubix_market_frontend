@@ -195,3 +195,12 @@
 .address-map-hint {
     padding: 0 0.25rem;
 }
+
+/* Fechas — formato estricto dd/mm/aaaa */
+input[placeholder="dd/mm/aaaa"] {
+    font-variant-numeric: tabular-nums;
+}
+
+input[placeholder="dd/mm/aaaa"].is-invalid {
+    border-color: #dc3545;
+}

@@ -357,8 +357,8 @@ export default function SecurityRolesPage() {
                                     data-bs-dismiss="modal"
                                 />
                             </div>
-                            <div className="modal-body flex-grow-1 min-h-0 overflow-hidden d-flex flex-column pt-0">
-                                <div className="row g-3 mb-3 flex-shrink-0">
+                            <div className="modal-body flex-grow-1 min-h-0 overflow-hidden d-flex flex-column role-modal-body">
+                                <div className="row g-4 role-form-section flex-shrink-0">
                                     <div className="col-md-6">
                                         <label className="form-label fw-semibold small">
                                             Nombre del rol *
@@ -403,18 +403,16 @@ export default function SecurityRolesPage() {
                                     </div>
                                 </div>
 
-                                <hr className="flex-shrink-0 my-2" />
-
-                                <div className="d-flex align-items-center justify-content-between flex-shrink-0 mb-2">
-                                    <h6 className="fw-bold mb-0">
+                                <div className="permissions-section-header d-flex align-items-center justify-content-between flex-shrink-0">
+                                    <h6 className="permissions-section-title mb-0">
                                         <i className="bi bi-shield-check me-2 text-emerald-600"></i>
                                         Permisos asignados
                                     </h6>
-                                    <span className="text-muted small">
+                                    <span className="permissions-section-count">
                                         {selectedPermisoIds.length} seleccionados
                                     </span>
                                 </div>
-                                <div className="permission-panel-scroll flex-grow-1 overflow-y-auto pe-1">
+                                <div className="permission-panel-scroll flex-grow-1 overflow-y-auto">
                                     <PermissionCheckboxPanel
                                         permisos={permisos}
                                         selectedIds={selectedPermisoIds}

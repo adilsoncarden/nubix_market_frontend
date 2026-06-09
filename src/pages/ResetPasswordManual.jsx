@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../features/auth/services/authService";
+import { parsePasswordResetError } from "../utils/passwordResetErrorUtils";
 
 const ResetPasswordManual = () => {
     const [email, setEmail] = useState("");
@@ -13,6 +14,7 @@ const ResetPasswordManual = () => {
 
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
+    const [showNewRecoveryLink, setShowNewRecoveryLink] = useState(false);
     const [loading, setLoading] = useState(false);
     const [codeVerified, setCodeVerified] = useState(false);
     const navigate = useNavigate();
@@ -38,6 +40,7 @@ const ResetPasswordManual = () => {
         e.preventDefault();
         setMessage("");
         setError("");
+        setShowNewRecoveryLink(false);
 
         if (!email || !code) {
             setError("Por favor ingresa tu email y código de recuperación");
@@ -53,10 +56,12 @@ const ResetPasswordManual = () => {
             );
         } catch (err) {
             setCodeVerified(false);
-            setError(
-                err?.response?.data?.message ||
-                    "Código de recuperación inválido o expirado.",
+            const parsed = parsePasswordResetError(
+                err,
+                "Código de recuperación inválido o expirado.",
             );
+            setError(parsed.message);
+            setShowNewRecoveryLink(parsed.isExpired);
         } finally {
             setLoading(false);
         }
@@ -66,6 +71,7 @@ const ResetPasswordManual = () => {
         e.preventDefault();
         setMessage("");
         setError("");
+        setShowNewRecoveryLink(false);
 
         if (!codeVerified) {
             setError("Debes verificar el código primero");
@@ -93,10 +99,15 @@ const ResetPasswordManual = () => {
 
             setTimeout(() => navigate("/login"), 2500);
         } catch (err) {
-            setError(
-                err?.response?.data?.message ||
-                    "Error al restablecer la contraseña.",
+            const parsed = parsePasswordResetError(
+                err,
+                "Error al restablecer la contraseña.",
             );
+            setError(parsed.message);
+            setShowNewRecoveryLink(parsed.isExpired);
+            if (parsed.isExpired) {
+                setCodeVerified(false);
+            }
         } finally {
             setLoading(false);
         }
@@ -160,6 +171,13 @@ const ResetPasswordManual = () => {
                                     <div className="alert alert-danger">
                                         <i className="bi bi-exclamation-triangle-fill me-2"></i>
                                         {error}
+                                        {showNewRecoveryLink && (
+                                            <div className="mt-2">
+                                                <Link to="/forgot-password">
+                                                    Solicitar nueva recuperación
+                                                </Link>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
@@ -192,7 +210,7 @@ const ResetPasswordManual = () => {
                                             onChange={(e) =>
                                                 setPassword(e.target.value)
                                             }
-                                            placeholder="Crea una contraseña segura"
+                                            placeholder=""
                                             required
                                         />
 
@@ -378,7 +396,7 @@ const ResetPasswordManual = () => {
                                                     e.target.value,
                                                 )
                                             }
-                                            placeholder="Confirma tu contraseña"
+                                            placeholder=""
                                             required
                                         />
 
@@ -415,6 +433,13 @@ const ResetPasswordManual = () => {
                                     <div className="alert alert-danger">
                                         <i className="bi bi-exclamation-triangle-fill me-2"></i>
                                         {error}
+                                        {showNewRecoveryLink && (
+                                            <div className="mt-2">
+                                                <Link to="/forgot-password">
+                                                    Solicitar nueva recuperación
+                                                </Link>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
