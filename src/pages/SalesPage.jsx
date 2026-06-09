@@ -253,7 +253,9 @@ const SalesPage = () => {
     };
 
     const fetchSaleWithDetails = async (sale) => {
-        if (sale?.detalles?.length) return sale;
+        if (!sale?.id) {
+            throw new Error("Venta sin identificador");
+        }
         return saleService.getById(sale.id);
     };
 

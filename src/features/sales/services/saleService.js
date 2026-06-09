@@ -1,6 +1,48 @@
 import api from "../../../config/axios";
 import { unwrapApiList } from "../../../config/apiUtils";
 
+export const mapSaleDetailLine = (detalle) => {
+    const cantidad = Number(detalle?.cantidad ?? 0);
+    const precioUnitario = Number(
+        detalle?.precioUnitario ?? detalle?.producto?.precioVenta ?? 0,
+    );
+    const subtotal = Number(
+        detalle?.subtotal ?? cantidad * precioUnitario,
+    );
+    const nombre =
+        detalle?.producto?.nombre ||
+        detalle?.nombreProducto ||
+        detalle?.nombre ||
+        "Producto";
+
+    return {
+        ...detalle,
+        cantidad,
+        precioUnitario,
+        subtotal,
+        producto: {
+            ...(detalle?.producto || {}),
+            nombre,
+            precioVenta: Number(
+                detalle?.producto?.precioVenta ?? precioUnitario,
+            ),
+        },
+    };
+};
+
+export const normalizeSaleFromApi = (sale) => {
+    if (!sale || typeof sale !== "object") {
+        return sale;
+    }
+
+    return {
+        ...sale,
+        detalles: Array.isArray(sale.detalles)
+            ? sale.detalles.map(mapSaleDetailLine)
+            : [],
+    };
+};
+
 export const saleService = {
     getAll: async () => {
         const response = await api.get("/admin/ventas");
@@ -10,7 +52,7 @@ export const saleService = {
 
     getById: async (id) => {
         const response = await api.get(`/admin/ventas/${id}`);
-        return response.data;
+        return normalizeSaleFromApi(response.data);
     },
 
     create: async (saleData) => {
