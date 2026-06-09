@@ -157,10 +157,6 @@ export default function MyOrdersPage() {
 
                             {!loadingOpen && !errorOpen && (
                                 <>
-                                    <p className="text-muted small mb-3">
-                                        Pedidos en curso (pendiente, en proceso,
-                                        listos para recojo o en camino).
-                                    </p>
                                     {openOrders.length === 0
                                         ? renderEmpty(
                                               "No tienes pedidos activos",

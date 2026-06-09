@@ -1,10 +1,11 @@
 import {
-    ORDER_TRACKING_STEPS,
+    getOrderFlowSteps,
     getOrderStepIndex,
 } from "../../utils/orderTracking";
 
-export default function OrderTrackingStepper({ estado }) {
-    const activeIndex = getOrderStepIndex(estado);
+export default function OrderTrackingStepper({ estado, tipoEntrega }) {
+    const steps = getOrderFlowSteps(tipoEntrega);
+    const activeIndex = Math.max(0, getOrderStepIndex(estado, tipoEntrega));
 
     return (
         <div
@@ -13,7 +14,7 @@ export default function OrderTrackingStepper({ estado }) {
             aria-label="Progreso del pedido"
         >
             <div className="order-tracking-track d-none d-md-flex">
-                {ORDER_TRACKING_STEPS.map((step, index) => {
+                {steps.map((step, index) => {
                     const done = index <= activeIndex;
                     const current = index === activeIndex;
                     return (
@@ -38,7 +39,7 @@ export default function OrderTrackingStepper({ estado }) {
             </div>
 
             <ul className="list-group list-group-flush d-md-none">
-                {ORDER_TRACKING_STEPS.map((step, index) => {
+                {steps.map((step, index) => {
                     const done = index <= activeIndex;
                     const current = index === activeIndex;
                     return (

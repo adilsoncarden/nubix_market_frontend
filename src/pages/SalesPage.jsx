@@ -14,6 +14,7 @@ import {
     getSaleVendorLabel,
 } from "../features/sales/services/saleService";
 import VentaForm from "../features/sales/components/VentaForm";
+import SaleOrderStatusSelect from "../features/sales/components/SaleOrderStatusSelect";
 import Swal from "sweetalert2";
 import { useProductCatalog } from "../store/ProductCatalogContext";
 import { reportService } from "../features/reports/services/reportService";
@@ -787,44 +788,18 @@ const SalesPage = () => {
                                                             </button>
                                                         )}
 
-                                                    <select
-                                                        className="btn btn-outline-warning"
-                                                        value={
+                                                    <SaleOrderStatusSelect
+                                                        saleId={sale.id}
+                                                        estadoPedido={
                                                             sale.estadoPedido
                                                         }
-                                                        onChange={(e) => {
-                                                            if (
-                                                                e.target
-                                                                    .value !==
-                                                                sale.estadoPedido
-                                                            ) {
-                                                                handleStatusUpdate(
-                                                                    sale.id,
-                                                                    e.target
-                                                                        .value,
-                                                                );
-                                                            }
-                                                        }}
-                                                        style={{
-                                                            cursor: "pointer",
-                                                        }}
-                                                    >
-                                                        <option value="PENDIENTE">
-                                                            PENDIENTE
-                                                        </option>
-                                                        <option value="EN_PROCESO">
-                                                            EN PROCESO
-                                                        </option>
-                                                        <option value="LISTO_PARA_RECOJO">
-                                                            LISTO PARA RECOJO
-                                                        </option>
-                                                        <option value="EN_CAMINO">
-                                                            EN CAMINO
-                                                        </option>
-                                                        <option value="ENTREGADO">
-                                                            ENTREGADO
-                                                        </option>
-                                                    </select>
+                                                        tipoEntrega={
+                                                            sale.tipoEntrega
+                                                        }
+                                                        onStatusChange={
+                                                            handleStatusUpdate
+                                                        }
+                                                    />
                                                 </div>
                                             </td>
                                         </tr>
