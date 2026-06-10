@@ -1095,6 +1095,19 @@
   transform: scale(1.08);
 }
 
+.admin-page .btn-view {
+  color: #0ea5e9;
+}
+
+.admin-page .btn-view:hover {
+  background-color: #e0f2fe;
+  transform: scale(1.08);
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-page .btn-view:hover {
+  background-color: rgba(14, 165, 233, 0.15);
+}
+
 .admin-page .btn-delete {
   color: #ef4444;
 }

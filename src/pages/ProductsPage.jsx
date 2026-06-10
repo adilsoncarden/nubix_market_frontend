@@ -24,6 +24,7 @@ const ProductsPage = () => {
     const { invalidate: invalidateCatalog } = useProductCatalog();
     const { categories } = useCategories();
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [viewProduct, setViewProduct] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCategory, setFilterCategory] = useState("");
@@ -74,6 +75,8 @@ const ProductsPage = () => {
 
     const modalRef = useRef();
     const bsModal = useRef();
+    const viewModalRef = useRef();
+    const viewBsModal = useRef();
 
     useEffect(() => {
         if (modalRef.current) {
@@ -83,7 +86,18 @@ const ProductsPage = () => {
                 setFormUrlImagen(null);
             });
         }
+        if (viewModalRef.current) {
+            viewBsModal.current = new Modal(viewModalRef.current);
+            viewModalRef.current.addEventListener("hidden.bs.modal", () => {
+                setViewProduct(null);
+            });
+        }
     }, []);
+
+    const openViewModal = (product) => {
+        setViewProduct({ ...product });
+        viewBsModal.current?.show();
+    };
 
     const openModal = (product = null) => {
         setSelectedProduct(null);
@@ -420,6 +434,15 @@ const ProductsPage = () => {
                                             </td>
                                             <td className="text-end px-4">
                                                 <button
+                                                    className="btn-action btn-view me-2"
+                                                    onClick={() =>
+                                                        openViewModal(prod)
+                                                    }
+                                                    title="Ver producto"
+                                                >
+                                                    <i className="bi bi-eye"></i>
+                                                </button>
+                                                <button
                                                     className="btn-action btn-edit me-2"
                                                     onClick={() =>
                                                         openModal(prod)
@@ -540,6 +563,31 @@ const ProductsPage = () => {
                     confirmLabel="Confirmar Registro"
                     confirmIcon="bi-cloud-upload-fill"
                 />
+            </AdminModal>
+
+            <AdminModal
+                modalRef={viewModalRef}
+                size="lg"
+                title="Ver Producto"
+                onClose={() => viewBsModal.current?.hide()}
+            >
+                {viewProduct && (
+                    <>
+                        <ProductImageField
+                            urlImagen={viewProduct.urlImagen}
+                            disabled
+                        />
+                        <ProductForm
+                            product={viewProduct}
+                            categories={categories}
+                            readOnly
+                        />
+                        <AdminModalActions
+                            onClose={() => viewBsModal.current?.hide()}
+                            showConfirm={false}
+                        />
+                    </>
+                )}
             </AdminModal>
 
         </div>

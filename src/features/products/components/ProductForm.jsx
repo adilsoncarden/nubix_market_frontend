@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 
-const ProductForm = ({ product, categories, onSave, loading }) => {
+const ProductForm = ({
+    product,
+    categories,
+    onSave,
+    loading,
+    readOnly = false,
+}) => {
     const [formData, setFormData] = useState({
         codigo: "",
         nombre: "",
@@ -45,11 +51,16 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onSave(formData);
+        if (!readOnly) onSave(formData);
     };
 
+    const isDisabled = readOnly || loading;
+
     return (
-        <form onSubmit={handleSubmit} id="productForm">
+        <form
+            onSubmit={handleSubmit}
+            id={readOnly ? undefined : "productForm"}
+        >
             <div className="row g-3">
                 <div className="col-md-6">
                     <label className="form-label fw-bold">Código</label>
@@ -59,7 +70,9 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         className="form-control"
                         value={formData.codigo}
                         onChange={handleChange}
-                        required
+                        disabled={isDisabled}
+                        readOnly={readOnly}
+                        required={!readOnly}
                     />
                 </div>
                 <div className="col-md-6">
@@ -69,7 +82,8 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         className="form-select"
                         value={formData.categoriaId}
                         onChange={handleChange}
-                        required
+                        disabled={isDisabled}
+                        required={!readOnly}
                     >
                         <option value="">Seleccionar...</option>
                         {categories.map((cat) => (
@@ -87,7 +101,9 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         className="form-control"
                         value={formData.nombre}
                         onChange={handleChange}
-                        required
+                        disabled={isDisabled}
+                        readOnly={readOnly}
+                        required={!readOnly}
                     />
                 </div>
                 <div className="col-12">
@@ -98,6 +114,8 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         rows={3}
                         value={formData.descripcion}
                         onChange={handleChange}
+                        disabled={isDisabled}
+                        readOnly={readOnly}
                         placeholder=""
                     />
                 </div>
@@ -111,7 +129,9 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         className="form-control"
                         value={formData.precioCompra}
                         onChange={handleChange}
-                        required
+                        disabled={isDisabled}
+                        readOnly={readOnly}
+                        required={!readOnly}
                     />
                 </div>
                 <div className="col-md-4">
@@ -124,7 +144,9 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         className="form-control"
                         value={formData.precioVenta}
                         onChange={handleChange}
-                        required
+                        disabled={isDisabled}
+                        readOnly={readOnly}
+                        required={!readOnly}
                     />
                 </div>
                 <div className="col-md-4">
@@ -136,7 +158,9 @@ const ProductForm = ({ product, categories, onSave, loading }) => {
                         className="form-control"
                         value={formData.stock}
                         onChange={handleChange}
-                        required
+                        disabled={isDisabled}
+                        readOnly={readOnly}
+                        required={!readOnly}
                     />
                 </div>
             </div>

@@ -90,6 +90,7 @@ export function AdminModalActions({
     inlineSubmit = false,
     saving = false,
     closeDisabled = false,
+    showConfirm = true,
     cancelLabel = "Cerrar",
     confirmLabel = "Confirmar",
     savingLabel = "Guardando...",
@@ -105,19 +106,21 @@ export function AdminModalActions({
             >
                 {cancelLabel}
             </button>
-            <button
-                type="submit"
-                form={inlineSubmit ? undefined : submitForm}
-                className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary admin-modal-btn-primary"
-                disabled={saving}
-            >
-                {saving ? (
-                    <span className="spinner-border spinner-border-sm me-2" />
-                ) : (
-                    <i className={`bi ${confirmIcon} me-2`} />
-                )}
-                {saving ? savingLabel : confirmLabel}
-            </button>
+            {showConfirm && (
+                <button
+                    type="submit"
+                    form={inlineSubmit ? undefined : submitForm}
+                    className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary admin-modal-btn-primary"
+                    disabled={saving}
+                >
+                    {saving ? (
+                        <span className="spinner-border spinner-border-sm me-2" />
+                    ) : (
+                        <i className={`bi ${confirmIcon} me-2`} />
+                    )}
+                    {saving ? savingLabel : confirmLabel}
+                </button>
+            )}
         </div>
     );
 }
