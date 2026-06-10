@@ -1,6 +1,13 @@
 import Swal from "sweetalert2";
+import { setRedirectUrl } from "./authUtils";
 
 const FAVORITES_PATH = "/favorites";
+
+export const CART_LOGIN_MESSAGE =
+    "Debes iniciar sesión para agregar productos al carrito.";
+
+export const FAVORITES_LOGIN_MESSAGE =
+    "Debes iniciar sesión para agregar productos a favoritos.";
 
 const bindToastHover = (toast) => {
     toast.onmouseenter = Swal.stopTimer;
@@ -83,11 +90,11 @@ export const confirmDelete = (title, text = "Esta acción no se puede revertir."
         reverseButtons: true,
     });
 
-export const alertLoginRequired = () =>
+export const alertLoginRequired = (text = CART_LOGIN_MESSAGE) =>
     Swal.fire({
         icon: "info",
         title: "Inicia sesión",
-        text: "Debes iniciar sesión para agregar productos al carrito.",
+        text,
         confirmButtonText: "Ir a login",
         confirmButtonColor: "#10b981",
         showCancelButton: true,
@@ -95,3 +102,13 @@ export const alertLoginRequired = () =>
         cancelButtonColor: "#6b7280",
         reverseButtons: true,
     });
+
+/** Modal centrado de login requerido; redirige solo si el usuario confirma. */
+export const promptLoginRequired = async (text = CART_LOGIN_MESSAGE) => {
+    setRedirectUrl(window.location.pathname + window.location.search);
+    const result = await alertLoginRequired(text);
+    if (result.isConfirmed) {
+        window.location.href = "/login";
+    }
+    return result.isConfirmed;
+};

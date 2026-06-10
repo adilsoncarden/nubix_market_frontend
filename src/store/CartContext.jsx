@@ -17,11 +17,10 @@ import {
 import { mapProductosToShopItems } from "../features/products/utils/mapProducto";
 import { priceWithIgv, normalizeCartItem } from "../utils/pricing";
 import {
-    alertLoginRequired,
     cartToastFirstAdded,
     cartToastRemovedComplete,
+    promptLoginRequired,
 } from "../utils/swalConfig";
-import { setRedirectUrl } from "../utils/authUtils";
 import {
     hasWebSessionToken,
     loadCartFromLocalStorage,
@@ -210,11 +209,7 @@ export function CartProvider({ children }) {
         : 0;
 
     const requireLoginForCart = async () => {
-        setRedirectUrl(window.location.pathname + window.location.search);
-        const result = await alertLoginRequired();
-        if (result.isConfirmed) {
-            window.location.href = "/login";
-        }
+        await promptLoginRequired();
         return false;
     };
 

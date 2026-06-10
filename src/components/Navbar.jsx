@@ -5,6 +5,7 @@ import { useCart } from "../store/CartContext";
 import { useFavorites } from "../store/FavoritesContext";
 import { useAuth } from "../store/AuthContext";
 import { clearRedirectUrl, setRedirectUrl } from "../utils/authUtils";
+import { FAVORITES_LOGIN_MESSAGE, promptLoginRequired } from "../utils/swalConfig";
 import api from "../config/axios";
 import logoImage from "../assets/logo.png";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
@@ -199,8 +200,7 @@ export default function Navbar() {
         e.preventDefault();
         e.stopPropagation();
         if (!token) {
-            setRedirectUrl(window.location.pathname);
-            navigate("/login");
+            await promptLoginRequired(FAVORITES_LOGIN_MESSAGE);
             return;
         }
         await toggleFavorite(product.id, {

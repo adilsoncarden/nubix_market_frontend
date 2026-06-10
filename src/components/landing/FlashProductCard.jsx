@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useCart } from "../../store/CartContext";
 import { useFavorites } from "../../store/FavoritesContext";
 import { useAuth } from "../../store/AuthContext";
-import { setRedirectUrl } from "../../utils/authUtils";
+import { FAVORITES_LOGIN_MESSAGE, promptLoginRequired } from "../../utils/swalConfig";
 import ProductQtyControl from "../shared/ProductQtyControl";
 import { handleProductImageError } from "../../features/products/services/productService";
 
@@ -64,8 +64,7 @@ export default function FlashProductCard({ p, showTodayDeal = false }) {
         e.preventDefault();
         e.stopPropagation();
         if (!token) {
-            setRedirectUrl(window.location.pathname);
-            window.location.href = "/login";
+            await promptLoginRequired(FAVORITES_LOGIN_MESSAGE);
             return;
         }
         await toggleFavorite(p.id, buildProductPayload());
