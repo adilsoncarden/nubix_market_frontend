@@ -115,15 +115,16 @@ const ProductDetail = () => {
     setBgPos(`${x}% ${y}%`);
   };
 
-  const handleAgregarAlCarrito = () => {
-    for (let i = 0; i < cantidad; i++) {
-      addToCart({
+  const handleAgregarAlCarrito = async () => {
+    await addToCart(
+      {
         id: producto.id,
         name: producto.name,
         price: producto.price,
         img: producto.img,
-      });
-    }
+      },
+      cantidad,
+    );
   };
 
   const descriptionText =

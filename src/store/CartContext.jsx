@@ -49,11 +49,17 @@ function mergeCartPreservingOrder(prevItems, carritoResponse) {
 
 function mapCarritoToItems(carrito) {
     const items = Array.isArray(carrito?.items) ? carrito.items : [];
-    return items.map((it) => {
+    const byProductId = new Map();
+
+    for (const it of items) {
         const p = it.producto || {};
+        const productId = p.id;
+        if (productId == null) continue;
+
         const priceBase = Number(p.precioVenta) || 0;
-        return {
-            id: p.id,
+        const qty = Number(it.cantidad) || 1;
+        const mapped = {
+            id: productId,
             name: p.nombre ?? "",
             category: p.categoria?.nombre ?? "",
             priceBase,
@@ -62,19 +68,31 @@ function mapCarritoToItems(carrito) {
             stock: p.stock ?? 0,
             codigo: p.codigo ?? "",
             img: resolveProductImageUrl(p) || PRODUCT_PLACEHOLDER_IMAGE,
-            qty: it.cantidad ?? 1,
+            qty,
         };
-    });
+
+        const existing = byProductId.get(productId);
+        if (existing) {
+            existing.qty += qty;
+        } else {
+            byProductId.set(productId, mapped);
+        }
+    }
+
+    return Array.from(byProductId.values());
 }
 
 function reducer(state, { type, product, id, qty, synced, items }) {
     switch (type) {
         case "ADD": {
-            const normalized = normalizeCartItem(product, 1);
+            const qtyToAdd = Math.max(1, Number(product?.qtyToAdd) || 1);
+            const normalized = normalizeCartItem(product, qtyToAdd);
             const found = state.find((i) => i.id === normalized.id);
             return found
                 ? state.map((i) =>
-                      i.id === normalized.id ? { ...i, qty: i.qty + 1 } : i,
+                      i.id === normalized.id
+                          ? { ...i, qty: i.qty + qtyToAdd }
+                          : i,
                   )
                 : [...state, normalized];
         }
@@ -222,12 +240,13 @@ export function CartProvider({ children }) {
                 cartAnimationTick,
                 totalPrice,
                 totalPriceBase,
-                addToCart: async (p) => {
+                addToCart: async (p, qty = 1) => {
                     if (!token) return requireLoginForCart();
+                    const amount = Math.max(1, Math.floor(Number(qty) || 1));
                     const isFirstAdd = !items.some((i) => i.id === p.id);
                     const res = await api.post("/carrito/items", {
                         productoId: p.id,
-                        cantidad: 1,
+                        cantidad: amount,
                     });
                     dispatch({
                         type: "SET_ALL",
