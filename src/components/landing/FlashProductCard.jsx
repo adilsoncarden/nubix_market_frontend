@@ -8,8 +8,8 @@ import { handleProductImageError } from "../../features/products/services/produc
 
 const PAYMENT_LOGOS = (
     <span className="flash-card-payments" aria-hidden="true">
-        <span className="pay-pill">VISA</span>
         <span className="pay-pill">YAPE</span>
+        <span className="pay-pill">PLIN</span>
     </span>
 );
 
