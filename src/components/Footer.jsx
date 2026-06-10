@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import "../styles/landing.css";
+import CustomSelect from "./ui/CustomSelect";
 
 const digitsOnly = (value, maxLen) =>
     String(value ?? "")
@@ -296,16 +297,23 @@ const Footer = () => {
                                     {/* Campo: Tipo de solicitud */}
                                     <div className="mb-2">
                                         <label className="form-label fw-semibold text-secondary mb-1">Tipo de Solicitud</label>
-                                        <select 
+                                        <CustomSelect
                                             name="tipo"
-                                            className="form-select border-0 py-2 px-3" 
-                                            style={{ backgroundColor: "#F1F3F5", borderRadius: "12px", fontSize: "0.9rem" }}
+                                            className="py-2 px-3"
+                                            style={{ borderRadius: "12px", fontSize: "0.9rem" }}
                                             value={reclamacionData.tipo}
                                             onChange={handleInputChange}
-                                        >
-                                            <option value="Reclamación">Reclamación (Disconformidad relacionada a los productos)</option>
-                                            <option value="Queja">Queja (Disconformidad relacionada a la atención recibida)</option>
-                                        </select>
+                                            options={[
+                                                {
+                                                    value: "Reclamación",
+                                                    label: "Reclamación (Disconformidad relacionada a los productos)",
+                                                },
+                                                {
+                                                    value: "Queja",
+                                                    label: "Queja (Disconformidad relacionada a la atención recibida)",
+                                                },
+                                            ]}
+                                        />
                                     </div>
 
                                     {/* Campo: Detalle */}

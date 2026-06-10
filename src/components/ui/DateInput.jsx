@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { es } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
@@ -30,6 +30,14 @@ export default function DateInput({
     const [invalid, setInvalid] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [pendingDisplay, setPendingDisplay] = useState(null);
+    const [isDarkCalendar, setIsDarkCalendar] = useState(false);
+    const wrapperRef = useRef(null);
+
+    const resolveDarkCalendar = () =>
+        Boolean(
+            wrapperRef.current?.closest('[data-bs-theme="dark"]') ||
+                wrapperRef.current?.closest(".dark"),
+        );
 
     useEffect(() => {
         setInvalid(false);
@@ -91,8 +99,15 @@ export default function DateInput({
 
     const inputClassName = `${className}${invalid ? " is-invalid" : ""}`;
 
+    const popperClassName = `nubix-datepicker-popper${
+        isDarkCalendar ? " nubix-datepicker-popper--dark" : ""
+    }`;
+    const calendarClassName = `nubix-datepicker-calendar${
+        isDarkCalendar ? " nubix-datepicker-calendar--dark" : ""
+    }`;
+
     return (
-        <div className="nubix-date-input">
+        <div className="nubix-date-input" ref={wrapperRef}>
             <DatePicker
                 id={id}
                 name={name}
@@ -112,6 +127,7 @@ export default function DateInput({
                         onChange?.("");
                     }
                 }}
+                onCalendarOpen={() => setIsDarkCalendar(resolveDarkCalendar())}
                 onCalendarClose={flushPending}
                 onBlur={flushPending}
                 disabled={disabled}
@@ -126,8 +142,8 @@ export default function DateInput({
                 isClearable={!required}
                 minDate={minDate ? isoToDate(minDate) : undefined}
                 maxDate={maxDate ? isoToDate(maxDate) : undefined}
-                popperClassName="nubix-datepicker-popper"
-                calendarClassName="nubix-datepicker-calendar"
+                popperClassName={popperClassName}
+                calendarClassName={calendarClassName}
                 popperPlacement="bottom-start"
                 ariaLabel={ariaLabel}
                 className={inputClassName}

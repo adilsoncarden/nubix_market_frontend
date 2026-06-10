@@ -1,5 +1,6 @@
 import ProductQtyControl from "./ProductQtyControl";
 import { useCartProductQty } from "../../features/cart/hooks/useCartProductQty";
+import { isOutOfStock } from "../../utils/stockUtils";
 
 /**
  * Botón "Agregar al carrito" o control de cantidad según estado en CartContext.
@@ -23,8 +24,15 @@ export default function ProductCartActions({
         img: product.img,
     };
 
-    const { cartQty, inCart, stock, handleAdd, handleDecrease, handleIncrease } =
-        useCartProductQty(product.id, payload);
+    const {
+        cartQty,
+        inCart,
+        stock,
+        handleAdd,
+        handleDecrease,
+        handleIncrease,
+        handleStockLimit,
+    } = useCartProductQty(product.id, payload);
 
     if (inCart) {
         return (
@@ -33,10 +41,25 @@ export default function ProductCartActions({
                 stock={stock}
                 onDecrease={handleDecrease}
                 onIncrease={handleIncrease}
+                onStockLimit={handleStockLimit}
                 pillClassName={pillClassName}
                 btnClassName={btnClassName}
                 valueClassName={valueClassName}
             />
+        );
+    }
+
+    if (isOutOfStock(product)) {
+        return (
+            <button
+                type="button"
+                className={`${addButtonClassName} btn-flash-sold-out`}
+                disabled
+                aria-disabled="true"
+                title="Producto agotado"
+            >
+                Agotado
+            </button>
         );
     }
 
@@ -45,7 +68,6 @@ export default function ProductCartActions({
             type="button"
             className={addButtonClassName}
             onClick={(e) => handleAdd(e)}
-            disabled={product.stock <= 0}
             title={addButtonLabel}
         >
             {addButtonLabel}

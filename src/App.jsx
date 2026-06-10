@@ -23,6 +23,7 @@ import MainContent from "./components/MainContent";
 import AdminLayout from "./components/AdminLayout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Chatbot from "./components/Chatbot/Chatbot";
+import WhatsAppButton from "./components/WhatsAppButton/WhatsAppButton";
 import { useAuth } from "./store/AuthContext";
 
 // ───────────────── PÁGINAS PÚBLICAS ─────────────────
@@ -51,6 +52,8 @@ import SecurityRolesPage from "./pages/security/SecurityRolesPage";
 
 const PublicLayoutShell = () => (
     <div className="public-layout-shell d-flex flex-column min-vh-100" data-bs-theme="light">
+        <WhatsAppButton />
+        <Chatbot />
         <Navbar />
         <main className="flex-grow-1">
             <Outlet />
@@ -91,7 +94,6 @@ export default function App() {
                 <ProductCatalogProvider>
                     <CartProvider>
                         <FavoritesProvider>
-                            <Chatbot />
                             <Routes>
                             {/* ───────────── WEB PÚBLICA ───────────── */}
                             <Route element={<PublicLayoutShell />}>

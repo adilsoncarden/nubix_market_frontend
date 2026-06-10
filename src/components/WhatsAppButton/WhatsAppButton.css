@@ -1,0 +1,71 @@
+.nubix-whatsapp-btn {
+    --nubix-fab-size: 56px;
+    --nubix-fab-gap: 0.75rem;
+    --nubix-fab-offset-x: 1.25rem;
+    --nubix-fab-offset-y: 1.25rem;
+
+    position: fixed;
+    right: var(--nubix-fab-offset-x);
+    bottom: calc(
+        var(--nubix-fab-offset-y) + var(--nubix-fab-size) + var(--nubix-fab-gap)
+    );
+    z-index: 1105;
+    width: var(--nubix-fab-size);
+    height: var(--nubix-fab-size);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #25d366;
+    color: #fff;
+    font-size: 1.65rem;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45);
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    animation: nubix-whatsapp-pulse 2.5s ease-out infinite;
+}
+
+.nubix-whatsapp-btn:hover {
+    color: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 10px 28px rgba(37, 211, 102, 0.55);
+    animation: none;
+}
+
+.nubix-whatsapp-btn:focus-visible {
+    outline: 2px solid #128c7e;
+    outline-offset: 3px;
+}
+
+@keyframes nubix-whatsapp-pulse {
+    0% {
+        box-shadow:
+            0 8px 24px rgba(37, 211, 102, 0.45),
+            0 0 0 0 rgba(37, 211, 102, 0.35);
+    }
+    70% {
+        box-shadow:
+            0 8px 24px rgba(37, 211, 102, 0.45),
+            0 0 0 12px rgba(37, 211, 102, 0);
+    }
+    100% {
+        box-shadow:
+            0 8px 24px rgba(37, 211, 102, 0.45),
+            0 0 0 0 rgba(37, 211, 102, 0);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .nubix-whatsapp-btn {
+        --nubix-fab-offset-x: 0.75rem;
+        --nubix-fab-offset-y: 0.75rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nubix-whatsapp-btn {
+        animation: none;
+    }
+}

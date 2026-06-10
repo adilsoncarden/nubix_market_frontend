@@ -1,0 +1,7 @@
+/* Estilos legacy — el dropdown personalizado vive en CustomSelect.css.
+   Se mantiene el alias para compatibilidad con form-select-custom. */
+
+.form-select-custom {
+    appearance: none;
+    -webkit-appearance: none;
+}

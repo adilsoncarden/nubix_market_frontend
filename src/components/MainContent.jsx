@@ -1,11 +1,10 @@
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Carousel } from "bootstrap";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 import { Link } from "react-router-dom";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import FlashProductCard from "./landing/FlashProductCard";
-import { getTodayDealIdSet } from "../utils/todayDealProducts";
 import "../styles/landing.css";
 
 import slide1 from "../assets/imagen1.png";
@@ -75,11 +74,6 @@ const MainContent = () => {
 
   const [timeLeft, setTimeLeft] = useState(2 * 3600 + 45 * 60 + 12);
 
-  const todayDealIds = useMemo(
-    () => getTodayDealIdSet(products.map((p) => p.id)),
-    [products],
-  );
-
   useEffect(() => {
     const mainEl = document.querySelector("#heroCarousel");
     if (mainEl) {
@@ -104,10 +98,7 @@ const MainContent = () => {
     if (items.length > 0) {
       return items.map((p) => (
         <div key={p.id} className="col">
-          <FlashProductCard
-            p={p}
-            showTodayDeal={todayDealIds.has(p.id)}
-          />
+          <FlashProductCard p={p} />
         </div>
       ));
     }

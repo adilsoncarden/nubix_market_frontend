@@ -1,21 +1,30 @@
 import {
     ROLES,
     ROUTES,
-    ENUMS,
-    LIMITATIONS,
-    QUICK_REPLIES,
+    WEB_PAYMENT_METHODS,
+    WEB_DELIVERY_TYPES,
+    PURCHASE_STEPS,
     INTENT_KEYWORDS,
+    WEB_WELCOME_MESSAGE,
+    WHATSAPP_URL,
+    WEB_CHIPS,
+    getDefaultWebChips,
+    getPageContextChips,
+    getFallbackChips,
 } from "../knowledge/chatbotKnowledge";
 
 export const INTENTS = {
     HELP: "help",
+    SEARCH: "search",
     PURCHASE: "purchase",
+    CART: "cart",
     AUTH: "auth",
     ORDER: "order",
-    ADMIN: "admin",
+    PAYMENT: "payment",
+    DELIVERY: "delivery",
     ERROR: "error",
     FAVORITES: "favorites",
-    SYSTEM: "system",
+    WHATSAPP: "whatsapp",
     UNKNOWN: "unknown",
 };
 
@@ -45,150 +54,234 @@ export const detectIntent = (message) => {
     );
     scores.sort((a, b) => b.score - a.score);
     if (scores[0].score === 0) return INTENTS.UNKNOWN;
-    const top = scores[0].intent;
+
     const map = {
         help: INTENTS.HELP,
+        search: INTENTS.SEARCH,
         purchase: INTENTS.PURCHASE,
+        cart: INTENTS.CART,
         auth: INTENTS.AUTH,
         order: INTENTS.ORDER,
-        admin: INTENTS.ADMIN,
+        payment: INTENTS.PAYMENT,
+        delivery: INTENTS.DELIVERY,
         error: INTENTS.ERROR,
         favorites: INTENTS.FAVORITES,
-        system: INTENTS.SYSTEM,
+        whatsapp: INTENTS.WHATSAPP,
     };
-    return map[top] || INTENTS.UNKNOWN;
+    return map[scores[0].intent] || INTENTS.UNKNOWN;
 };
 
-export const resolveUserRole = ({
-    webToken,
-    webUser,
-    adminToken,
-    pathname,
-}) => {
-    const isAdminRoute =
-        pathname?.startsWith("/admin") && pathname !== ROUTES.adminLogin;
+const SEARCH_PREFIXES =
+    /^(?:buscar|busco|quiero|necesito|dame|ver|mostrar|encontrar|producto[s]?\s+(?:de\s+)?)(.+)$/;
 
-    if (isAdminRoute) {
-        if (adminToken) return ROLES.ADMIN;
-        if (
-            webToken &&
-            (webUser?.rol === "ADMIN" || webUser?.rol === "EMPLEADO")
-        ) {
-            return ROLES.ADMIN;
-        }
+export const extractSearchQuery = (message) => {
+    const raw = (message || "").trim();
+    if (!raw) return null;
+
+    const m = normalize(raw);
+    const prefixMatch = m.match(SEARCH_PREFIXES);
+    if (prefixMatch?.[1]?.trim().length >= 2) {
+        return raw
+            .slice(raw.toLowerCase().indexOf(prefixMatch[1]))
+            .trim();
     }
 
-    if (adminToken && !webToken) {
-        return ROLES.GUEST;
+    if (
+        m === "buscar producto" ||
+        m === "buscar productos" ||
+        m === "quiero buscar"
+    ) {
+        return null;
     }
 
+    const intent = detectIntent(message);
+    if (intent === INTENTS.SEARCH && m.length >= 3) {
+        return raw;
+    }
+
+    return null;
+};
+
+export const resolveUserRole = ({ webToken, webUser }) => {
     if (webToken && webUser) return ROLES.CLIENT;
     return ROLES.GUEST;
 };
 
-const link = (path, label) => `${label}: ${path}`;
+const formatSoles = (amount) =>
+    `S/ ${Number(amount || 0).toFixed(2)}`;
 
-const welcomeByRole = (role) => {
-    if (role === ROLES.ADMIN) {
-        return (
-            "Hola, soy el asistente del panel Nubix Market. " +
-            "Puedo guiarte en productos, categorías, proveedores, ventas y usuarios. " +
-            "¿Qué necesitas?"
-        );
+const suggestionsFor = (context, intent) => {
+    const role = resolveUserRole(context);
+    if (intent === INTENTS.UNKNOWN) {
+        return getFallbackChips(role);
     }
-    if (role === ROLES.CLIENT) {
-        return (
-            "Hola, soy tu asistente en Nubix Market. " +
-            "Te ayudo con compras, carrito, cuenta y entregas. ¿En qué te apoyo?"
-        );
+    return getPageContextChips(context.pathname || "/", role);
+};
+
+const searchPromptResponse = () => ({
+    text:
+        "¿Qué producto buscas? 🔍\n\n" +
+        "Escríbelo así:\n" +
+        '• "quiero arroz"\n' +
+        '• "buscar bebidas"\n' +
+        '• "lacteos"',
+    intent: INTENTS.SEARCH,
+    suggestions: [
+        { label: "Bebidas", type: "message", message: "buscar bebidas" },
+        { label: "Abarrotes", type: "message", message: "buscar abarrotes" },
+        WEB_CHIPS.shop,
+    ],
+});
+
+const searchResponse = (message) => {
+    const query = extractSearchQuery(message);
+    if (!query) return searchPromptResponse();
+
+    return {
+        text: `Perfecto, busco "${query}" en la tienda. Te redirijo ahora 🛒`,
+        intent: INTENTS.SEARCH,
+        navigate: `${ROUTES.shop}?search=${encodeURIComponent(query)}`,
+        suggestions: [WEB_CHIPS.cart, WEB_CHIPS.howToBuy, WEB_CHIPS.payment],
+    };
+};
+
+const cartResponse = (context) => {
+    const role = resolveUserRole(context);
+    const { cartItems = [], totalUnits = 0, totalPrice = 0 } = context;
+
+    if (role === ROLES.GUEST) {
+        return {
+            text:
+                "Para ver tu carrito necesitas iniciar sesión. 🔐\n\n" +
+                "Mientras tanto puedes explorar la tienda y agregar productos; " +
+                "al iniciar sesión se sincronizará tu carrito.",
+            intent: INTENTS.CART,
+            navigate: ROUTES.login,
+            suggestions: [WEB_CHIPS.login, WEB_CHIPS.shop, WEB_CHIPS.howToBuy],
+        };
     }
-    return (
-        "Hola, soy el asistente de Nubix Market. " +
-        "Puedo explicarte cómo comprar, crear cuenta o recuperar contraseña. ¿Qué necesitas?"
+
+    if (!cartItems.length) {
+        return {
+            text:
+                "Tu carrito está vacío por ahora. 🛒\n\n" +
+                "Explora la tienda, agrega productos y vuelve cuando quieras pagar.",
+            intent: INTENTS.CART,
+            navigate: ROUTES.shop,
+            suggestions: [WEB_CHIPS.search, WEB_CHIPS.howToBuy],
+        };
+    }
+
+    const lines = cartItems.slice(0, 4).map(
+        (item) => `• ${item.name} × ${item.qty}`,
     );
+    if (cartItems.length > 4) {
+        lines.push(`• … y ${cartItems.length - 4} producto(s) más`);
+    }
+
+    return {
+        text: [
+            `Tienes ${totalUnits} unidad${totalUnits === 1 ? "" : "es"} en tu carrito:`,
+            ...lines,
+            "",
+            `Total estimado: ${formatSoles(totalPrice)}`,
+            "",
+            "¿Quieres finalizar tu compra?",
+        ].join("\n"),
+        intent: INTENTS.CART,
+        suggestions: [WEB_CHIPS.cart, WEB_CHIPS.payment, WEB_CHIPS.delivery],
+    };
 };
 
-const helpResponse = (role) => {
-    if (role === ROLES.ADMIN) {
-        return [
-            "Comandos útiles (escribe palabras clave):",
-            "• productos / categorías / proveedores / ventas — guías CRUD",
-            "• estados — pedidos y pagos",
-            "• export / excel — reportes",
-            "• error — problemas comunes",
-            "",
-            link(ROUTES.adminDashboard, "Panel"),
-            link(ROUTES.adminProducts, "Productos"),
-            link(ROUTES.adminSales, "Ventas"),
-        ].join("\n");
-    }
-    return [
-        "Puedo ayudarte con:",
-        "• Comprar en la tienda y finalizar pedido",
-        "• Login, registro y contraseña",
-        "• Carrito, pagos y tipos de entrega",
-        "• Errores frecuentes",
+const paymentResponse = () => ({
+    text: [
+        "Estos son los métodos de pago disponibles: 💳",
         "",
-        link(ROUTES.shop, "Tienda"),
-        link(ROUTES.cart, "Carrito (requiere sesión)"),
-        link(ROUTES.login, "Iniciar sesión"),
-    ].join("\n");
-};
+        ...WEB_PAYMENT_METHODS.map(
+            (p) => `• ${p.name}: ${p.summary}`,
+        ),
+        "",
+        "Los eliges al finalizar compra en tu carrito.",
+    ].join("\n"),
+    intent: INTENTS.PAYMENT,
+    suggestions: [WEB_CHIPS.cart, WEB_CHIPS.howToBuy, WEB_CHIPS.delivery],
+});
+
+const deliveryResponse = () => ({
+    text: [
+        "Tipos de entrega en Nubix Market: 🚚",
+        "",
+        ...WEB_DELIVERY_TYPES.map(
+            (d) => `• ${d.name}: ${d.summary}`,
+        ),
+        "",
+        "En el checkout eliges Fast Lane o Delivery según prefieras.",
+    ].join("\n"),
+    intent: INTENTS.DELIVERY,
+    suggestions: [WEB_CHIPS.cart, WEB_CHIPS.payment, WEB_CHIPS.howToBuy],
+});
 
 const purchaseResponse = (role) => {
-    if (role === ROLES.ADMIN) {
-        return [
-            "Flujo de compra (cliente):",
-            "1) Tienda (/shop) → agregar al carrito",
-            "2) Iniciar sesión si hace falta",
-            "3) Carrito (/cart) → Finalizar compra",
-            "4) Elegir boleta/factura, pago y entrega → confirmar",
-            "",
-            "Como admin también puedes registrar ventas en Ventas → Nueva venta.",
-            link(ROUTES.adminSales, "Módulo ventas"),
-        ].join("\n");
-    }
-    return [
-        "Para comprar:",
-        "1) Entra a la tienda y agrega productos al carrito",
-        "2) Inicia sesión (obligatorio para pagar)",
-        "3) Ve a Carrito → Finalizar compra",
-        "4) Completa datos, método de pago y tipo de entrega",
+    const steps = PURCHASE_STEPS.map((s, i) => `${i + 1}) ${s}`).join("\n");
+    const text = [
+        "Comprar en Nubix Market es muy fácil: 🛍️",
         "",
-        `Pagos: ${ENUMS.metodoPago.join(", ")}.`,
-        `Entrega: PRESENCIAL, FAST_LANE (código recojo), DELIVERY (dirección).`,
+        steps,
         "",
-        link(ROUTES.shop, "Ir a tienda"),
-        link(ROUTES.cart, "Ver carrito"),
+        role === ROLES.GUEST
+            ? "Recuerda: necesitas una cuenta para pagar."
+            : "Ya tienes sesión activa, puedes ir directo al carrito.",
     ].join("\n");
+
+    return {
+        text,
+        intent: INTENTS.PURCHASE,
+        suggestions:
+            role === ROLES.GUEST
+                ? [WEB_CHIPS.login, WEB_CHIPS.shop, WEB_CHIPS.payment]
+                : [WEB_CHIPS.cart, WEB_CHIPS.shop, WEB_CHIPS.payment],
+    };
 };
 
-const authResponse = (role, message) => {
-    const m = normalize(message);
-    const adminAuth =
-        m.includes("admin") || m.includes("empleado") || m.includes("panel");
-
-    if (adminAuth || role === ROLES.ADMIN) {
-        return [
-            "Acceso administrador:",
-            "• Usa /admin-login (no es el mismo login de clientes)",
-            "• Endpoint: POST /api/auth/admin-login",
-            "• Roles ADMIN o EMPLEADO acceden al panel",
-            "",
-            "Si la sesión expira, vuelve a iniciar sesión.",
-            link(ROUTES.adminLogin, "Login admin"),
-        ].join("\n");
+const orderResponse = (role) => {
+    if (role === ROLES.GUEST) {
+        return {
+            text:
+                "Para ver el estado de tus pedidos inicia sesión. 📦\n\n" +
+                "En Mis pedidos verás pedidos activos e historial con su estado actual.",
+            intent: INTENTS.ORDER,
+            navigate: ROUTES.login,
+            suggestions: [WEB_CHIPS.login, WEB_CHIPS.whatsapp, WEB_CHIPS.howToBuy],
+        };
     }
 
+    return {
+        text:
+            "Puedes revisar tus pedidos en Mis pedidos. 📦\n\n" +
+            "Ahí verás:\n" +
+            "• Pedidos activos (en proceso, listos, en camino)\n" +
+            "• Historial de pedidos entregados\n\n" +
+            "Si necesitas ayuda extra, escríbenos por WhatsApp.",
+        intent: INTENTS.ORDER,
+        navigate: ROUTES.misPedidos,
+        suggestions: [WEB_CHIPS.whatsapp, WEB_CHIPS.shop, WEB_CHIPS.payment],
+    };
+};
+
+const authResponse = (message) => {
+    const m = normalize(message);
+
     if (m.includes("registr")) {
-        return [
-            "Registro de cliente:",
-            "1) Ve a Registrarse",
-            "2) Usuario, email y contraseña",
-            "3) POST /api/auth/register",
-            "4) Luego inicia sesión en Login",
-            link(ROUTES.register, "Registro"),
-        ].join("\n");
+        return {
+            text:
+                "Crear cuenta es rápido: 📝\n\n" +
+                "1) Ve a Registrarse\n" +
+                "2) Completa tus datos\n" +
+                "3) Inicia sesión y ya puedes comprar",
+            intent: INTENTS.AUTH,
+            navigate: ROUTES.register,
+            suggestions: [WEB_CHIPS.login, WEB_CHIPS.howToBuy],
+        };
     }
 
     if (
@@ -197,312 +290,216 @@ const authResponse = (role, message) => {
         m.includes("recuper") ||
         m.includes("contrase")
     ) {
-        return [
-            "Recuperar contraseña:",
-            "1) Olvidé mi contraseña → ingresa tu email",
-            "2) Recibes un código por correo",
-            "3) Verifica el código y define nueva contraseña",
-            "",
-            "Rutas: /forgot-password y /reset-password/manual",
-            link(ROUTES.forgotPassword, "Recuperar contraseña"),
-        ].join("\n");
+        return {
+            text:
+                "Recuperar contraseña: 🔑\n\n" +
+                "1) Ve a Olvidé mi contraseña\n" +
+                "2) Ingresa tu correo\n" +
+                "3) Sigue los pasos con el código recibido",
+            intent: INTENTS.AUTH,
+            navigate: ROUTES.forgotPassword,
+            suggestions: [WEB_CHIPS.login],
+        };
     }
 
-    return [
-        "Cuenta de cliente:",
-        "• Login: email y contraseña → JWT guardado en el navegador",
-        "• Registro: solo usuarios tipo CLIENTE",
-        "• Carrito y favoritos requieren estar logueado",
-        "",
-        link(ROUTES.login, "Login"),
-        link(ROUTES.register, "Registro"),
-    ].join("\n");
+    return {
+        text:
+            "Para comprar y ver tu carrito necesitas iniciar sesión. 🔐\n\n" +
+            "Si no tienes cuenta, regístrate en un minuto.",
+        intent: INTENTS.AUTH,
+        navigate: ROUTES.login,
+        suggestions: [
+            WEB_CHIPS.login,
+            { label: "Registrarme", type: "navigate", path: ROUTES.register, confirmText: "Te llevo al registro 📝" },
+            WEB_CHIPS.howToBuy,
+        ],
+    };
 };
 
-const orderResponse = (role) => {
-    if (role === ROLES.CLIENT || role === ROLES.GUEST) {
-        return [
-            "Pedidos y seguimiento:",
-            "• Al confirmar compra recibes número de venta y PDF; en FAST_LANE también código de recojo",
-            "• Hoy no hay pantalla de historial de pedidos para clientes en la web",
-            "• Para consultar estado, contacta al comercio o al administrador",
-            "",
-            "Estados internos del pedido:",
-            ENUMS.estadoPedido.join(" → "),
-            "",
-            "Estados de pago: " + ENUMS.estadoPago.join(", "),
-        ].join("\n");
-    }
-    return [
-        "Gestión de pedidos (admin):",
-        "• Ventas lista todos los pedidos",
-        "• Cambia estado con el selector en cada fila",
-        "• Crédito pendiente/rechazado: botón para registrar pago",
-        "",
-        "Estados pedido: " + ENUMS.estadoPedido.join(", "),
-        "Estados pago: " + ENUMS.estadoPago.join(", "),
-        "",
-        link(ROUTES.adminSales, "Ir a ventas"),
-    ].join("\n");
-};
-
-const adminResponse = (message) => {
+const errorResponse = (message) => {
     const m = normalize(message);
-
-    if (m.includes("product")) {
-        return [
-            "Productos (admin):",
-            "• Listar, buscar y filtrar por categoría",
-            "• Nuevo producto: código, nombre, precios, stock, categoría",
-            "• Editar / eliminar desde la tabla",
-            "• Imagen: subir y asignar al producto",
-            "• Excel: exportar con filtros opcionales",
-            link(ROUTES.adminProducts, "Abrir productos"),
-        ].join("\n");
-    }
-
-    if (m.includes("categor")) {
-        return [
-            "Categorías:",
-            "• Crear: nombre y descripción",
-            "• Editar: POST /admin/categorias/{id}/update",
-            "• Eliminar: confirmación antes de borrar",
-            "• Exportar Excel desde el botón del módulo",
-            link(ROUTES.adminCategories, "Abrir categorías"),
-        ].join("\n");
-    }
-
-    if (m.includes("proveedor")) {
-        return [
-            "Proveedores:",
-            "• CRUD completo (RUC, razón social, teléfono, email)",
-            "• Al editar, guarda con el ID correcto para no duplicar RUC",
-            "• Exportar Excel disponible",
-            link(ROUTES.adminSuppliers, "Abrir proveedores"),
-        ].join("\n");
-    }
-
-    if (m.includes("venta") || m.includes("pedido")) {
-        return [
-            "Ventas:",
-            "• Ver listado con filtros (entrega, cliente, fechas)",
-            "• Nueva venta manual desde el modal",
-            "• Actualizar estado del pedido",
-            "• Registrar crédito pagado si aplica",
-            "• Exportar Excel con filtros de fechas y más",
-            link(ROUTES.adminSales, "Abrir ventas"),
-        ].join("\n");
-    }
-
-    if (m.includes("cliente") && !m.includes("empleado")) {
-        return [
-            "Clientes (usuarios):",
-            "• Listar y buscar usuarios registrados",
-            "• Editar datos desde el modal",
-            "• No creas clientes aquí: se registran en la web",
-            link(ROUTES.adminClients, "Abrir clientes"),
-        ].join("\n");
-    }
+    const lines = ["Te ayudo con eso. Prueba estas soluciones: 🛠️", ""];
 
     if (
-        m.includes("empleado") ||
-        m.includes("personal") ||
-        m.includes("trabajador")
+        m.includes("pagar") ||
+        m.includes("pago") ||
+        m.includes("checkout")
     ) {
-        return [
-            "Empleados / admins:",
-            "• Registrar trabajador con rol EMPLEADO o ADMIN",
-            "• Editar o eliminar desde la tabla",
-            link(ROUTES.adminEmployees, "Abrir empleados"),
-        ].join("\n");
+        lines.push(
+            "No puedo pagar:",
+            "• Verifica que iniciaste sesión",
+            "• Revisa que tu carrito tenga productos",
+            "• Confirma stock disponible",
+            "• Completa todos los datos del checkout",
+        );
+    } else if (m.includes("stock") || m.includes("agotado")) {
+        lines.push(
+            "Sin stock:",
+            "• El producto puede haberse agotado",
+            "• Reduce la cantidad en tu carrito",
+            "• Busca un producto similar en la tienda",
+        );
+    } else {
+        lines.push(
+            "Problemas comunes:",
+            "• No puedo pagar → inicia sesión y revisa stock",
+            "• Carrito vacío → agrega productos desde la tienda",
+            "• Sin stock → elige otra cantidad o producto",
+            "• Error al confirmar → revisa datos de entrega y pago",
+        );
     }
 
-    if (m.includes("export") || m.includes("excel")) {
-        return [
-            "Exportar reportes:",
-            "• Productos, categorías, proveedores y ventas tienen botón Excel",
-            "• Ventas: elige rango de fechas y filtros en el modal",
-            "• Productos: categoría, stock bajo, rango de precios",
-        ].join("\n");
-    }
+    lines.push("", "Si sigue el problema, contáctanos por WhatsApp.");
 
-    if (
-        m.includes("crear") ||
-        m.includes("editar") ||
-        m.includes("eliminar") ||
-        m.includes("crud")
-    ) {
-        return [
-            "CRUD en el panel:",
-            "• Crear: botón Nuevo / + en cada módulo",
-            "• Editar: icono lápiz en la fila",
-            "• Eliminar: icono papelera + confirmación",
-            "• Los cambios llaman a la API /api/admin/...",
-        ].join("\n");
-    }
-
-    return [
-        "Panel administrador:",
-        "• Dashboard: métricas y gráficos",
-        "• Módulos: categorías, productos, proveedores, ventas, usuarios",
-        "• Tema claro/oscuro en la barra superior",
-        "",
-        link(ROUTES.adminDashboard, "Dashboard"),
-        "Escribe: productos, ventas, categorías o proveedores para más detalle.",
-    ].join("\n");
-};
-
-const errorResponse = (role) => {
-    const common = [
-        "Problemas frecuentes:",
-        "• 401 / sesión expirada → vuelve a iniciar sesión",
-        "• No puedo pagar → debes estar logueado y tener stock",
-        "• Carrito vacío → agrega productos desde /shop",
-        "• Admin sin acceso → usa /admin-login con rol ADMIN",
-    ];
-    if (role === ROLES.ADMIN) {
-        return common
-            .concat([
-                "• Error al guardar proveedor duplicado → revisa RUC único",
-                "• Excel no descarga → verifica rango de fechas en ventas",
-            ])
-            .join("\n");
-    }
-    return common
-        .concat([
-            "• Checkout falló → revisa stock y datos del formulario",
-            "• Delivery → debes indicar dirección de entrega",
-        ])
-        .join("\n");
+    return {
+        text: lines.join("\n"),
+        intent: INTENTS.ERROR,
+        suggestions: [WEB_CHIPS.whatsapp, WEB_CHIPS.cart, WEB_CHIPS.payment],
+    };
 };
 
 const favoritesResponse = (role) => {
     if (role === ROLES.GUEST) {
-        return [
-            "Favoritos requieren iniciar sesión.",
-            "Marca productos con el corazón en la tienda y revísalos en Favoritos.",
-            link(ROUTES.login, "Iniciar sesión"),
-        ].join("\n");
+        return {
+            text:
+                "Los favoritos requieren iniciar sesión. ❤️\n\n" +
+                "Marca productos con el corazón en la tienda y revísalos después.",
+            intent: INTENTS.FAVORITES,
+            navigate: ROUTES.login,
+            suggestions: [WEB_CHIPS.login, WEB_CHIPS.shop],
+        };
     }
-    return [
-        "Favoritos:",
-        "• Guarda productos desde la tienda (icono corazón)",
-        "• Requiere sesión activa",
-        link(ROUTES.favorites, "Ver favoritos"),
-    ].join("\n");
+
+    return {
+        text:
+            "Guarda tus productos favoritos con el corazón en la tienda. ❤️\n\n" +
+            "Luego los encuentras todos en Favoritos.",
+        intent: INTENTS.FAVORITES,
+        navigate: ROUTES.favorites,
+        suggestions: [WEB_CHIPS.shop, WEB_CHIPS.cart],
+    };
 };
 
-const systemResponse = (message) => {
-    const m = normalize(message);
-    if (m.includes("limit")) {
-        return [
-            "Limitaciones actuales:",
-            ...LIMITATIONS.map((l) => `• ${l}`),
-        ].join("\n");
-    }
-    return [
-        "Nubix Market: tienda web (React) + API Spring Boot (JWT).",
-        "• Clientes: catálogo, carrito local, checkout autenticado",
-        "• Admin: inventario, ventas, proveedores y usuarios",
-        "• API base: https://nubix-market-backend.onrender.com/api",
-        "",
-        "Escribe «limitaciones» para ver qué aún no está implementado.",
-    ].join("\n");
-};
+const whatsappResponse = () => ({
+    text: "Te conecto con nuestro equipo por WhatsApp. 💬\n\nEstamos para ayudarte con tu compra.",
+    intent: INTENTS.WHATSAPP,
+    externalUrl: WHATSAPP_URL,
+    suggestions: [WEB_CHIPS.howToBuy, WEB_CHIPS.payment, WEB_CHIPS.orders],
+});
 
-const unknownResponse = (role) => {
-    if (role === ROLES.ADMIN) {
-        return [
-            "No tengo una respuesta exacta para eso.",
-            "Prueba: productos, ventas, categorías, exportar, error o ayuda.",
-            "También revisa el módulo correspondiente en el menú lateral.",
-        ].join("\n");
-    }
-    return [
-        "No estoy seguro de entender tu consulta.",
-        "Prueba: comprar, carrito, login, contraseña, entrega o error.",
-        "Si es sobre un pedido ya realizado, contacta al administrador de la tienda.",
-    ].join("\n");
-};
+const helpResponse = (role) => ({
+    text:
+        "Puedo ayudarte con: 🙌\n\n" +
+        "🛒 Buscar y comprar productos\n" +
+        "📦 Ver tu carrito y pedidos\n" +
+        "💳 Métodos de pago\n" +
+        "🚚 Tipos de entrega\n" +
+        "🛠️ Problemas al comprar\n\n" +
+        "Elige una opción o escríbeme lo que necesitas.",
+    intent: INTENTS.HELP,
+    suggestions: getDefaultWebChips(role),
+});
+
+const unknownResponse = (role) => ({
+    text:
+        "No entendí tu consulta, pero puedo ayudarte con estas opciones: 🤔\n\n" +
+        "Prueba los botones de abajo o escribe algo como:\n" +
+        '• "quiero arroz"\n' +
+        '• "métodos de pago"\n' +
+        '• "ver mi carrito"',
+    intent: INTENTS.UNKNOWN,
+    suggestions: getFallbackChips(role),
+});
 
 /**
- * @param {string} message - Mensaje del usuario
- * @param {{ webToken?: string, webUser?: object, adminToken?: string, pathname?: string }} context
- * @returns {{ text: string, intent: string, suggestions: string[] }}
+ * @param {string} message
+ * @param {object} context
+ * @returns {{ text: string, intent: string, suggestions: object[], navigate?: string, externalUrl?: string }}
  */
 export const getChatResponse = (message, context = {}) => {
     const role = resolveUserRole(context);
-    const intent = detectIntent(message);
     const m = normalize(message);
 
     if (!message?.trim()) {
         return {
-            text: "Escribe tu pregunta y te respondo enseguida.",
+            text: "Escribe tu consulta y te ayudo enseguida 😊",
             intent: INTENTS.HELP,
-            suggestions: QUICK_REPLIES[role],
+            suggestions: getPageContextChips(context.pathname || "/", role),
         };
     }
 
     const isGreeting = /^(hola|hey|hi|buenas|buenos)\b/.test(m);
+    const intent = detectIntent(message);
 
-    let text;
-    switch (intent) {
-        case INTENTS.PURCHASE:
-            text = purchaseResponse(role);
-            break;
-        case INTENTS.AUTH:
-            text = authResponse(role, message);
-            break;
-        case INTENTS.ORDER:
-            text = orderResponse(role);
-            break;
-        case INTENTS.ADMIN:
-            text =
-                role === ROLES.ADMIN
-                    ? adminResponse(message)
-                    : [
-                          "Esa función es del panel administrador.",
-                          "Accede con cuenta ADMIN en /admin-login.",
-                          link(ROUTES.adminLogin, "Login admin"),
-                      ].join("\n");
-            break;
-        case INTENTS.ERROR:
-            text = errorResponse(role);
-            break;
-        case INTENTS.FAVORITES:
-            text = favoritesResponse(role);
-            break;
-        case INTENTS.SYSTEM:
-            text = systemResponse(message);
-            break;
-        case INTENTS.HELP:
-            text = isGreeting ? welcomeByRole(role) : helpResponse(role);
-            break;
-        default:
-            if (
-                role === ROLES.ADMIN &&
-                scoreIntent(message, INTENT_KEYWORDS.admin) > 0
-            ) {
-                text = adminResponse(message);
-            } else {
-                text = unknownResponse(role);
-            }
+    if (m === "buscar producto" || m === "buscar productos") {
+        return searchPromptResponse();
     }
 
-    return {
-        text,
-        intent,
-        suggestions: QUICK_REPLIES[role],
-    };
+    const searchQuery = extractSearchQuery(message);
+    if (searchQuery && (intent === INTENTS.SEARCH || intent === INTENTS.UNKNOWN)) {
+        return searchResponse(message);
+    }
+
+    let result;
+
+    switch (intent) {
+        case INTENTS.SEARCH:
+            result = searchResponse(message);
+            break;
+        case INTENTS.CART:
+            result = cartResponse(context);
+            break;
+        case INTENTS.PAYMENT:
+            result = paymentResponse();
+            break;
+        case INTENTS.DELIVERY:
+            result = deliveryResponse();
+            break;
+        case INTENTS.PURCHASE:
+            result = purchaseResponse(role);
+            break;
+        case INTENTS.ORDER:
+            result = orderResponse(role);
+            break;
+        case INTENTS.AUTH:
+            result = authResponse(message);
+            break;
+        case INTENTS.ERROR:
+            result = errorResponse(message);
+            break;
+        case INTENTS.FAVORITES:
+            result = favoritesResponse(role);
+            break;
+        case INTENTS.WHATSAPP:
+            result = whatsappResponse();
+            break;
+        case INTENTS.HELP:
+            result = isGreeting
+                ? {
+                      text: WEB_WELCOME_MESSAGE,
+                      intent: INTENTS.HELP,
+                      suggestions: getDefaultWebChips(role),
+                  }
+                : helpResponse(role);
+            break;
+        default:
+            result = unknownResponse(role);
+    }
+
+    if (!result.suggestions?.length) {
+        result.suggestions = suggestionsFor(context, result.intent);
+    }
+
+    return result;
 };
 
 export const getWelcomeMessage = (context = {}) => {
     const role = resolveUserRole(context);
     return {
-        text: welcomeByRole(role),
+        text: WEB_WELCOME_MESSAGE,
         intent: INTENTS.HELP,
-        suggestions: QUICK_REPLIES[role],
+        suggestions: getPageContextChips(context.pathname || "/", role),
     };
 };
 
-export { welcomeByRole, QUICK_REPLIES };
+export { WEB_WELCOME_MESSAGE, getDefaultWebChips, getPageContextChips };

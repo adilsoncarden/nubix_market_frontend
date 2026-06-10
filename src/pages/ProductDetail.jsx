@@ -9,6 +9,12 @@ import {
 import { mapProductoToShopItem } from "../features/products/utils/mapProducto";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import FlashProductCard from "../components/landing/FlashProductCard";
+import ProductFavoriteButton from "../components/shared/ProductFavoriteButton";
+import {
+  stockToastMaxReached,
+  stockToastOutOfStock,
+} from "../utils/swalConfig";
+import { isOutOfStock } from "../utils/stockUtils";
 import "../styles/product-detail.css";
 import "../styles/landing.css";
 
@@ -159,11 +165,23 @@ const ProductDetail = () => {
       await handleIncrease();
       return;
     }
+    if (isOutOfStock(producto)) {
+      stockToastOutOfStock();
+      return;
+    }
+    if (cantidad >= producto.stock) {
+      stockToastMaxReached();
+      return;
+    }
     setCantidad((prev) => Math.min(producto.stock, prev + 1));
   };
 
   const handleAgregarAlCarrito = async () => {
     if (inCart) return;
+    if (isOutOfStock(producto)) {
+      stockToastOutOfStock();
+      return;
+    }
     await handleAdd(null, cantidad);
   };
 
@@ -253,32 +271,49 @@ const ProductDetail = () => {
                   </span>
                   <button
                     type="button"
-                    className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5"
+                    className={`btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5${displayQty >= producto.stock ? " qty-btn--at-limit" : ""}`}
                     onClick={handleIncreaseQty}
-                    disabled={displayQty >= producto.stock}
+                    title={
+                      displayQty >= producto.stock
+                        ? "Stock limitado"
+                        : "Aumentar cantidad"
+                    }
                   >
                     +
                   </button>
                 </div>
               </div>
               <div className="col">
-                {inCart ? (
-                  <Link
-                    to="/cart"
-                    className="btn btn-outline-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
-                  >
-                    <i className="bi bi-cart3 me-2"></i> Ver carrito
-                  </Link>
-                ) : (
-                  <button
-                    className="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
-                    onClick={handleAgregarAlCarrito}
-                    disabled={producto.stock <= 0}
-                    style={{ backgroundColor: "#28a745", border: "none" }}
-                  >
-                    <i className="bi bi-cart-plus-fill me-2"></i> Agregar al Carrito
-                  </button>
-                )}
+                <div className="d-flex align-items-center gap-2 product-detail-actions">
+                  <div className="flex-grow-1">
+                    {inCart ? (
+                      <Link
+                        to="/cart"
+                        className="btn btn-outline-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
+                      >
+                        <i className="bi bi-cart3 me-2"></i> Ver carrito
+                      </Link>
+                    ) : isOutOfStock(producto) ? (
+                      <button
+                        type="button"
+                        className="btn btn-product-sold-out w-100 rounded-pill py-3 fw-bold text-uppercase"
+                        disabled
+                        aria-disabled="true"
+                      >
+                        Agotado
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
+                        onClick={handleAgregarAlCarrito}
+                        style={{ backgroundColor: "#28a745", border: "none" }}
+                      >
+                        <i className="bi bi-cart-plus-fill me-2"></i> Agregar al Carrito
+                      </button>
+                    )}
+                  </div>
+                  <ProductFavoriteButton product={productPayload} />
+                </div>
               </div>
             </div>
           </div>

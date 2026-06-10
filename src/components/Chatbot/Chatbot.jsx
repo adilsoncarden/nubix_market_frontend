@@ -1,24 +1,34 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../store/AuthContext";
+import { useCart } from "../../store/CartContext";
 import {
     getChatResponse,
     getWelcomeMessage,
     resolveUserRole,
 } from "../../features/chatbot/services/chatbotService";
-import { ROLES } from "../../features/chatbot/knowledge/chatbotKnowledge";
+import {
+    CHIP_TYPES,
+    ROUTES,
+    ROLES,
+    getPageContextChips,
+} from "../../features/chatbot/knowledge/chatbotKnowledge";
 import "./Chatbot.css";
 
 const ROLE_LABELS = {
     [ROLES.GUEST]: "Visitante",
     [ROLES.CLIENT]: "Cliente",
-    [ROLES.ADMIN]: "Administrador",
 };
 
 const makeId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+const chipKey = (chip) =>
+    typeof chip === "string" ? chip : chip.label || chip.message || makeId();
+
 const Chatbot = () => {
-    const { webToken, webUser, adminToken } = useAuth();
+    const navigate = useNavigate();
+    const { webToken, webUser } = useAuth();
+    const { items, totalUnits, totalPrice } = useCart();
     const location = useLocation();
     const [open, setOpen] = useState(false);
     const [input, setInput] = useState("");
@@ -30,10 +40,12 @@ const Chatbot = () => {
         () => ({
             webToken,
             webUser,
-            adminToken,
             pathname: location.pathname,
+            cartItems: items,
+            totalUnits,
+            totalPrice,
         }),
-        [webToken, webUser, adminToken, location.pathname],
+        [webToken, webUser, location.pathname, items, totalUnits, totalPrice],
     );
 
     const role = useMemo(() => resolveUserRole(context), [context]);
@@ -46,6 +58,29 @@ const Chatbot = () => {
             }
         });
     }, []);
+
+    const appendBotMessage = useCallback(
+        (text) => {
+            setMessages((prev) => [
+                ...prev,
+                { id: makeId(), role: "bot", text },
+            ]);
+            scrollToBottom();
+        },
+        [scrollToBottom],
+    );
+
+    const applyResponseSideEffects = useCallback(
+        (response) => {
+            if (response.navigate) {
+                navigate(response.navigate);
+            }
+            if (response.externalUrl) {
+                window.open(response.externalUrl, "_blank", "noopener,noreferrer");
+            }
+        },
+        [navigate],
+    );
 
     useEffect(() => {
         if (open && messages.length === 0) {
@@ -65,6 +100,23 @@ const Chatbot = () => {
         scrollToBottom();
     }, [messages, open, scrollToBottom]);
 
+    useEffect(() => {
+        if (open) {
+            setSuggestions(getPageContextChips(location.pathname, role));
+        }
+    }, [location.pathname, open, role]);
+
+    const dispatchBotReply = useCallback(
+        (reply) => {
+            setTimeout(() => {
+                appendBotMessage(reply.text);
+                setSuggestions(reply.suggestions || []);
+                applyResponseSideEffects(reply);
+            }, 280);
+        },
+        [appendBotMessage, applyResponseSideEffects],
+    );
+
     const sendMessage = useCallback(
         (text) => {
             const trimmed = (text || "").trim();
@@ -76,30 +128,74 @@ const Chatbot = () => {
             ]);
             setInput("");
 
-            const { text: reply, suggestions: chips } = getChatResponse(
-                trimmed,
-                context,
-            );
+            const reply = getChatResponse(trimmed, context);
+            dispatchBotReply(reply);
+        },
+        [context, dispatchBotReply],
+    );
 
-            setTimeout(() => {
+    const handleChipAction = useCallback(
+        (chip) => {
+            if (typeof chip === "string") {
+                sendMessage(chip);
+                return;
+            }
+
+            const type = chip.type || CHIP_TYPES.MESSAGE;
+
+            if (type === CHIP_TYPES.MESSAGE) {
+                sendMessage(chip.message || chip.label);
+                return;
+            }
+
+            if (type === CHIP_TYPES.NAVIGATE) {
                 setMessages((prev) => [
                     ...prev,
-                    { id: makeId(), role: "bot", text: reply },
+                    { id: makeId(), role: "user", text: chip.label },
                 ]);
-                setSuggestions(chips || []);
-                scrollToBottom();
-            }, 280);
+
+                if (chip.requireAuth && !webToken) {
+                    dispatchBotReply({
+                        text:
+                            "Para eso necesitas iniciar sesión. Te llevo al login 🔐",
+                        suggestions: [
+                            {
+                                label: "Iniciar sesión",
+                                type: CHIP_TYPES.NAVIGATE,
+                                path: ROUTES.login,
+                            },
+                        ],
+                        navigate: ROUTES.login,
+                    });
+                    return;
+                }
+
+                dispatchBotReply({
+                    text: chip.confirmText || `Abriendo ${chip.label}…`,
+                    suggestions: getChatResponse("", context).suggestions,
+                    navigate: chip.path,
+                });
+                return;
+            }
+
+            if (type === CHIP_TYPES.EXTERNAL) {
+                setMessages((prev) => [
+                    ...prev,
+                    { id: makeId(), role: "user", text: chip.label },
+                ]);
+                dispatchBotReply({
+                    text: chip.confirmText || "Abriendo WhatsApp…",
+                    suggestions: getChatResponse("ayuda", context).suggestions,
+                    externalUrl: chip.url,
+                });
+            }
         },
-        [context, scrollToBottom],
+        [sendMessage, webToken, dispatchBotReply, context],
     );
 
     const handleSubmit = (e) => {
         e.preventDefault();
         sendMessage(input);
-    };
-
-    const handleChip = (chip) => {
-        sendMessage(chip);
     };
 
     return (
@@ -160,12 +256,12 @@ const Chatbot = () => {
                         <div className="nubix-chatbot-suggestions">
                             {suggestions.map((chip) => (
                                 <button
-                                    key={chip}
+                                    key={chipKey(chip)}
                                     type="button"
                                     className="nubix-chatbot-chip"
-                                    onClick={() => handleChip(chip)}
+                                    onClick={() => handleChipAction(chip)}
                                 >
-                                    {chip}
+                                    {typeof chip === "string" ? chip : chip.label}
                                 </button>
                             ))}
                         </div>
@@ -178,7 +274,7 @@ const Chatbot = () => {
                         <input
                             type="text"
                             className="form-control form-control-sm"
-                            placeholder="Escribe tu pregunta..."
+                            placeholder="Ej: quiero arroz, métodos de pago…"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             autoComplete="off"
