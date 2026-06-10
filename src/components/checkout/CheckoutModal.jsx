@@ -9,7 +9,9 @@ import {
 } from "../../features/identity/utils/documentUtils";
 import { mergeWebUserProfile } from "../../utils/authUtils";
 import { calcOrderTotals, formatSoles } from "../../utils/pricing";
+import { Toast } from "../../utils/swalConfig";
 import api from "../../config/axios";
+import CheckoutPaymentSimulation from "./CheckoutPaymentSimulation";
 import "../../styles/checkout-modal.css";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -29,23 +31,21 @@ const PAYMENT_OPTIONS = [
         metodoPago: "YAPE",
         label: "Yape",
         detailTitle: "Yape",
-        detailLines: ["Número: 994 949 181", "a nombre de Nubix Market SAC"],
+        detailLines: ["Número: 999 999 999", "Nubix Market SAC"],
     },
     {
         uiKey: "PLIN",
         metodoPago: "YAPE",
         label: "Plin",
         detailTitle: "Plin",
-        detailLines: ["Número: 994 949 181", "a nombre de Nubix Market SAC"],
+        detailLines: ["Número: 988 888 888", "Nubix Market SAC"],
     },
     {
         uiKey: "TARJETA",
         metodoPago: "TARJETA",
         label: "Pago con tarjeta",
         detailTitle: "Pago con tarjeta",
-        detailLines: [
-            "Coordinaremos el cobro con tarjeta al confirmar tu pedido.",
-        ],
+        detailLines: ["Completa el formulario para procesar tu pago."],
     },
 ];
 
@@ -239,8 +239,9 @@ const enviarEmailConfirmacion = async (orden) => {
 function CheckoutStepIndicator({ step }) {
     const steps = [
         { n: 1, label: "Datos" },
-        { n: 2, label: "Pago" },
-        { n: 3, label: "Confirmar" },
+        { n: 2, label: "Método" },
+        { n: 3, label: "Validar" },
+        { n: 4, label: "Confirmar" },
     ];
     return (
         <div className="checkout-steps">
@@ -269,6 +270,8 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     );
     const { subtotalBase, igv, subtotalConIgv, delivery, total } = totals;
     const [metodoPagoUi, setMetodoPagoUi] = useState("YAPE");
+    const [paymentVerified, setPaymentVerified] = useState(false);
+    const [paymentData, setPaymentData] = useState(null);
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [emailOk, setEmailOk] = useState(null);
@@ -337,6 +340,40 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
 
     const deliveryDisabled = tipoEntrega !== "DELIVERY";
     const selectedPayment = PAYMENT_OPTIONS.find((p) => p.uiKey === metodoPagoUi);
+
+    useEffect(() => {
+        setPaymentVerified(false);
+        setPaymentData(null);
+    }, [metodoPagoUi]);
+
+    const handlePaymentVerified = (data) => {
+        setPaymentData(data);
+        setPaymentVerified(true);
+    };
+
+    const handleResetPaymentVerification = () => {
+        setPaymentVerified(false);
+        setPaymentData(null);
+    };
+
+    const handlePaymentMethodChange = (uiKey) => {
+        setMetodoPagoUi(uiKey);
+    };
+
+    const handleContinueToValidation = () => {
+        setStep(3);
+    };
+
+    const handleContinueToConfirm = () => {
+        if (!paymentVerified) {
+            Toast.fire({
+                icon: "warning",
+                title: "Debes completar el pago",
+            });
+            return;
+        }
+        setStep(4);
+    };
 
     const emailError = (() => {
         const value = form.email.trim();
@@ -751,7 +788,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
 
                 {/* Paso 2: Método de pago */}
                 {step === 2 && (
-                    <div className="modal-pago-body">
+                    <div className="modal-pago-body checkout-step-panel">
                         <p className="text-muted small mb-3">
                             Selecciona cómo deseas pagar tu pedido.
                         </p>
@@ -768,7 +805,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                         value={opt.uiKey}
                                         checked={metodoPagoUi === opt.uiKey}
                                         onChange={() =>
-                                            setMetodoPagoUi(opt.uiKey)
+                                            handlePaymentMethodChange(opt.uiKey)
                                         }
                                     />
                                     <span>
@@ -779,17 +816,6 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                 </label>
                             ))}
                         </div>
-
-                        {selectedPayment && (
-                            <div className="checkout-payment-details">
-                                <p>
-                                    <strong>{selectedPayment.detailTitle}</strong>
-                                </p>
-                                {selectedPayment.detailLines.map((line) => (
-                                    <p key={line}>{line}</p>
-                                ))}
-                            </div>
-                        )}
 
                         <div className="checkout-modal-actions">
                             <button
@@ -802,7 +828,45 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                             <button
                                 type="button"
                                 className="btn-modal-confirmar checkout-btn-primary"
-                                onClick={() => setStep(3)}
+                                onClick={handleContinueToValidation}
+                            >
+                                Continuar a validar pago →
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Paso 3: Validación de pago */}
+                {step === 3 && (
+                    <div className="modal-pago-body checkout-step-panel">
+                        <p className="text-muted small mb-3 text-center">
+                            Valida tu pago con{" "}
+                            <strong>{selectedPayment?.label}</strong> para
+                            continuar.
+                        </p>
+
+                        <CheckoutPaymentSimulation
+                            selectedPayment={selectedPayment}
+                            metodoPagoUi={metodoPagoUi}
+                            total={total}
+                            paymentVerified={paymentVerified}
+                            onPaymentVerified={handlePaymentVerified}
+                            onResetVerification={handleResetPaymentVerification}
+                        />
+
+                        <div className="checkout-modal-actions">
+                            <button
+                                type="button"
+                                className="btn-modal-back checkout-btn-secondary"
+                                onClick={() => setStep(2)}
+                            >
+                                ← Cambiar método
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-modal-confirmar checkout-btn-primary"
+                                onClick={handleContinueToConfirm}
+                                disabled={!paymentVerified}
                             >
                                 Revisar pedido →
                             </button>
@@ -810,9 +874,9 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                     </div>
                 )}
 
-                {/* Paso 3: Confirmar pedido */}
-                {step === 3 && (
-                    <div className="modal-pago-body">
+                {/* Paso 4: Confirmar pedido */}
+                {step === 4 && (
+                    <div className="modal-pago-body checkout-step-panel">
                         <div className="checkout-review-summary">
                             <div className="confirm-header mb-0">
                                 <i className="bi bi-clipboard-check confirm-icon"></i>
@@ -853,6 +917,30 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                     <span>Pago</span>
                                     <strong>{selectedPayment?.label}</strong>
                                 </div>
+                                {paymentData?.codigoOperacion && (
+                                    <div className="confirm-row">
+                                        <span>Cód. operación</span>
+                                        <strong>
+                                            {paymentData.codigoOperacion}
+                                        </strong>
+                                    </div>
+                                )}
+                                {paymentData?.cardLast4 && (
+                                    <div className="confirm-row">
+                                        <span>Tarjeta</span>
+                                        <strong>
+                                            **** {paymentData.cardLast4}
+                                        </strong>
+                                    </div>
+                                )}
+                                {paymentVerified && (
+                                    <div className="confirm-row">
+                                        <span>Estado pago</span>
+                                        <strong className="text-success">
+                                            Validado
+                                        </strong>
+                                    </div>
+                                )}
                                 <div className="confirm-row">
                                     <span>Entrega</span>
                                     <strong>
@@ -918,7 +1006,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                             <button
                                 type="button"
                                 className="btn-modal-back checkout-btn-secondary"
-                                onClick={() => setStep(2)}
+                                onClick={() => setStep(3)}
                             >
                                 ← Editar
                             </button>
