@@ -32,7 +32,9 @@ export default function ProductQtyControl({
                     <span aria-hidden="true">−</span>
                 )}
             </button>
-            <span className={valueClassName}>{qty}</span>
+            <span className={`${valueClassName} qty-value-bump`} key={qty}>
+                {qty}
+            </span>
             <button
                 type="button"
                 className={btnClassName}

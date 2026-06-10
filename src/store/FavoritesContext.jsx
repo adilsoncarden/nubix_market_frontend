@@ -111,24 +111,42 @@ export function FavoritesProvider({ children }) {
             if (!webToken || !userId) return false;
 
             const wasFavorite = favoriteIds.includes(productoId);
+            const willBeFavorite = !wasFavorite;
+
+            if (willBeFavorite) {
+                dispatch({ type: "ADD", productoId });
+                if (productSnapshot) {
+                    upsertFavoriteInCache(userId, productSnapshot);
+                }
+                favToastAdded();
+            } else {
+                dispatch({ type: "REMOVE", productoId });
+                removeFavoriteFromCache(userId, productoId);
+                favToastRemoved();
+            }
 
             try {
                 const isFavorite = await favoritesService.toggle(productoId);
-                if (isFavorite) {
-                    dispatch({ type: "ADD", productoId });
-                    if (productSnapshot) {
-                        upsertFavoriteInCache(userId, productSnapshot);
+                if (isFavorite !== willBeFavorite) {
+                    if (isFavorite) {
+                        dispatch({ type: "ADD", productoId });
+                        if (productSnapshot) {
+                            upsertFavoriteInCache(userId, productSnapshot);
+                        }
+                    } else {
+                        dispatch({ type: "REMOVE", productoId });
+                        removeFavoriteFromCache(userId, productoId);
                     }
-                    favToastAdded();
-                } else {
-                    dispatch({ type: "REMOVE", productoId });
-                    removeFavoriteFromCache(userId, productoId);
-                    favToastRemoved();
                 }
                 return true;
             } catch (err) {
                 console.error("Error al toggle favorito", err);
                 if (wasFavorite) {
+                    dispatch({ type: "ADD", productoId });
+                    if (productSnapshot) {
+                        upsertFavoriteInCache(userId, productSnapshot);
+                    }
+                } else {
                     dispatch({ type: "REMOVE", productoId });
                     removeFavoriteFromCache(userId, productoId);
                 }
