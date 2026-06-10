@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { useCart } from "../../store/CartContext";
 import { useFavorites } from "../../store/FavoritesContext";
 import { useAuth } from "../../store/AuthContext";
 import { FAVORITES_LOGIN_MESSAGE, promptLoginRequired } from "../../utils/swalConfig";
-import ProductQtyControl from "../shared/ProductQtyControl";
+import ProductCartActions from "../shared/ProductCartActions";
 import { handleProductImageError } from "../../features/products/services/productService";
 
 const PAYMENT_LOGOS = (
@@ -14,7 +13,6 @@ const PAYMENT_LOGOS = (
 );
 
 export default function FlashProductCard({ p, showTodayDeal = false }) {
-    const { items, addToCart, setQty, removeFromCart } = useCart();
     const { toggleFavorite, isFavorite } = useFavorites();
     const { token } = useAuth();
 
@@ -23,8 +21,6 @@ export default function FlashProductCard({ p, showTodayDeal = false }) {
     const priceNormal = currentPrice.toFixed(2);
     const priceCard = (currentPrice * 0.94).toFixed(2);
     const vendor = p.category || "Nubix Market";
-    const cartItem = items.find((i) => i.id === p.id);
-    const cartQty = cartItem?.qty || 0;
     const favorited = isFavorite(p.id);
 
     const buildProductPayload = () => ({
@@ -37,28 +33,6 @@ export default function FlashProductCard({ p, showTodayDeal = false }) {
         unit: p.unit || "und",
         img: p.img,
     });
-
-    const handleAdd = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        await addToCart(buildProductPayload());
-    };
-
-    const handleDecreaseQty = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (cartQty === 1) {
-            await removeFromCart(p.id);
-        } else {
-            await setQty(p.id, cartQty - 1);
-        }
-    };
-
-    const handleIncreaseQty = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        await setQty(p.id, cartQty + 1);
-    };
 
     const handleFavorite = async (e) => {
         e.preventDefault();
@@ -100,58 +74,22 @@ export default function FlashProductCard({ p, showTodayDeal = false }) {
             </Link>
 
             <div className="flash-card-actions">
-                {cartQty === 0 ? (
-                    <>
-                        <button
-                            type="button"
-                            className="btn-flash-add-cart"
-                            onClick={handleAdd}
-                            disabled={p.stock <= 0}
-                            title="Agregar al carrito"
-                        >
-                            Agregar al carrito
-                        </button>
-                        <button
-                            type="button"
-                            className={`btn-flash-fav${favorited ? " active" : ""}`}
-                            onClick={handleFavorite}
-                            aria-label="Favoritos"
-                            title={
-                                favorited
-                                    ? "Quitar de favoritos"
-                                    : "Agregar a favoritos"
-                            }
-                        >
-                            <i
-                                className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
-                            />
-                        </button>
-                    </>
-                ) : (
-                    <>
-                        <ProductQtyControl
-                            qty={cartQty}
-                            stock={p.stock}
-                            onDecrease={handleDecreaseQty}
-                            onIncrease={handleIncreaseQty}
-                        />
-                        <button
-                            type="button"
-                            className={`btn-flash-fav${favorited ? " active" : ""}`}
-                            onClick={handleFavorite}
-                            aria-label="Favoritos"
-                            title={
-                                favorited
-                                    ? "Quitar de favoritos"
-                                    : "Agregar a favoritos"
-                            }
-                        >
-                            <i
-                                className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
-                            />
-                        </button>
-                    </>
-                )}
+                <ProductCartActions product={p} />
+                <button
+                    type="button"
+                    className={`btn-flash-fav${favorited ? " active" : ""}`}
+                    onClick={handleFavorite}
+                    aria-label="Favoritos"
+                    title={
+                        favorited
+                            ? "Quitar de favoritos"
+                            : "Agregar a favoritos"
+                    }
+                >
+                    <i
+                        className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
+                    />
+                </button>
             </div>
         </div>
     );

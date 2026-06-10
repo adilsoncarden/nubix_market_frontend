@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useCart } from "../store/CartContext";
+import { useCartProductQty } from "../features/cart/hooks/useCartProductQty";
 import {
     productService,
     handleProductImageError,
@@ -45,7 +45,6 @@ function buildProductHighlights(producto) {
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const { addToCart } = useCart();
   const { products: catalogProducts } = useShopProducts();
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,6 +52,36 @@ const ProductDetail = () => {
   const [bgPos, setBgPos] = useState("50% 50%");
   const [isZooming, setIsZooming] = useState(false);
   const [cantidad, setCantidad] = useState(1);
+
+  const productPayload = useMemo(
+    () =>
+      producto
+        ? {
+            id: producto.id,
+            name: producto.name,
+            category: producto.category,
+            priceBase: producto.priceBase,
+            price: producto.price,
+            stock: producto.stock,
+            unit: producto.unit || "und",
+            img: producto.img,
+          }
+        : null,
+    [producto],
+  );
+
+  const {
+    cartQty,
+    inCart,
+    handleAdd,
+    handleDecrease,
+    handleIncrease,
+  } = useCartProductQty(producto?.id, productPayload);
+
+  useEffect(() => {
+    if (!producto) return;
+    setCantidad(cartQty > 0 ? cartQty : 1);
+  }, [producto?.id, cartQty]);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,16 +144,27 @@ const ProductDetail = () => {
     setBgPos(`${x}% ${y}%`);
   };
 
+  const displayQty = inCart ? cartQty : cantidad;
+
+  const handleDecreaseQty = async () => {
+    if (inCart) {
+      await handleDecrease();
+      return;
+    }
+    setCantidad((prev) => Math.max(1, prev - 1));
+  };
+
+  const handleIncreaseQty = async () => {
+    if (inCart) {
+      await handleIncrease();
+      return;
+    }
+    setCantidad((prev) => Math.min(producto.stock, prev + 1));
+  };
+
   const handleAgregarAlCarrito = async () => {
-    await addToCart(
-      {
-        id: producto.id,
-        name: producto.name,
-        price: producto.price,
-        img: producto.img,
-      },
-      cantidad,
-    );
+    if (inCart) return;
+    await handleAdd(null, cantidad);
   };
 
   const descriptionText =
@@ -187,24 +227,58 @@ const ProductDetail = () => {
           </div>
 
           <div className="mt-4 p-4 rounded-4 border border-light bg-white shadow-sm">
+            {inCart && (
+              <p className="small text-success fw-semibold mb-3 mb-md-2">
+                <i className="bi bi-cart-check-fill me-1" />
+                En tu carrito ({cartQty} {cartQty === 1 ? "unidad" : "unidades"})
+              </p>
+            )}
             <div className="row align-items-center g-3">
               <div className="col-auto">
                 <span className="small d-block text-muted mb-1 fw-bold">Cantidad:</span>
                 <div className="d-flex align-items-center border rounded-pill bg-light p-1">
-                  <button type="button" className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5" onClick={() => setCantidad(Math.max(1, cantidad - 1))}>-</button>
-                  <span className="px-3 fw-bold fs-6" style={{ minWidth: "30px", textAlign: "center" }}>{cantidad}</span>
-                  <button type="button" className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5" onClick={() => setCantidad(Math.min(producto.stock, cantidad + 1))} disabled={cantidad >= producto.stock}>+</button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5"
+                    onClick={handleDecreaseQty}
+                  >
+                    {inCart && cartQty === 1 ? (
+                      <i className="bi bi-trash" />
+                    ) : (
+                      "-"
+                    )}
+                  </button>
+                  <span className="px-3 fw-bold fs-6" style={{ minWidth: "30px", textAlign: "center" }}>
+                    {displayQty}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5"
+                    onClick={handleIncreaseQty}
+                    disabled={displayQty >= producto.stock}
+                  >
+                    +
+                  </button>
                 </div>
               </div>
               <div className="col">
-                <button
-                  className="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
-                  onClick={handleAgregarAlCarrito}
-                  disabled={producto.stock <= 0}
-                  style={{ backgroundColor: "#28a745", border: "none" }}
-                >
-                  <i className="bi bi-cart-plus-fill me-2"></i> Agregar al Carrito
-                </button>
+                {inCart ? (
+                  <Link
+                    to="/cart"
+                    className="btn btn-outline-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
+                  >
+                    <i className="bi bi-cart3 me-2"></i> Ver carrito
+                  </Link>
+                ) : (
+                  <button
+                    className="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
+                    onClick={handleAgregarAlCarrito}
+                    disabled={producto.stock <= 0}
+                    style={{ backgroundColor: "#28a745", border: "none" }}
+                  >
+                    <i className="bi bi-cart-plus-fill me-2"></i> Agregar al Carrito
+                  </button>
+                )}
               </div>
             </div>
           </div>

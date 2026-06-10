@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import LocationAddressModal from "./profile/LocationAddressModal";
 import { useCart } from "../store/CartContext";
+import ProductCartActions from "./shared/ProductCartActions";
 import { useFavorites } from "../store/FavoritesContext";
 import { useAuth } from "../store/AuthContext";
 import { clearRedirectUrl, setRedirectUrl } from "../utils/authUtils";
@@ -13,7 +14,7 @@ import "../styles/landing.css";
 
 export default function Navbar() {
     const navigate = useNavigate();
-    const { totalItems, cartAnimationTick, addToCart } = useCart();
+    const { totalItems, cartAnimationTick } = useCart();
     const [cartIconAnimating, setCartIconAnimating] = useState(false);
     const { count: favoritesCount, toggleFavorite, isFavorite } = useFavorites();
     const { webToken, webUser, logoutWeb } = useAuth();
@@ -180,21 +181,6 @@ export default function Navbar() {
         const timer = setTimeout(() => setCartIconAnimating(false), 320);
         return () => clearTimeout(timer);
     }, [cartAnimationTick]);
-
-    const handleSuggestedAdd = async (e, product) => {
-        e.preventDefault();
-        e.stopPropagation();
-        await addToCart({
-            id: product.id,
-            name: product.name,
-            category: product.category,
-            priceBase: product.priceBase,
-            price: product.price,
-            stock: product.stock,
-            unit: product.unit || "und",
-            img: product.img,
-        });
-    };
 
     const handleSuggestedFavorite = async (e, product) => {
         e.preventDefault();
@@ -397,14 +383,14 @@ export default function Navbar() {
                                                             <span className="card d-block">S/ {cardP}</span>
                                                         </div>
                                                         <div className="search-suggestion-actions flex-shrink-0 d-flex align-items-center">
-                                                            <button
-                                                                type="button"
-                                                                className="btn-search-add-oval"
-                                                                onClick={(e) => handleSuggestedAdd(e, p)}
-                                                                title="Agregar al carrito"
-                                                            >
-                                                                Agregar al carrito
-                                                            </button>
+                                                            <ProductCartActions
+                                                                product={p}
+                                                                addButtonClassName="btn-search-add-oval"
+                                                                addButtonLabel="Agregar al carrito"
+                                                                pillClassName="search-qty-pill"
+                                                                btnClassName="search-qty-btn"
+                                                                valueClassName="search-qty-value"
+                                                            />
                                                             <button
                                                                 type="button"
                                                                 className={`btn-search-fav${favorited ? " active" : ""}`}
