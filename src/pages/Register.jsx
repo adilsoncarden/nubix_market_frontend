@@ -14,7 +14,6 @@ const Register = () => {
 
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
-    const [isHovered, setIsHovered] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
     const navigate = useNavigate();
@@ -238,15 +237,9 @@ const Register = () => {
                                     <button
                                         type="submit"
                                         className="btn w-100 auth-btn-primary mt-2"
-                                        onMouseEnter={() =>
-                                            isPasswordValid && setIsHovered(true)
-                                        }
-                                        onMouseLeave={() => setIsHovered(false)}
                                         disabled={!isPasswordValid}
                                     >
-                                        {isHovered
-                                            ? "¡Empezar ahora! ✨"
-                                            : "Registrarse"}
+                                        Registrarse
                                     </button>
 
                                     <div className="text-center mt-3">

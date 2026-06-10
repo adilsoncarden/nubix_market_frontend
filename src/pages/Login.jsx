@@ -12,7 +12,6 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
     const [alertType, setAlertType] = useState("");
-    const [isHovered, setIsHovered] = useState(false);
     const navigate = useNavigate();
     const { loginWeb } = useAuth();
 
@@ -179,12 +178,8 @@ const Login = () => {
                         <button
                             type="submit"
                             className="btn w-100 auth-btn-primary"
-                            onMouseEnter={() => setIsHovered(true)}
-                            onMouseLeave={() => setIsHovered(false)}
                         >
-                            {isHovered
-                                ? "¡Vamos allá! 🚀"
-                                : "Iniciar Sesión"}
+                            Iniciar Sesión
                         </button>
 
                         <div className="d-flex align-items-center my-3">

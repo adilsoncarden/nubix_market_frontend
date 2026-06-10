@@ -14,6 +14,9 @@ import { useProductCatalog } from "../store/ProductCatalogContext";
 import { reportService } from "../features/reports/services/reportService";
 import { exportProductsPdf } from "../features/products/utils/exportProductsPdf";
 import { Toast, confirmDelete } from "../utils/swalConfig";
+import SearchInput from "../components/admin/SearchInput";
+import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
+import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
 import Swal from "sweetalert2";
 
 const ProductsPage = () => {
@@ -251,91 +254,48 @@ const ProductsPage = () => {
                 </div>
             </div>
 
-            <div className="row g-4 mb-4">
-                <div className="col-md-3">
-                    <div
-                        className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div
-                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "48px", height: "48px" }}
-                            >
-                                <i className="bi bi-layers-fill fs-4"></i>
-                            </div>
-                            <div className="ms-3">
-                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
-                                    Items
-                                </h6>
-                                <h3 className="fw-bold mb-0">
-                                    {totalResultados}
-                                </h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-3">
-                    <div
-                        className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div
-                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "48px", height: "48px" }}
-                            >
-                                <i className="bi bi-currency-exchange fs-4"></i>
-                            </div>
-                            <div className="ms-3">
-                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
-                                    Inversión
-                                </h6>
-                                <h3 className="fw-bold mb-0 text-emerald-600">
-                                    S/ {valorInversion.toLocaleString()}
-                                </h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-6">
-                    <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
-                        style={{ borderRadius: "15px", height: "100%" }}
-                    >
-                        <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
-                        <input
-                            type="search"
-                            id="product_global_search"
-                            name="product_search_unique"
-                            autoComplete="off"
-                            className="form-control border-0 shadow-none bg-transparent"
-                            placeholder="Buscar por nombre o código..."
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                        />
-                        <select
-                            className="form-select border-0 bg-transparent ms-2"
-                            style={{ maxWidth: "200px" }}
-                            value={filterCategory}
-                            onChange={(e) => {
-                                setFilterCategory(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                        >
-                            <option value="">Todas las categorías</option>
-                            {categories.map((c) => (
-                                <option key={c.id} value={c.nombre}>
-                                    {c.nombre}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-            </div>
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-layers-fill fs-4",
+                        label: "Items",
+                        value: totalResultados,
+                    },
+                    {
+                        icon: "bi bi-currency-exchange fs-4",
+                        label: "Inversión",
+                        value: `S/ ${valorInversion.toLocaleString()}`,
+                        valueClassName: "text-emerald-600",
+                    },
+                ]}
+            >
+                <SearchInput
+                    id="product_global_search"
+                    name="product_search_unique"
+                    placeholder="Buscar por nombre o código..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+                <select
+                    className="form-select admin-filter-select admin-toolbar-select"
+                    value={filterCategory}
+                    onChange={(e) => {
+                        setFilterCategory(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                    aria-label="Filtrar por categoría"
+                >
+                    <option value="">Todas las categorías</option>
+                    {categories.map((c) => (
+                        <option key={c.id} value={c.nombre}>
+                            {c.nombre}
+                        </option>
+                    ))}
+                </select>
+            </AdminToolbarPanel>
 
             <div
                 className="card shadow-sm border-0 overflow-hidden"
@@ -549,76 +509,38 @@ const ProductsPage = () => {
                 )}
             </div>
 
-            <div
-                className="modal fade"
-                ref={modalRef}
-                tabIndex="-1"
-                data-bs-backdrop="static"
+            <AdminModal
+                modalRef={modalRef}
+                size="lg"
+                title={
+                    selectedProduct
+                        ? "Actualizar Producto"
+                        : "Registrar Producto"
+                }
+                onClose={() => bsModal.current.hide()}
             >
-                <div className="modal-dialog modal-lg modal-dialog-centered">
-                    <div
-                        className="modal-content border-0 shadow-lg"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="modal-header border-0 pt-4 px-4 pb-0">
-                            <h5 className="modal-title fw-bold text-dark d-flex align-items-center">
-                                <i
-                                    className={`bi ${selectedProduct ? "bi-pencil-square" : "bi-box-seam"} text-emerald-600 me-2`}
-                                ></i>
-                                {selectedProduct
-                                    ? "Actualizar Producto"
-                                    : "Registrar Producto"}
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close shadow-none"
-                                onClick={() => bsModal.current.hide()}
-                            ></button>
-                        </div>
-                        <div className="modal-body p-4">
-                            <ProductImageField
-                                key={`img-${formkey}-${selectedProduct?.id ?? "new"}`}
-                                urlImagen={formUrlImagen}
-                                onUrlImagenChange={setFormUrlImagen}
-                                disabled={saving}
-                            />
-                            <ProductForm
-                                key={formkey}
-                                product={selectedProduct}
-                                categories={categories}
-                                onSave={handleSave}
-                                loading={saving}
-                            />
-
-                            <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button
-                                    type="button"
-                                    className="btn btn-light fw-bold text-secondary px-4 border"
-                                    onClick={() => bsModal.current.hide()}
-                                    style={{ borderRadius: "10px" }}
-                                >
-                                    Cerrar
-                                </button>
-                                <button
-                                    type="submit"
-                                    form="productForm"
-                                    className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary"
-                                    disabled={saving}
-                                >
-                                    {saving ? (
-                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                    ) : (
-                                        <i className="bi bi-cloud-upload-fill me-2"></i>
-                                    )}
-                                    {saving
-                                        ? "Guardando..."
-                                        : "Confirmar Registro"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <ProductImageField
+                    key={`img-${formkey}-${selectedProduct?.id ?? "new"}`}
+                    urlImagen={formUrlImagen}
+                    onUrlImagenChange={setFormUrlImagen}
+                    disabled={saving}
+                />
+                <ProductForm
+                    key={formkey}
+                    product={selectedProduct}
+                    categories={categories}
+                    onSave={handleSave}
+                    loading={saving}
+                />
+                <AdminModalActions
+                    onClose={() => bsModal.current.hide()}
+                    submitForm="productForm"
+                    saving={saving}
+                    savingLabel="Guardando..."
+                    confirmLabel="Confirmar Registro"
+                    confirmIcon="bi-cloud-upload-fill"
+                />
+            </AdminModal>
 
         </div>
     );

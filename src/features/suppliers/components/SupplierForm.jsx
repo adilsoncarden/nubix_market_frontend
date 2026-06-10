@@ -49,7 +49,7 @@ const SupplierForm = ({ supplier, onSave, loading }) => {
     return (
         <form onSubmit={handleSubmit} id="supplierForm">
             <div className="mb-3">
-                <label className="form-label small fw-bold">RUC (11 dígitos)</label>
+                <label className="form-label small fw-bold">RUC</label>
                 <input
                     type="text"
                     className={`form-control ${errors.ruc ? "is-invalid" : ""}`}
@@ -78,7 +78,7 @@ const SupplierForm = ({ supplier, onSave, loading }) => {
                 {errors.nombre && <div className="invalid-feedback">{errors.nombre}</div>}
             </div>
             <div className="mb-3">
-                <label className="form-label small fw-bold">Teléfono (9 dígitos)</label>
+                <label className="form-label small fw-bold">Teléfono</label>
                 <input
                     type="text"
                     className={`form-control ${errors.telefono ? "is-invalid" : ""}`}

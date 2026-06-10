@@ -689,29 +689,37 @@ const VentaForm = ({ onSave, loading, active = false }) => {
                     )}
                 </div>
 
-                {/* Botón Submit */}
                 <div className="col-12">
-                    <button
-                        type="submit"
-                        className="btn btn-lg btn-success w-100 fw-bold"
-                        disabled={
-                            loading ||
-                            loadingData ||
-                            formData.detalles.length === 0
-                        }
-                    >
-                        {loading ? (
-                            <>
-                                <span className="spinner-border spinner-border-sm me-2"></span>
-                                Creando venta...
-                            </>
-                        ) : (
-                            <>
-                                <i className="bi bi-check-circle me-2"></i>
-                                Crear Venta
-                            </>
-                        )}
-                    </button>
+                    <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top admin-modal-footer">
+                        <button
+                            type="button"
+                            className="btn btn-light fw-bold text-secondary px-4 border admin-modal-btn-secondary"
+                            data-bs-dismiss="modal"
+                        >
+                            Cancelar
+                        </button>
+                        <button
+                            type="submit"
+                            className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary admin-modal-btn-primary"
+                            disabled={
+                                loading ||
+                                loadingData ||
+                                formData.detalles.length === 0
+                            }
+                        >
+                            {loading ? (
+                                <>
+                                    <span className="spinner-border spinner-border-sm me-2"></span>
+                                    Creando venta...
+                                </>
+                            ) : (
+                                <>
+                                    <i className="bi bi-check-circle me-2"></i>
+                                    Crear Venta
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
         </form>
