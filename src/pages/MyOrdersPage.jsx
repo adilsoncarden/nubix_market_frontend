@@ -8,6 +8,7 @@ import {
     periodToApiParam,
 } from "../utils/orderDateFilter";
 import "../styles/my-orders.css";
+import CustomSelect from "../components/ui/CustomSelect";
 
 export default function MyOrdersPage() {
     const [openOrders, setOpenOrders] = useState([]);
@@ -181,24 +182,22 @@ export default function MyOrdersPage() {
                                     >
                                         Filtrar por tiempo
                                     </label>
-                                    <select
+                                    <CustomSelect
                                         id="order-period-filter"
-                                        className="form-select form-select-sm my-orders-period-select"
+                                        className="my-orders-period-select"
+                                        size="sm"
                                         value={periodFilter}
                                         onChange={(e) =>
                                             setPeriodFilter(e.target.value)
                                         }
                                         disabled={loadingHistory}
-                                    >
-                                        {ORDER_PERIOD_OPTIONS.map((opt) => (
-                                            <option
-                                                key={opt.value}
-                                                value={opt.value}
-                                            >
-                                                {opt.label}
-                                            </option>
-                                        ))}
-                                    </select>
+                                        options={ORDER_PERIOD_OPTIONS.map(
+                                            (opt) => ({
+                                                value: opt.value,
+                                                label: opt.label,
+                                            }),
+                                        )}
+                                    />
                                 </div>
                             </div>
 

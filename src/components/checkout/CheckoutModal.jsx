@@ -9,7 +9,11 @@ import {
 } from "../../features/identity/utils/documentUtils";
 import { mergeWebUserProfile } from "../../utils/authUtils";
 import { calcOrderTotals, formatSoles } from "../../utils/pricing";
+import { Toast } from "../../utils/swalConfig";
 import api from "../../config/axios";
+import CheckoutPaymentSimulation from "./CheckoutPaymentSimulation";
+import CustomSelect from "../ui/CustomSelect";
+import { generateOrderReceiptPdf } from "../../utils/generateOrderReceiptPdf";
 import "../../styles/checkout-modal.css";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -25,207 +29,27 @@ function sanitizePhoneDigits(value) {
 
 const PAYMENT_OPTIONS = [
     {
-        uiKey: "TRANSFERENCIA",
-        metodoPago: "TRANSFERENCIA",
-        label: "Transferencia bancaria directa - BCP",
-        detailTitle: "Banco de Crédito del Perú - BCP",
-        detailLines: [
-            "Soles: 194 9949 1810 76",
-            "a nombre de Nubix Market SAC",
-        ],
-    },
-    {
         uiKey: "YAPE",
         metodoPago: "YAPE",
         label: "Yape",
         detailTitle: "Yape",
-        detailLines: ["Número: 994 949 181", "a nombre de Nubix Market SAC"],
+        detailLines: ["Número: 999 999 999", "Nubix Market SAC"],
     },
     {
         uiKey: "PLIN",
         metodoPago: "YAPE",
         label: "Plin",
         detailTitle: "Plin",
-        detailLines: ["Número: 994 949 181", "a nombre de Nubix Market SAC"],
+        detailLines: ["Número: 988 888 888", "Nubix Market SAC"],
     },
     {
         uiKey: "TARJETA",
         metodoPago: "TARJETA",
         label: "Pago con tarjeta",
         detailTitle: "Pago con tarjeta",
-        detailLines: [
-            "Coordinaremos el cobro con tarjeta al confirmar tu pedido.",
-        ],
+        detailLines: ["Completa el formulario para procesar tu pago."],
     },
 ];
-
-const generarPDF = async (orden) => {
-    const { default: jsPDF } = await import("jspdf");
-    const doc = new jsPDF();
-
-    const {
-        tipo,
-        numero,
-        fecha,
-        cliente,
-        items,
-        subtotalBase,
-        igv,
-        delivery,
-        total,
-        codigoRecojo,
-    } = orden;
-
-    const VERDE_NUBIX = [34, 153, 84];
-    const NEGRO_TEXTO = [40, 40, 40];
-    const GRIS_FONDO = [245, 245, 245];
-    const AMARILLO_TOTAL = [255, 235, 59];
-
-    doc.setFillColor(...VERDE_NUBIX);
-    doc.rect(0, 0, 210, 55, "F");
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
-    doc.setFont("helvetica", "bold");
-    doc.text("NUBIX", 15, 22);
-    doc.text("MARKET", 15, 32);
-
-    doc.setFontSize(18);
-    doc.text(
-        tipo === "boleta" ? "BOLETA ELECTRÓNICA" : "FACTURA ELECTRÓNICA",
-        195,
-        35,
-        { align: "right" },
-    );
-
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.text("(55) 1234-5678", 15, 45);
-    doc.text("Calle San Pedro, Comas", 15, 50);
-
-    doc.setTextColor(...NEGRO_TEXTO);
-    doc.setFontSize(10);
-
-    doc.text("FECHA:", 15, 75);
-    doc.text(fecha, 195, 75, { align: "right" });
-
-    doc.text("CLIENTE:", 15, 83);
-    const nombreCliente =
-        tipo === "boleta" ? cliente.nombre : cliente.razonSocial;
-    doc.setFont("helvetica", "bold");
-    doc.text(nombreCliente.toUpperCase(), 195, 83, { align: "right" });
-
-    doc.setFont("helvetica", "normal");
-    doc.text(tipo === "boleta" ? "DNI:" : "RUC:", 15, 91);
-    doc.text(tipo === "boleta" ? cliente.dni : cliente.ruc, 195, 91, {
-        align: "right",
-    });
-
-    doc.text("CÓDIGO PEDIDO:", 15, 99);
-    doc.setTextColor(...VERDE_NUBIX);
-    doc.setFont("helvetica", "bold");
-    doc.text(numero, 195, 99, { align: "right" });
-
-    if (codigoRecojo) {
-        doc.setTextColor(...NEGRO_TEXTO);
-        doc.setFont("helvetica", "normal");
-        doc.text("CÓDIGO DE RECOJO:", 15, 107);
-        doc.setTextColor(...VERDE_NUBIX);
-        doc.setFont("helvetica", "bold");
-        doc.text(String(codigoRecojo), 195, 107, { align: "right" });
-    }
-
-    const tableY = codigoRecojo ? 123 : 115;
-    doc.setDrawColor(0);
-    doc.setLineWidth(0.5);
-    doc.line(15, tableY, 195, tableY);
-
-    doc.setTextColor(...NEGRO_TEXTO);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("Articulo", 17, tableY + 7);
-    doc.text("Cantidad", 110, tableY + 7);
-    doc.text("Precio", 145, tableY + 7);
-    doc.text("SubTotal", 193, tableY + 7, { align: "right" });
-
-    doc.line(15, tableY + 11, 195, tableY + 11);
-
-    let currentY = tableY + 19;
-    doc.setFont("helvetica", "normal");
-
-    items.forEach((item, index) => {
-        if (index % 2 === 0) {
-            doc.setFillColor(...GRIS_FONDO);
-            doc.rect(15, currentY - 6, 180, 8, "F");
-        }
-        doc.text(item.name.substring(0, 45), 17, currentY);
-        doc.text(String(item.qty), 118, currentY, { align: "center" });
-        doc.text(`S/ ${item.price.toFixed(2)}`, 145, currentY);
-        doc.text(`S/ ${(item.price * item.qty).toFixed(2)}`, 193, currentY, {
-            align: "right",
-        });
-        currentY += 8;
-    });
-
-    currentY += 10;
-    doc.setFontSize(10);
-    doc.text("Subtotal (sin IGV):", 155, currentY, { align: "right" });
-    doc.text(`S/ ${(subtotalBase ?? 0).toFixed(2)}`, 193, currentY, {
-        align: "right",
-    });
-
-    currentY += 7;
-    doc.text("IGV (13%):", 155, currentY, { align: "right" });
-    doc.text(`S/ ${(igv ?? 0).toFixed(2)}`, 193, currentY, { align: "right" });
-
-    if ((delivery ?? 0) > 0) {
-        currentY += 7;
-        doc.text("Envío:", 155, currentY, { align: "right" });
-        doc.text(`S/ ${delivery.toFixed(2)}`, 193, currentY, {
-            align: "right",
-        });
-    }
-
-    currentY += 5;
-    doc.setFillColor(...AMARILLO_TOTAL);
-    doc.rect(130, currentY, 65, 10, "F");
-    doc.setDrawColor(0);
-    doc.rect(130, currentY, 65, 10, "D");
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("Total:", 155, currentY + 7, { align: "right" });
-    doc.text(`S/ ${total.toFixed(2)}`, 190, currentY + 7, { align: "right" });
-
-    currentY += 30;
-    doc.setFontSize(16);
-    doc.setTextColor(...NEGRO_TEXTO);
-    doc.text("¡Gracias por su compra!", 15, currentY);
-    doc.setLineWidth(1);
-    doc.line(15, currentY + 2, 35, currentY + 2);
-
-    const footerY = 245;
-    doc.setFillColor(...VERDE_NUBIX);
-    doc.rect(0, footerY, 210, 52, "F");
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "bold");
-    doc.text("Información de pago", 15, footerY + 15);
-    doc.setFont("helvetica", "normal");
-    doc.text("Nubix Market SAC", 15, footerY + 23);
-    doc.text("BCP - Cuenta Corriente", 15, footerY + 28);
-    doc.text("191-01234567-0-89", 15, footerY + 33);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Contacto", 130, footerY + 15);
-    doc.setFont("helvetica", "normal");
-    doc.text("(55) 1234-5678", 130, footerY + 23);
-    doc.text("soporte@nubixmarket.com", 130, footerY + 28);
-    doc.text("www.nubixmarket.com", 130, footerY + 33);
-
-    doc.save(`${tipo}-${numero}.pdf`);
-};
 
 const enviarEmailConfirmacion = async (orden) => {
     try {
@@ -249,8 +73,9 @@ const enviarEmailConfirmacion = async (orden) => {
 function CheckoutStepIndicator({ step }) {
     const steps = [
         { n: 1, label: "Datos" },
-        { n: 2, label: "Pago" },
-        { n: 3, label: "Confirmar" },
+        { n: 2, label: "Método" },
+        { n: 3, label: "Validar" },
+        { n: 4, label: "Confirmar" },
     ];
     return (
         <div className="checkout-steps">
@@ -278,7 +103,9 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         [items, tipoEntrega],
     );
     const { subtotalBase, igv, subtotalConIgv, delivery, total } = totals;
-    const [metodoPagoUi, setMetodoPagoUi] = useState("TRANSFERENCIA");
+    const [metodoPagoUi, setMetodoPagoUi] = useState("YAPE");
+    const [paymentVerified, setPaymentVerified] = useState(false);
+    const [paymentData, setPaymentData] = useState(null);
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [emailOk, setEmailOk] = useState(null);
@@ -347,6 +174,40 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
 
     const deliveryDisabled = tipoEntrega !== "DELIVERY";
     const selectedPayment = PAYMENT_OPTIONS.find((p) => p.uiKey === metodoPagoUi);
+
+    useEffect(() => {
+        setPaymentVerified(false);
+        setPaymentData(null);
+    }, [metodoPagoUi]);
+
+    const handlePaymentVerified = (data) => {
+        setPaymentData(data);
+        setPaymentVerified(true);
+    };
+
+    const handleResetPaymentVerification = () => {
+        setPaymentVerified(false);
+        setPaymentData(null);
+    };
+
+    const handlePaymentMethodChange = (uiKey) => {
+        setMetodoPagoUi(uiKey);
+    };
+
+    const handleContinueToValidation = () => {
+        setStep(3);
+    };
+
+    const handleContinueToConfirm = () => {
+        if (!paymentVerified) {
+            Toast.fire({
+                icon: "warning",
+                title: "Debes completar el pago",
+            });
+            return;
+        }
+        setStep(4);
+    };
 
     const emailError = (() => {
         const value = form.email.trim();
@@ -439,7 +300,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
             month: "2-digit",
             year: "numeric",
         });
-        const metodoPago = selectedPayment?.metodoPago ?? "TRANSFERENCIA";
+        const metodoPago = selectedPayment?.metodoPago ?? "YAPE";
 
         try {
             const isFactura = documentoDigits.length === 11;
@@ -493,7 +354,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
 
             const ok = await enviarEmailConfirmacion(orden);
             setEmailOk(ok);
-            await generarPDF(orden);
+            await generateOrderReceiptPdf(orden);
             setStep("success");
             onSuccess(venta);
         } catch (err) {
@@ -675,18 +536,23 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                 <label className="checkout-form-label">
                                     Tipo de entrega
                                 </label>
-                                <select
-                                    className="form-select checkout-input checkout-select"
+                                <CustomSelect
+                                    className="checkout-input checkout-select"
                                     value={tipoEntrega}
                                     onChange={(e) =>
                                         setTipoEntrega(e.target.value)
                                     }
-                                >
-                                    <option value="FAST_LANE">
-                                        Fast Lane (recojo en tienda)
-                                    </option>
-                                    <option value="DELIVERY">Delivery</option>
-                                </select>
+                                    options={[
+                                        {
+                                            value: "FAST_LANE",
+                                            label: "Fast Lane (recojo en tienda)",
+                                        },
+                                        {
+                                            value: "DELIVERY",
+                                            label: "Delivery",
+                                        },
+                                    ]}
+                                />
                             </div>
 
                             <div
@@ -761,7 +627,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
 
                 {/* Paso 2: Método de pago */}
                 {step === 2 && (
-                    <div className="modal-pago-body">
+                    <div className="modal-pago-body checkout-step-panel">
                         <p className="text-muted small mb-3">
                             Selecciona cómo deseas pagar tu pedido.
                         </p>
@@ -778,7 +644,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                         value={opt.uiKey}
                                         checked={metodoPagoUi === opt.uiKey}
                                         onChange={() =>
-                                            setMetodoPagoUi(opt.uiKey)
+                                            handlePaymentMethodChange(opt.uiKey)
                                         }
                                     />
                                     <span>
@@ -789,17 +655,6 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                 </label>
                             ))}
                         </div>
-
-                        {selectedPayment && (
-                            <div className="checkout-payment-details">
-                                <p>
-                                    <strong>{selectedPayment.detailTitle}</strong>
-                                </p>
-                                {selectedPayment.detailLines.map((line) => (
-                                    <p key={line}>{line}</p>
-                                ))}
-                            </div>
-                        )}
 
                         <div className="checkout-modal-actions">
                             <button
@@ -812,7 +667,45 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                             <button
                                 type="button"
                                 className="btn-modal-confirmar checkout-btn-primary"
-                                onClick={() => setStep(3)}
+                                onClick={handleContinueToValidation}
+                            >
+                                Continuar a validar pago →
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Paso 3: Validación de pago */}
+                {step === 3 && (
+                    <div className="modal-pago-body checkout-step-panel">
+                        <p className="text-muted small mb-3 text-center">
+                            Valida tu pago con{" "}
+                            <strong>{selectedPayment?.label}</strong> para
+                            continuar.
+                        </p>
+
+                        <CheckoutPaymentSimulation
+                            selectedPayment={selectedPayment}
+                            metodoPagoUi={metodoPagoUi}
+                            total={total}
+                            paymentVerified={paymentVerified}
+                            onPaymentVerified={handlePaymentVerified}
+                            onResetVerification={handleResetPaymentVerification}
+                        />
+
+                        <div className="checkout-modal-actions">
+                            <button
+                                type="button"
+                                className="btn-modal-back checkout-btn-secondary"
+                                onClick={() => setStep(2)}
+                            >
+                                ← Cambiar método
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-modal-confirmar checkout-btn-primary"
+                                onClick={handleContinueToConfirm}
+                                disabled={!paymentVerified}
                             >
                                 Revisar pedido →
                             </button>
@@ -820,9 +713,9 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                     </div>
                 )}
 
-                {/* Paso 3: Confirmar pedido */}
-                {step === 3 && (
-                    <div className="modal-pago-body">
+                {/* Paso 4: Confirmar pedido */}
+                {step === 4 && (
+                    <div className="modal-pago-body checkout-step-panel">
                         <div className="checkout-review-summary">
                             <div className="confirm-header mb-0">
                                 <i className="bi bi-clipboard-check confirm-icon"></i>
@@ -863,6 +756,30 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                     <span>Pago</span>
                                     <strong>{selectedPayment?.label}</strong>
                                 </div>
+                                {paymentData?.codigoOperacion && (
+                                    <div className="confirm-row">
+                                        <span>Cód. operación</span>
+                                        <strong>
+                                            {paymentData.codigoOperacion}
+                                        </strong>
+                                    </div>
+                                )}
+                                {paymentData?.cardLast4 && (
+                                    <div className="confirm-row">
+                                        <span>Tarjeta</span>
+                                        <strong>
+                                            **** {paymentData.cardLast4}
+                                        </strong>
+                                    </div>
+                                )}
+                                {paymentVerified && (
+                                    <div className="confirm-row">
+                                        <span>Estado pago</span>
+                                        <strong className="text-success">
+                                            Validado
+                                        </strong>
+                                    </div>
+                                )}
                                 <div className="confirm-row">
                                     <span>Entrega</span>
                                     <strong>
@@ -928,7 +845,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                             <button
                                 type="button"
                                 className="btn-modal-back checkout-btn-secondary"
-                                onClick={() => setStep(2)}
+                                onClick={() => setStep(3)}
                             >
                                 ← Editar
                             </button>

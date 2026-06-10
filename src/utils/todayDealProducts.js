@@ -1,4 +1,9 @@
-const MAX_TODAY_DEALS = 4;
+const PROMO_SHARE = 0.3;
+
+function normalizeId(id) {
+    if (id == null || id === "") return null;
+    return String(id);
+}
 
 function hashString(str) {
     let h = 0;
@@ -10,23 +15,13 @@ function hashString(str) {
 }
 
 /**
- * Hasta 4 productos con etiqueta "Solo por hoy" (estable por día e ids).
+ * ~30% de productos con etiqueta "Solo por hoy" (estable por día e id).
  */
-export function getTodayDealIdSet(productIds = []) {
-    const ids = productIds.filter((id) => id != null && id !== "");
-    if (!ids.length) return new Set();
+export function isTodayDealProduct(productId) {
+    const normalized = normalizeId(productId);
+    if (!normalized) return false;
 
     const dayKey = new Date().toISOString().slice(0, 10);
-    const ranked = ids
-        .map((id) => ({
-            id,
-            score: hashString(`${dayKey}-${id}`),
-        }))
-        .sort((a, b) => a.score - b.score);
-
-    return new Set(ranked.slice(0, MAX_TODAY_DEALS).map((r) => r.id));
-}
-
-export function isTodayDealProduct(productId, productIds = []) {
-    return getTodayDealIdSet(productIds).has(productId);
+    const bucket = hashString(`${dayKey}-${normalized}`) % 100;
+    return bucket < PROMO_SHARE * 100;
 }

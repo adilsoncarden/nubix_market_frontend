@@ -3,6 +3,7 @@ import { calcOrderTotals } from "../../../utils/pricing";
 import { clientService } from "../../users/services/clientService";
 import { productService } from "../../products/services/productService";
 import { useAuth } from "../../../store/AuthContext";
+import CustomSelect from "../../../components/ui/CustomSelect";
 import Swal from "sweetalert2";
 import { fetchOptionalResource } from "../../../utils/apiErrorUtils";
 
@@ -325,17 +326,17 @@ const VentaForm = ({ onSave, loading, active = false }) => {
                 {/* Tipo comprobante */}
                 <div className="col-md-6">
                     <label className="form-label fw-bold">Comprobante</label>
-                    <select
+                    <CustomSelect
                         name="tipoComprobante"
-                        className="form-select"
                         value={formData.tipoComprobante}
                         onChange={handleChange}
                         required
-                    >
-                        <option value="TICKET">Ticket</option>
-                        <option value="BOLETA">Boleta</option>
-                        <option value="FACTURA">Factura</option>
-                    </select>
+                        options={[
+                            { value: "TICKET", label: "Ticket" },
+                            { value: "BOLETA", label: "Boleta" },
+                            { value: "FACTURA", label: "Factura" },
+                        ]}
+                    />
                 </div>
 
                 {/* Cliente */}
@@ -344,20 +345,20 @@ const VentaForm = ({ onSave, loading, active = false }) => {
                         Cliente{" "}
                         <small className="text-muted">(opcional)</small>
                     </label>
-                    <select
+                    <CustomSelect
                         name="clienteId"
-                        className="form-select"
                         value={formData.clienteId}
                         onChange={handleChange}
                         disabled={loadingData}
-                    >
-                        <option value="">Seleccionar...</option>
-                        {clients.map((client) => (
-                            <option key={client.id} value={client.id}>
-                                {client.username} - {client.email}
-                            </option>
-                        ))}
-                    </select>
+                        placeholder="Seleccionar..."
+                        options={[
+                            { value: "", label: "Seleccionar..." },
+                            ...clients.map((client) => ({
+                                value: String(client.id),
+                                label: `${client.username} - ${client.email}`,
+                            })),
+                        ]}
+                    />
                 </div>
 
                 {/* Vendedor */}
@@ -374,19 +375,19 @@ const VentaForm = ({ onSave, loading, active = false }) => {
                 {/* Método de Pago */}
                 <div className="col-md-6">
                     <label className="form-label fw-bold">Método de Pago</label>
-                    <select
+                    <CustomSelect
                         name="metodoPago"
-                        className="form-select"
                         value={formData.metodoPago}
                         onChange={handleChange}
                         required
-                    >
-                        <option value="EFECTIVO">Efectivo</option>
-                        <option value="YAPE">Yape</option>
-                        <option value="TRANSFERENCIA">Transferencia</option>
-                        <option value="TARJETA">Tarjeta</option>
-                        <option value="CREDITO">Crédito</option>
-                    </select>
+                        options={[
+                            { value: "EFECTIVO", label: "Efectivo" },
+                            { value: "YAPE", label: "Yape" },
+                            { value: "TRANSFERENCIA", label: "Transferencia" },
+                            { value: "TARJETA", label: "Tarjeta" },
+                            { value: "CREDITO", label: "Crédito" },
+                        ]}
+                    />
                 </div>
 
                 {/* Tipo de Entrega (fijo presencial para cajero) */}

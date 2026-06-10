@@ -3,6 +3,7 @@ import { Modal } from "bootstrap";
 import AdminPagination from "../../components/admin/AdminPagination";
 import { PERMISO_MODULOS, MODULO_FILTER_ALL } from "../../features/security/constants/securityModules";
 import SearchInput from "../../components/admin/SearchInput";
+import CustomSelect from "../../components/ui/CustomSelect";
 import AdminToolbarPanel from "../../components/admin/AdminToolbarPanel";
 import AdminModal, { AdminModalActions } from "../../components/admin/AdminModal";
 import { securityService } from "../../features/security/services/securityService";
@@ -174,21 +175,20 @@ export default function SecurityPermisosPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <select
-                    className="form-select admin-filter-select admin-toolbar-select"
+                <CustomSelect
+                    className="admin-filter-select admin-toolbar-select"
                     value={filterModulo}
                     onChange={(e) => setFilterModulo(e.target.value)}
                     aria-label="Filtrar por módulo"
-                >
-                    <option value={MODULO_FILTER_ALL}>
-                        Todos los módulos
-                    </option>
-                    {modulos.map((m) => (
-                        <option key={m} value={m}>
-                            {m}
-                        </option>
-                    ))}
-                </select>
+                    placeholder="Todos los módulos"
+                    options={[
+                        {
+                            value: MODULO_FILTER_ALL,
+                            label: "Todos los módulos",
+                        },
+                        ...modulos.map((m) => ({ value: m, label: m })),
+                    ]}
+                />
             </AdminToolbarPanel>
 
             <div
@@ -304,8 +304,7 @@ export default function SecurityPermisosPage() {
                 <form onSubmit={handleSave}>
                     <div className="mb-3">
                         <label className="form-label">Módulo</label>
-                        <select
-                            className="form-select"
+                        <CustomSelect
                             value={form.modulo}
                             onChange={(e) =>
                                 setForm((f) => ({
@@ -314,13 +313,11 @@ export default function SecurityPermisosPage() {
                                 }))
                             }
                             required
-                        >
-                            {modulos.map((m) => (
-                                <option key={m} value={m}>
-                                    {m}
-                                </option>
-                            ))}
-                        </select>
+                            options={modulos.map((m) => ({
+                                value: m,
+                                label: m,
+                            }))}
+                        />
                     </div>
                     <div className="mb-3">
                         <label className="form-label">Nombre (slug único)</label>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import LocationAddressModal from "./profile/LocationAddressModal";
 import { useCart } from "../store/CartContext";
 import ProductCartActions from "./shared/ProductCartActions";
@@ -14,6 +14,7 @@ import "../styles/landing.css";
 
 export default function Navbar() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { totalItems, cartAnimationTick } = useCart();
     const [cartIconAnimating, setCartIconAnimating] = useState(false);
     const { count: favoritesCount, toggleFavorite, isFavorite } = useFavorites();
@@ -174,6 +175,10 @@ export default function Navbar() {
         }
         return () => document.body.classList.remove("search-overlay-active");
     }, [searchPanelOpen]);
+
+    useEffect(() => {
+        closeSearchPanel();
+    }, [location.pathname]);
 
     useEffect(() => {
         if (cartAnimationTick === 0) return;
@@ -356,7 +361,7 @@ export default function Navbar() {
                                                         <Link
                                                             to={`/producto/${p.id}`}
                                                             className="search-suggestion-link search-suggestion-main d-flex align-items-center flex-grow-1 me-3"
-                                                            onClick={() => setSearchFocused(false)}
+                                                            onClick={closeSearchPanel}
                                                         >
                                                             <img
                                                                 src={p.img}
@@ -418,7 +423,7 @@ export default function Navbar() {
                                         <Link
                                             to={showAllHref}
                                             className="search-show-all-link"
-                                            onClick={() => setSearchFocused(false)}
+                                            onClick={closeSearchPanel}
                                         >
                                             Mostrar todos los resultados
                                         </Link>

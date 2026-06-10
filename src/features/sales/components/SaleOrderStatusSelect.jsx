@@ -1,3 +1,4 @@
+import CustomSelect from "../../../components/ui/CustomSelect";
 import {
     canSelectOrderStatus,
     formatOrderStatusLabel,
@@ -40,8 +41,8 @@ export default function SaleOrderStatusSelect({
     }
 
     return (
-        <select
-            className="form-select form-select-sm"
+        <CustomSelect
+            size="sm"
             value={estadoPedido}
             onChange={(e) => {
                 const next = e.target.value;
@@ -53,16 +54,11 @@ export default function SaleOrderStatusSelect({
                 }
             }}
             aria-label={`Estado del pedido ${saleId}`}
-        >
-            {steps.map((step, index) => (
-                <option
-                    key={step.key}
-                    value={step.key}
-                    disabled={index < currentIndex}
-                >
-                    {step.label}
-                </option>
-            ))}
-        </select>
+            options={steps.map((step, index) => ({
+                value: step.key,
+                label: step.label,
+                disabled: index < currentIndex,
+            }))}
+        />
     );
 }

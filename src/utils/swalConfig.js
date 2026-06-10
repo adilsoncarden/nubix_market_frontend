@@ -76,6 +76,31 @@ export const favToastRemoved = () =>
         title: "Eliminado de tus favoritos.",
     });
 
+const stockToast = (icon, title) =>
+    Toast.fire({
+        icon,
+        title,
+        timer: 2400,
+    });
+
+/** Producto sin stock disponible. */
+export const stockToastOutOfStock = () =>
+    stockToast("warning", "Producto agotado");
+
+/** Intentó superar el stock máximo en carrito. */
+export const stockToastMaxReached = () =>
+    stockToast("info", "Ya alcanzaste el stock disponible");
+
+/** Informa cuántas unidades hay disponibles. */
+export const stockToastLimited = (stock) => {
+    const units = Math.max(0, Number(stock) || 0);
+    const title =
+        units === 1
+            ? "Solo hay 1 unidad disponible"
+            : `Solo hay ${units} unidades disponibles`;
+    return stockToast("info", title);
+};
+
 /** Confirmación modal centrada (comportamiento por defecto de SweetAlert2). */
 export const confirmDelete = (title, text = "Esta acción no se puede revertir.") =>
     Swal.fire({

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DateInput from "../../../components/ui/DateInput";
+import CustomSelect from "../../../components/ui/CustomSelect";
 import { addDaysIso, todayIso } from "../../../utils/dateInputUtils";
 import { TIPO_ENTREGA_LABELS } from "../utils/saleFilters";
 
@@ -116,74 +117,81 @@ export default function ExportSalesModal({
                                 <label className="form-label small">
                                     Tipo de entrega
                                 </label>
-                                <select
-                                    className="form-select mb-2"
+                                <CustomSelect
+                                    className="mb-2"
                                     value={form.tipoEntrega}
                                     onChange={(e) =>
                                         update("tipoEntrega")(e.target.value)
                                     }
-                                >
-                                    <option value="">Todos</option>
-                                    {Object.entries(TIPO_ENTREGA_LABELS).map(
-                                        ([value, label]) => (
-                                            <option key={value} value={value}>
-                                                {label}
-                                            </option>
+                                    placeholder="Todos"
+                                    options={[
+                                        { value: "", label: "Todos" },
+                                        ...Object.entries(TIPO_ENTREGA_LABELS).map(
+                                            ([value, label]) => ({
+                                                value,
+                                                label,
+                                            }),
                                         ),
-                                    )}
-                                </select>
+                                    ]}
+                                />
                                 <label className="form-label small">Cliente</label>
-                                <select
-                                    className="form-select mb-2"
+                                <CustomSelect
+                                    className="mb-2"
                                     value={form.clienteId}
                                     onChange={(e) =>
                                         update("clienteId")(e.target.value)
                                     }
-                                >
-                                    <option value="">Todos</option>
-                                    {clients.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                            {c.username ||
+                                    placeholder="Todos"
+                                    options={[
+                                        { value: "", label: "Todos" },
+                                        ...clients.map((c) => ({
+                                            value: String(c.id),
+                                            label:
+                                                c.username ||
                                                 c.email ||
-                                                `Cliente #${c.id}`}
-                                        </option>
-                                    ))}
-                                </select>
+                                                `Cliente #${c.id}`,
+                                        })),
+                                    ]}
+                                />
                                 <label className="form-label small">
                                     Estado pedido
                                 </label>
-                                <select
-                                    className="form-select mb-2"
+                                <CustomSelect
+                                    className="mb-2"
                                     value={form.estadoPedido}
                                     onChange={(e) =>
                                         update("estadoPedido")(e.target.value)
                                     }
-                                >
-                                    <option value="">Todos</option>
-                                    <option value="PENDIENTE">Pendiente</option>
-                                    <option value="EN_PROCESO">En proceso</option>
-                                    <option value="LISTO_PARA_RECOJO">
-                                        Listo para recojo
-                                    </option>
-                                    <option value="EN_CAMINO">En camino</option>
-                                    <option value="ENTREGADO">Entregado</option>
-                                </select>
+                                    placeholder="Todos"
+                                    options={[
+                                        { value: "", label: "Todos" },
+                                        { value: "PENDIENTE", label: "Pendiente" },
+                                        { value: "EN_PROCESO", label: "En proceso" },
+                                        {
+                                            value: "LISTO_PARA_RECOJO",
+                                            label: "Listo para recojo",
+                                        },
+                                        { value: "EN_CAMINO", label: "En camino" },
+                                        { value: "ENTREGADO", label: "Entregado" },
+                                    ]}
+                                />
                                 <label className="form-label small">
                                     Estado pago
                                 </label>
-                                <select
-                                    className="form-select"
+                                <CustomSelect
                                     value={form.estadoPago}
                                     onChange={(e) =>
                                         update("estadoPago")(e.target.value)
                                     }
-                                >
-                                    <option value="">Todos</option>
-                                    <option value="PAGADO">Pagado</option>
-                                    <option value="APROBADO">Aprobado</option>
-                                    <option value="PENDIENTE">Pendiente</option>
-                                    <option value="RECHAZADO">Rechazado</option>
-                                </select>
+                                    placeholder="Todos"
+                                    options={[
+                                        { value: "", label: "Todos" },
+                                        { value: "PAGADO", label: "Pagado" },
+                                        { value: "APROBADO", label: "Aprobado" },
+                                        { value: "PENDIENTE", label: "Pendiente" },
+                                        { value: "RECHAZADO", label: "Rechazado" },
+                                    ]}
+                                />
                             </div>
                             <div className="modal-footer">
                                 <button

@@ -17,13 +17,14 @@ import { Toast, confirmDelete } from "../utils/swalConfig";
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
-import Swal from "sweetalert2";
+import CustomSelect from "../components/ui/CustomSelect";
 
 const ProductsPage = () => {
     const { products, setProducts, handleDelete, loading } = useProducts();
     const { invalidate: invalidateCatalog } = useProductCatalog();
     const { categories } = useCategories();
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [viewProduct, setViewProduct] = useState(null);
     const [saving, setSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCategory, setFilterCategory] = useState("");
@@ -74,6 +75,10 @@ const ProductsPage = () => {
 
     const modalRef = useRef();
     const bsModal = useRef();
+    const viewModalRef = useRef();
+    const viewBsModal = useRef();
+    const exportModalRef = useRef();
+    const exportBsModal = useRef();
 
     useEffect(() => {
         if (modalRef.current) {
@@ -83,7 +88,44 @@ const ProductsPage = () => {
                 setFormUrlImagen(null);
             });
         }
+        if (viewModalRef.current) {
+            viewBsModal.current = new Modal(viewModalRef.current);
+            viewModalRef.current.addEventListener("hidden.bs.modal", () => {
+                setViewProduct(null);
+            });
+        }
+        if (exportModalRef.current) {
+            exportBsModal.current = new Modal(exportModalRef.current);
+        }
     }, []);
+
+    const openExportModal = () => {
+        setExportFilters({
+            categoriaId: "",
+            stockBajo: false,
+            precioMin: "",
+            precioMax: "",
+        });
+        exportBsModal.current?.show();
+    };
+
+    const handleExportProducts = () => {
+        const payload = {
+            categoriaId: exportFilters.categoriaId || undefined,
+            stockBajo: exportFilters.stockBajo,
+            precioMin: exportFilters.precioMin,
+            precioMax: exportFilters.precioMax,
+        };
+        reportService.exportProducts(payload).catch(() =>
+            Toast.fire({ icon: "error", title: "Error al exportar" }),
+        );
+        exportBsModal.current?.hide();
+    };
+
+    const openViewModal = (product) => {
+        setViewProduct({ ...product });
+        viewBsModal.current?.show();
+    };
 
     const openModal = (product = null) => {
         setSelectedProduct(null);
@@ -193,42 +235,7 @@ const ProductsPage = () => {
                     <button
                         type="button"
                         className="btn btn-outline-success shadow-sm px-3 py-2 fw-bold d-flex align-items-center"
-                        onClick={() =>
-                            Swal.fire({
-                                title: "Exportar productos",
-                                html: `
-                                  <div class="text-start">
-                                    <label class="form-label small">Categoría</label>
-                                    <select id="exp-cat" class="form-select mb-2">
-                                      <option value="">Todas</option>
-                                      ${categories.map((c) => `<option value="${c.id}">${c.nombre}</option>`).join("")}
-                                    </select>
-                                    <div class="form-check mb-2">
-                                      <input class="form-check-input" type="checkbox" id="exp-stock">
-                                      <label class="form-check-label">Solo stock bajo (&lt;10)</label>
-                                    </div>
-                                    <label class="form-label small">Precio mín.</label>
-                                    <input type="number" id="exp-min" class="form-control mb-2" step="0.01">
-                                    <label class="form-label small">Precio máx.</label>
-                                    <input type="number" id="exp-max" class="form-control" step="0.01">
-                                  </div>`,
-                                showCancelButton: true,
-                                confirmButtonText: "Descargar",
-                                confirmButtonColor: "#10b981",
-                                preConfirm: () => ({
-                                    categoriaId: document.getElementById("exp-cat").value || undefined,
-                                    stockBajo: document.getElementById("exp-stock").checked,
-                                    precioMin: document.getElementById("exp-min").value,
-                                    precioMax: document.getElementById("exp-max").value,
-                                }),
-                            }).then((r) => {
-                                if (r.isConfirmed) {
-                                    reportService.exportProducts(r.value).catch(() =>
-                                        Toast.fire({ icon: "error", title: "Error al exportar" }),
-                                    );
-                                }
-                            })
-                        }
+                        onClick={openExportModal}
                     >
                         <i className="bi bi-file-earmark-excel me-2"></i> Excel
                     </button>
@@ -279,22 +286,23 @@ const ProductsPage = () => {
                         setCurrentPage(1);
                     }}
                 />
-                <select
-                    className="form-select admin-filter-select admin-toolbar-select"
+                <CustomSelect
+                    className="admin-filter-select admin-toolbar-select"
                     value={filterCategory}
                     onChange={(e) => {
                         setFilterCategory(e.target.value);
                         setCurrentPage(1);
                     }}
                     aria-label="Filtrar por categoría"
-                >
-                    <option value="">Todas las categorías</option>
-                    {categories.map((c) => (
-                        <option key={c.id} value={c.nombre}>
-                            {c.nombre}
-                        </option>
-                    ))}
-                </select>
+                    placeholder="Todas las categorías"
+                    options={[
+                        { value: "", label: "Todas las categorías" },
+                        ...categories.map((c) => ({
+                            value: c.nombre,
+                            label: c.nombre,
+                        })),
+                    ]}
+                />
             </AdminToolbarPanel>
 
             <div
@@ -420,6 +428,15 @@ const ProductsPage = () => {
                                             </td>
                                             <td className="text-end px-4">
                                                 <button
+                                                    className="btn-action btn-view me-2"
+                                                    onClick={() =>
+                                                        openViewModal(prod)
+                                                    }
+                                                    title="Ver producto"
+                                                >
+                                                    <i className="bi bi-eye"></i>
+                                                </button>
+                                                <button
                                                     className="btn-action btn-edit me-2"
                                                     onClick={() =>
                                                         openModal(prod)
@@ -540,6 +557,119 @@ const ProductsPage = () => {
                     confirmLabel="Confirmar Registro"
                     confirmIcon="bi-cloud-upload-fill"
                 />
+            </AdminModal>
+
+            <AdminModal
+                modalRef={exportModalRef}
+                title="Exportar productos"
+                onClose={() => exportBsModal.current?.hide()}
+            >
+                <div className="mb-3">
+                    <label className="form-label small">Categoría</label>
+                    <CustomSelect
+                        className="mb-2"
+                        value={exportFilters.categoriaId}
+                        onChange={(e) =>
+                            setExportFilters((f) => ({
+                                ...f,
+                                categoriaId: e.target.value,
+                            }))
+                        }
+                        placeholder="Todas"
+                        options={[
+                            { value: "", label: "Todas" },
+                            ...categories.map((c) => ({
+                                value: String(c.id),
+                                label: c.nombre,
+                            })),
+                        ]}
+                    />
+                    <div className="form-check mb-2">
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="exp-stock"
+                            checked={exportFilters.stockBajo}
+                            onChange={(e) =>
+                                setExportFilters((f) => ({
+                                    ...f,
+                                    stockBajo: e.target.checked,
+                                }))
+                            }
+                        />
+                        <label className="form-check-label" htmlFor="exp-stock">
+                            Solo stock bajo (&lt;10)
+                        </label>
+                    </div>
+                    <label className="form-label small">Precio mín.</label>
+                    <input
+                        type="number"
+                        className="form-control mb-2"
+                        step="0.01"
+                        value={exportFilters.precioMin}
+                        onChange={(e) =>
+                            setExportFilters((f) => ({
+                                ...f,
+                                precioMin: e.target.value,
+                            }))
+                        }
+                    />
+                    <label className="form-label small">Precio máx.</label>
+                    <input
+                        type="number"
+                        className="form-control"
+                        step="0.01"
+                        value={exportFilters.precioMax}
+                        onChange={(e) =>
+                            setExportFilters((f) => ({
+                                ...f,
+                                precioMax: e.target.value,
+                            }))
+                        }
+                    />
+                </div>
+                <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top admin-modal-footer">
+                    <button
+                        type="button"
+                        className="btn btn-light fw-bold text-secondary px-4 border admin-modal-btn-secondary"
+                        onClick={() => exportBsModal.current?.hide()}
+                    >
+                        Cerrar
+                    </button>
+                    <button
+                        type="button"
+                        className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary admin-modal-btn-primary"
+                        onClick={handleExportProducts}
+                    >
+                        <i className="bi bi-download me-2" />
+                        Descargar
+                    </button>
+                </div>
+            </AdminModal>
+
+            <AdminModal
+                modalRef={viewModalRef}
+                size="lg"
+                title="Ver Producto"
+                onClose={() => viewBsModal.current?.hide()}
+            >
+                {viewProduct && (
+                    <>
+                        <ProductImageField
+                            urlImagen={viewProduct.urlImagen}
+                            disabled
+                        />
+                        <ProductForm
+                            product={viewProduct}
+                            categories={categories}
+                            readOnly
+                        />
+                        <AdminModalActions
+                            onClose={() => viewBsModal.current?.hide()}
+                            showConfirm={false}
+                        />
+                    </>
+                )}
             </AdminModal>
 
         </div>

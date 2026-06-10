@@ -522,23 +522,7 @@ body {
 .pago-field input:focus  { border-color: #2e7d32; }
 .pago-field input::placeholder { color: #bbb; }
 
-.modal-pago .pago-select,
-.modal-pago .form-select.pago-select {
-  padding: 0.55rem 0.85rem;
-  border: 1.5px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  color: #1a1a1a;
-  background-color: #fff;
-  transition: border-color 0.15s;
-  outline: none;
-  box-shadow: none;
-}
-.modal-pago .pago-select:focus,
-.modal-pago .form-select.pago-select:focus {
-  border-color: #2e7d32;
-  box-shadow: none;
-}
+/* Selects de pago: estilo global en custom-select.css */
 .field-hint { font-size: 0.75rem; color: #888; font-weight: 400; }
 
 /* Mini resumen */

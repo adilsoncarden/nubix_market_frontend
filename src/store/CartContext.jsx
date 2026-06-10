@@ -5,6 +5,7 @@ import {
     useEffect,
     useCallback,
     useState,
+    useRef,
 } from "react";
 import { useProductCatalog } from "./ProductCatalogContext";
 import { useAuth } from "./AuthContext";
@@ -20,7 +21,11 @@ import {
     cartToastFirstAdded,
     cartToastRemovedComplete,
     promptLoginRequired,
+    stockToastLimited,
+    stockToastMaxReached,
+    stockToastOutOfStock,
 } from "../utils/swalConfig";
+import { clampQtyToStock, resolveAddQty } from "../utils/stockUtils";
 import {
     hasWebSessionToken,
     loadCartFromLocalStorage,
@@ -132,9 +137,15 @@ export function CartProvider({ children }) {
     const { version } = useProductCatalog();
     const { token } = useAuth();
     const [items, dispatch] = useReducer(reducer, [], readInitialCartItems);
+    const itemsRef = useRef(items);
     const [cartAnimationTick, setCartAnimationTick] = useState(0);
 
+    itemsRef.current = items;
+
     const bumpCartIcon = () => setCartAnimationTick((t) => t + 1);
+
+    const snapshotItems = () =>
+        itemsRef.current.map((item) => ({ ...item }));
 
     const syncCartWithCatalog = useCallback(async () => {
         if (!token || items.length === 0) return;
@@ -242,52 +253,106 @@ export function CartProvider({ children }) {
                 totalPriceBase,
                 addToCart: async (p, qty = 1) => {
                     if (!token) return requireLoginForCart();
-                    const amount = Math.max(1, Math.floor(Number(qty) || 1));
-                    const isFirstAdd = !items.some((i) => i.id === p.id);
-                    const res = await api.post("/carrito/items", {
-                        productoId: p.id,
-                        cantidad: amount,
-                    });
+                    const prevItems = snapshotItems();
+                    const prevQty =
+                        prevItems.find((i) => i.id === p.id)?.qty ?? 0;
+                    const addResult = resolveAddQty(prevQty, qty, p.stock);
+                    if (!addResult.ok) {
+                        if (addResult.reason === "out") {
+                            stockToastOutOfStock();
+                        } else if (addResult.reason === "max") {
+                            stockToastMaxReached();
+                        } else if (addResult.reason === "partial") {
+                            stockToastLimited(addResult.available);
+                        }
+                        return false;
+                    }
+                    const amount = addResult.qtyToAdd;
+                    const isFirstAdd = prevQty === 0;
+
                     dispatch({
-                        type: "SET_ALL",
-                        items: mergeCartPreservingOrder(items, res.data),
+                        type: "ADD",
+                        product: { ...p, qtyToAdd: amount },
                     });
                     bumpCartIcon();
                     if (isFirstAdd) {
                         cartToastFirstAdded();
                     }
-                    return true;
+
+                    try {
+                        await api.post("/carrito/items", {
+                            productoId: p.id,
+                            cantidad: amount,
+                        });
+                        return true;
+                    } catch (err) {
+                        console.error("Error al agregar al carrito", err);
+                        dispatch({ type: "SET_ALL", items: prevItems });
+                        return false;
+                    }
                 },
                 removeFromCart: async (id) => {
                     if (!token) return requireLoginForCart();
-                    const hadItem = items.some((i) => i.id === id);
-                    const res = await api.delete(`/carrito/items/${id}`);
-                    dispatch({
-                        type: "SET_ALL",
-                        items: mergeCartPreservingOrder(items, res.data),
-                    });
+                    const prevItems = snapshotItems();
+                    const hadItem = prevItems.some((i) => i.id === id);
+
+                    dispatch({ type: "REMOVE", id });
                     bumpCartIcon();
                     if (hadItem) {
                         cartToastRemovedComplete();
                     }
-                    return true;
+
+                    try {
+                        await api.delete(`/carrito/items/${id}`);
+                        return true;
+                    } catch (err) {
+                        console.error("Error al quitar del carrito", err);
+                        dispatch({ type: "SET_ALL", items: prevItems });
+                        return false;
+                    }
                 },
                 setQty: async (id, qty) => {
                     if (!token) return requireLoginForCart();
-                    const prevQty =
-                        items.find((i) => i.id === id)?.qty ?? 0;
-                    const res = await api.put(`/carrito/items/${id}`, null, {
-                        params: { cantidad: qty },
-                    });
-                    dispatch({
-                        type: "SET_ALL",
-                        items: mergeCartPreservingOrder(items, res.data),
-                    });
+                    const prevItems = snapshotItems();
+                    const cartItem = prevItems.find((i) => i.id === id);
+                    const prevQty = cartItem?.qty ?? 0;
+                    const stock = cartItem?.stock ?? 0;
+                    let nextQty = qty;
+
+                    if (nextQty > 0 && stock <= 0) {
+                        stockToastOutOfStock();
+                        return false;
+                    }
+
+                    if (nextQty > stock) {
+                        stockToastLimited(stock);
+                        nextQty = clampQtyToStock(nextQty, stock);
+                        if (nextQty === prevQty) {
+                            stockToastMaxReached();
+                            return false;
+                        }
+                    }
+
+                    dispatch({ type: "SET_QTY", id, qty: nextQty });
                     bumpCartIcon();
-                    if (prevQty === 1 && qty < 1) {
+                    if (prevQty === 1 && nextQty < 1) {
                         cartToastRemovedComplete();
                     }
-                    return true;
+
+                    try {
+                        if (nextQty < 1) {
+                            await api.delete(`/carrito/items/${id}`);
+                        } else {
+                            await api.put(`/carrito/items/${id}`, null, {
+                                params: { cantidad: nextQty },
+                            });
+                        }
+                        return true;
+                    } catch (err) {
+                        console.error("Error al actualizar cantidad", err);
+                        dispatch({ type: "SET_ALL", items: prevItems });
+                        return false;
+                    }
                 },
                 reloadCart: async () => {
                     if (!token) return;

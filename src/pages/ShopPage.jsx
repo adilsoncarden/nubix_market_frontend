@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
 import FlashProductCard from "../components/landing/FlashProductCard";
-import { getTodayDealIdSet } from "../utils/todayDealProducts";
 import "../styles/landing.css";
 
 const AISLE_ICONS = {
@@ -19,8 +18,6 @@ const FILTER_CHIPS = [
     { id: "price-asc", label: "Precio: Menor a Mayor" },
     { id: "price-desc", label: "Precio: Mayor a Menor" },
     { id: "bestseller", label: "Más Vendidos" },
-    { id: "brand", label: "Marca (Proveedor)" },
-    { id: "discount", label: "Descuento %" },
     { id: "stock", label: "Disponibilidad de Stock" },
 ];
 
@@ -73,17 +70,6 @@ export default function ShopPage() {
             case "bestseller":
                 list.sort((a, b) => (b.stock ?? 0) - (a.stock ?? 0));
                 break;
-            case "brand":
-                list.sort((a, b) =>
-                    String(a.category || "").localeCompare(
-                        String(b.category || ""),
-                        "es",
-                    ),
-                );
-                break;
-            case "discount":
-                list = list.filter((p) => p.tag);
-                break;
             case "stock":
                 list = list.filter((p) => (p.stock ?? 0) > 0);
                 break;
@@ -92,11 +78,6 @@ export default function ShopPage() {
         }
         return list;
     }, [products, activeCat, activeTag, search, activeFilter]);
-
-    const todayDealIds = useMemo(
-        () => getTodayDealIdSet(products.map((p) => p.id)),
-        [products],
-    );
 
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -212,12 +193,7 @@ export default function ShopPage() {
                             <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3 shop-product-grid">
                                 {paginated.map((product) => (
                                     <div key={product.id} className="col">
-                                        <FlashProductCard
-                                            p={product}
-                                            showTodayDeal={todayDealIds.has(
-                                                product.id,
-                                            )}
-                                        />
+                                        <FlashProductCard p={product} />
                                     </div>
                                 ))}
                             </div>

@@ -32,6 +32,7 @@ import {
 import { exportSalesPdf } from "../features/sales/utils/exportSalesPdf";
 import { printSaleReceipt } from "../features/sales/utils/printSaleReceipt";
 import DateInput from "../components/ui/DateInput";
+import CustomSelect from "../components/ui/CustomSelect";
 import ExportSalesModal from "../features/sales/components/ExportSalesModal";
 
 const SalesPage = () => {
@@ -452,38 +453,38 @@ const SalesPage = () => {
                         <label className="form-label small text-muted fw-bold mb-1">
                             Tipo de entrega
                         </label>
-                        <select
-                            className="form-select form-select-sm"
+                        <CustomSelect
+                            size="sm"
                             value={filterTipoEntrega}
                             onChange={(e) =>
                                 setFilterTipoEntrega(e.target.value)
                             }
-                        >
-                            {TIPO_ENTREGA_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </select>
+                            options={TIPO_ENTREGA_OPTIONS.map((opt) => ({
+                                value: opt.value,
+                                label: opt.label,
+                            }))}
+                        />
                     </div>
                     <div className="col-md-3">
                         <label className="form-label small text-muted fw-bold mb-1">
                             Cliente
                         </label>
-                        <select
-                            className="form-select form-select-sm"
+                        <CustomSelect
+                            size="sm"
                             value={filterClienteId}
                             onChange={(e) => setFilterClienteId(e.target.value)}
-                        >
-                            <option value="">Todos los clientes</option>
-                            {clients.map((c) => (
-                                <option key={c.id} value={c.id}>
-                                    {c.username ||
+                            placeholder="Todos los clientes"
+                            options={[
+                                { value: "", label: "Todos los clientes" },
+                                ...clients.map((c) => ({
+                                    value: String(c.id),
+                                    label:
+                                        c.username ||
                                         c.email ||
-                                        `Cliente #${c.id}`}
-                                </option>
-                            ))}
-                        </select>
+                                        `Cliente #${c.id}`,
+                                })),
+                            ]}
+                        />
                     </div>
                     <div className="col-md-2">
                         <label className="form-label small text-muted fw-bold mb-1">

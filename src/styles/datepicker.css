@@ -120,3 +120,188 @@
     font-size: 1rem;
     line-height: 1rem;
 }
+
+/* ─── Admin: input de fecha en modo oscuro ───────────────── */
+.admin-shell[data-bs-theme="dark"] .nubix-date-input input,
+.dark .nubix-date-input input {
+    background-color: var(--bs-secondary-bg, #1e293b);
+    border-color: var(--bs-border-color, #374151);
+    color: var(--bs-body-color, #e5e7eb);
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.admin-shell[data-bs-theme="dark"] .nubix-date-input input:hover,
+.dark .nubix-date-input input:hover {
+    border-color: #4b5563;
+}
+
+.admin-shell[data-bs-theme="dark"] .nubix-date-input input:focus,
+.dark .nubix-date-input input:focus {
+    background-color: var(--bs-tertiary-bg, #334155);
+    border-color: #34d399;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.22);
+    color: #f9fafb;
+    outline: none;
+}
+
+.admin-shell[data-bs-theme="dark"]
+    .nubix-date-input
+    .react-datepicker__close-icon::after,
+.dark .nubix-date-input .react-datepicker__close-icon::after {
+    background-color: #6b7280;
+}
+
+.admin-shell[data-bs-theme="dark"] .nubix-date-input .invalid-feedback,
+.dark .nubix-date-input .invalid-feedback {
+    color: #fca5a5;
+}
+
+/* ─── Calendario en portal (clase --dark al abrir en admin) ─ */
+.nubix-datepicker-calendar--dark.react-datepicker {
+    color-scheme: dark;
+    background: #1f2937 !important;
+    border: 1px solid #374151;
+    border-radius: 12px;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
+.nubix-datepicker-popper--dark .react-datepicker__triangle {
+    display: none;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__header {
+    background: #111827;
+    border-bottom: 1px solid #374151;
+    padding-top: 0.75rem;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__current-month,
+.nubix-datepicker-calendar--dark .react-datepicker-year-header {
+    color: #f9fafb;
+    font-weight: 700;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day-name {
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day {
+    color: #d1d5db;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: #ecfdf5;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day--today {
+    font-weight: 700;
+    color: #4ade80;
+    background: transparent;
+    border: 1px solid #22c55e;
+    box-sizing: border-box;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day--today:hover {
+    background: rgba(34, 197, 94, 0.2);
+    color: #ecfdf5;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day--selected,
+.nubix-datepicker-calendar--dark .react-datepicker__day--keyboard-selected {
+    background: #22c55e !important;
+    color: #ffffff !important;
+    border: 1px solid transparent;
+    font-weight: 700;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day--selected:hover,
+.nubix-datepicker-calendar--dark
+    .react-datepicker__day--keyboard-selected:hover {
+    background: #16a34a !important;
+    color: #ffffff !important;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day--outside-month {
+    color: #6b7280;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__day--disabled {
+    color: #4b5563;
+    opacity: 0.55;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__navigation {
+    top: 12px;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__navigation-icon::before {
+    border-color: #9ca3af;
+    transition: border-color 0.2s ease;
+}
+
+.nubix-datepicker-calendar--dark
+    .react-datepicker__navigation:hover
+    .react-datepicker__navigation-icon::before {
+    border-color: #4ade80;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__month-select,
+.nubix-datepicker-calendar--dark .react-datepicker__year-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #111827;
+    color: #e5e7eb;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 0.25rem 1.5rem 0.25rem 0.45rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%236ee7b7' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.4rem center;
+    background-size: 10px 10px;
+    transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__month-select:hover,
+.nubix-datepicker-calendar--dark .react-datepicker__year-select:hover,
+.nubix-datepicker-calendar--dark .react-datepicker__month-select:focus,
+.nubix-datepicker-calendar--dark .react-datepicker__year-select:focus {
+    border-color: #34d399;
+    background-color: #1f2937;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__month-select option,
+.nubix-datepicker-calendar--dark .react-datepicker__year-select option {
+    background-color: #1f2937;
+    color: #e5e7eb;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__month-select option:checked,
+.nubix-datepicker-calendar--dark .react-datepicker__year-select option:checked {
+    background-color: #16a34a;
+    color: #ffffff;
+}
+
+.nubix-datepicker-calendar--dark .react-datepicker__month {
+    background: #1f2937;
+    margin: 0.35rem;
+}
+
+.nubix-datepicker-popper--dark {
+    z-index: 10070 !important;
+}
