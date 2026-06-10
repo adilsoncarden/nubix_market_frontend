@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import CustomSelect from "../../../components/ui/CustomSelect";
 
 const ProductForm = ({
     product,
@@ -77,21 +78,21 @@ const ProductForm = ({
                 </div>
                 <div className="col-md-6">
                     <label className="form-label fw-bold">Categoría</label>
-                    <select
+                    <CustomSelect
                         name="categoriaId"
-                        className="form-select"
                         value={formData.categoriaId}
                         onChange={handleChange}
                         disabled={isDisabled}
                         required={!readOnly}
-                    >
-                        <option value="">Seleccionar...</option>
-                        {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>
-                                {cat.nombre}
-                            </option>
-                        ))}
-                    </select>
+                        placeholder="Seleccionar..."
+                        options={[
+                            { value: "", label: "Seleccionar..." },
+                            ...categories.map((cat) => ({
+                                value: String(cat.id),
+                                label: cat.nombre,
+                            })),
+                        ]}
+                    />
                 </div>
                 <div className="col-12">
                     <label className="form-label fw-bold">Nombre del Producto</label>

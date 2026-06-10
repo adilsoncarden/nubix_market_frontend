@@ -12,6 +12,7 @@ import { calcOrderTotals, formatSoles } from "../../utils/pricing";
 import { Toast } from "../../utils/swalConfig";
 import api from "../../config/axios";
 import CheckoutPaymentSimulation from "./CheckoutPaymentSimulation";
+import CustomSelect from "../ui/CustomSelect";
 import { generateOrderReceiptPdf } from "../../utils/generateOrderReceiptPdf";
 import "../../styles/checkout-modal.css";
 
@@ -535,18 +536,23 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                 <label className="checkout-form-label">
                                     Tipo de entrega
                                 </label>
-                                <select
-                                    className="form-select checkout-input checkout-select"
+                                <CustomSelect
+                                    className="checkout-input checkout-select"
                                     value={tipoEntrega}
                                     onChange={(e) =>
                                         setTipoEntrega(e.target.value)
                                     }
-                                >
-                                    <option value="FAST_LANE">
-                                        Fast Lane (recojo en tienda)
-                                    </option>
-                                    <option value="DELIVERY">Delivery</option>
-                                </select>
+                                    options={[
+                                        {
+                                            value: "FAST_LANE",
+                                            label: "Fast Lane (recojo en tienda)",
+                                        },
+                                        {
+                                            value: "DELIVERY",
+                                            label: "Delivery",
+                                        },
+                                    ]}
+                                />
                             </div>
 
                             <div

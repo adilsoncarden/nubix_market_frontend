@@ -6,6 +6,7 @@ import { Modal, Tooltip } from "bootstrap";
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
+import CustomSelect from "../components/ui/CustomSelect";
 
 const isSupremeAdminRoleName = (nombre) => {
     const n = String(nombre ?? "").trim().toUpperCase();
@@ -394,8 +395,7 @@ const EmployeesPage = () => {
                     <div className="mb-0">
                         <label className="form-label">Rol de Acceso</label>
                         {assignableRoles.length > 0 ? (
-                            <select
-                                className="form-select"
+                            <CustomSelect
                                 value={formData.rolId}
                                 onChange={(e) =>
                                     setFormData({
@@ -404,16 +404,11 @@ const EmployeesPage = () => {
                                     })
                                 }
                                 required
-                            >
-                                {assignableRoles.map((rol) => (
-                                    <option key={rol.id} value={rol.id}>
-                                        {rol.nombre}
-                                        {rol.descripcion
-                                            ? ` — ${rol.descripcion}`
-                                            : ""}
-                                    </option>
-                                ))}
-                            </select>
+                                options={assignableRoles.map((rol) => ({
+                                    value: String(rol.id),
+                                    label: `${rol.nombre}${rol.descripcion ? ` — ${rol.descripcion}` : ""}`,
+                                }))}
+                            />
                         ) : (
                             <p className="text-muted small mb-0">
                                 No hay roles asignables disponibles.

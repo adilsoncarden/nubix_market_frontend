@@ -1972,7 +1972,10 @@ body.search-overlay-active {
   display: block;
 }
 
-.form-select-custom,
+.form-select-custom {
+  width: 100%;
+}
+
 .form-input-custom {
   width: 100%;
   padding: 10px 12px;

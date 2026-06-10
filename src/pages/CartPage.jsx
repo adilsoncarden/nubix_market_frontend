@@ -12,6 +12,7 @@ import {
     stockToastOutOfStock,
 } from "../utils/swalConfig";
 import { canIncreaseQty } from "../utils/stockUtils";
+import CustomSelect from "../components/ui/CustomSelect";
 
 // ─── Envío de email al backend ────────────────────────────────────────────────
 const enviarEmailConfirmacion = async (orden) => {
@@ -175,16 +176,18 @@ function ModalPago({ items, onClose, onSuccess }) {
                             <label className="fw-bold d-block mb-2">
                                 Tipo de entrega
                             </label>
-                            <select
-                                className="form-select pago-select"
+                            <CustomSelect
+                                className="pago-select"
                                 value={tipoEntrega}
                                 onChange={(e) => setTipoEntrega(e.target.value)}
-                            >
-                                <option value="FAST_LANE">
-                                    Fast Lane (recojo en tienda)
-                                </option>
-                                <option value="DELIVERY">Delivery</option>
-                            </select>
+                                options={[
+                                    {
+                                        value: "FAST_LANE",
+                                        label: "Fast Lane (recojo en tienda)",
+                                    },
+                                    { value: "DELIVERY", label: "Delivery" },
+                                ]}
+                            />
                         </div>
 
                         {tipoEntrega === "DELIVERY" && (
@@ -220,18 +223,20 @@ function ModalPago({ items, onClose, onSuccess }) {
                             <label className="fw-bold d-block mb-2">
                                 Método de pago
                             </label>
-                            <select
-                                className="form-select pago-select"
+                            <CustomSelect
+                                className="pago-select"
                                 value={metodoPago}
                                 onChange={(e) => setMetodoPago(e.target.value)}
-                            >
-                                <option value="EFECTIVO">Efectivo</option>
-                                <option value="YAPE">Yape</option>
-                                <option value="TRANSFERENCIA">
-                                    Transferencia
-                                </option>
-                                <option value="TARJETA">Tarjeta</option>
-                            </select>
+                                options={[
+                                    { value: "EFECTIVO", label: "Efectivo" },
+                                    { value: "YAPE", label: "Yape" },
+                                    {
+                                        value: "TRANSFERENCIA",
+                                        label: "Transferencia",
+                                    },
+                                    { value: "TARJETA", label: "Tarjeta" },
+                                ]}
+                            />
                         </div>
 
                         {/* Selector boleta / factura */}

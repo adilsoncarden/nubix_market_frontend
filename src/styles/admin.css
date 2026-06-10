@@ -481,16 +481,9 @@
 }
 
 .admin-page .admin-filter-select {
-  border-color: #e2e8f0;
   font-weight: 600;
   font-size: 0.85rem;
-  color: #334155;
   max-width: 220px;
-}
-
-.admin-page .admin-filter-select:focus {
-  border-color: var(--admin-accent);
-  box-shadow: 0 0 0 2px var(--admin-accent-soft);
 }
 
 /* ─── Toolbar unificado (permisos / filtros) ─────────────── */
@@ -620,14 +613,7 @@
   flex: 0 0 220px;
   max-width: 220px;
   border-radius: 12px;
-  padding: 0.6rem 0.85rem;
   height: auto;
-  border-color: #e2e8f0;
-  background-color: #f8fafc;
-}
-
-.admin-toolbar-select:focus {
-  background-color: #fff;
 }
 
 @media (max-width: 767.98px) {
@@ -664,14 +650,12 @@
   background: var(--bs-border-color);
 }
 
-.admin-shell[data-bs-theme="dark"] .admin-search-field,
-.admin-shell[data-bs-theme="dark"] .admin-toolbar-select {
+.admin-shell[data-bs-theme="dark"] .admin-search-field {
   background: var(--bs-tertiary-bg);
   border-color: var(--bs-border-color);
 }
 
-.admin-shell[data-bs-theme="dark"] .admin-search-field:focus-within,
-.admin-shell[data-bs-theme="dark"] .admin-toolbar-select:focus {
+.admin-shell[data-bs-theme="dark"] .admin-search-field:focus-within {
   background: var(--bs-body-bg);
 }
 
@@ -737,14 +721,11 @@
 }
 
 .admin-modal-body .form-control,
-.admin-modal-body .form-select {
+.admin-modal-body .form-select.custom-select-nubix {
   border-radius: 10px;
-  border-color: #e2e8f0;
-  padding: 0.55rem 0.85rem;
 }
 
 .admin-modal-body .form-control:focus,
-.admin-modal-body .form-select:focus,
 .admin-modal-body textarea.form-control:focus {
   border-color: var(--admin-accent);
   box-shadow: 0 0 0 3px var(--admin-accent-soft);
