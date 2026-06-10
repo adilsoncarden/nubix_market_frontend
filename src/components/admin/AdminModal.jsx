@@ -59,8 +59,10 @@ export default function AdminModal({
 export function AdminModalActions({
     onClose,
     submitForm,
+    inlineSubmit = false,
     saving = false,
     closeDisabled = false,
+    cancelLabel = "Cerrar",
     confirmLabel = "Confirmar",
     savingLabel = "Guardando...",
     confirmIcon = "bi-save2-fill",
@@ -73,11 +75,11 @@ export function AdminModalActions({
                 onClick={onClose}
                 disabled={closeDisabled || saving}
             >
-                Cerrar
+                {cancelLabel}
             </button>
             <button
                 type="submit"
-                form={submitForm}
+                form={inlineSubmit ? undefined : submitForm}
                 className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary admin-modal-btn-primary"
                 disabled={saving}
             >

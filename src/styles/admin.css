@@ -704,9 +704,26 @@
 }
 
 .admin-modal-body .form-control:focus,
-.admin-modal-body .form-select:focus {
+.admin-modal-body .form-select:focus,
+.admin-modal-body textarea.form-control:focus {
   border-color: var(--admin-accent);
   box-shadow: 0 0 0 3px var(--admin-accent-soft);
+}
+
+.admin-modal-body textarea.form-control {
+  border-radius: 10px;
+  border-color: #e2e8f0;
+  padding: 0.55rem 0.85rem;
+}
+
+.admin-modal-body .input-group .form-control {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.admin-modal-body .input-group .btn {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 .admin-modal-footer {
