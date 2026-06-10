@@ -25,16 +25,6 @@ function sanitizePhoneDigits(value) {
 
 const PAYMENT_OPTIONS = [
     {
-        uiKey: "TRANSFERENCIA",
-        metodoPago: "TRANSFERENCIA",
-        label: "Transferencia bancaria directa - BCP",
-        detailTitle: "Banco de Crédito del Perú - BCP",
-        detailLines: [
-            "Soles: 194 9949 1810 76",
-            "a nombre de Nubix Market SAC",
-        ],
-    },
-    {
         uiKey: "YAPE",
         metodoPago: "YAPE",
         label: "Yape",
@@ -278,7 +268,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         [items, tipoEntrega],
     );
     const { subtotalBase, igv, subtotalConIgv, delivery, total } = totals;
-    const [metodoPagoUi, setMetodoPagoUi] = useState("TRANSFERENCIA");
+    const [metodoPagoUi, setMetodoPagoUi] = useState("YAPE");
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [emailOk, setEmailOk] = useState(null);
@@ -439,7 +429,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
             month: "2-digit",
             year: "numeric",
         });
-        const metodoPago = selectedPayment?.metodoPago ?? "TRANSFERENCIA";
+        const metodoPago = selectedPayment?.metodoPago ?? "YAPE";
 
         try {
             const isFactura = documentoDigits.length === 11;
