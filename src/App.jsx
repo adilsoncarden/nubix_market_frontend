@@ -52,6 +52,8 @@ import SecurityRolesPage from "./pages/security/SecurityRolesPage";
 
 const PublicLayoutShell = () => (
     <div className="public-layout-shell d-flex flex-column min-vh-100" data-bs-theme="light">
+        <WhatsAppButton />
+        <Chatbot />
         <Navbar />
         <main className="flex-grow-1">
             <Outlet />
@@ -92,8 +94,6 @@ export default function App() {
                 <ProductCatalogProvider>
                     <CartProvider>
                         <FavoritesProvider>
-                            <WhatsAppButton />
-                            <Chatbot />
                             <Routes>
                             {/* ───────────── WEB PÚBLICA ───────────── */}
                             <Route element={<PublicLayoutShell />}>
