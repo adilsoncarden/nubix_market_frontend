@@ -805,6 +805,43 @@
   border-color: var(--bs-border-color) !important;
 }
 
+/* Botón secundario (Cerrar / Cancelar) en modales — solo dark mode */
+.admin-shell[data-bs-theme="dark"] .admin-modal-btn-secondary,
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer .btn-light,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-light.border,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-secondary:not(.btn-success) {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-btn-secondary:hover,
+.admin-shell[data-bs-theme="dark"] .admin-modal-btn-secondary:focus,
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer .btn-light:hover,
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer .btn-light:focus,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-light.border:hover,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-light.border:focus,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-secondary:not(.btn-success):hover,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-secondary:not(.btn-success):focus {
+  background-color: #475569 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: none;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-btn-secondary:disabled,
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer .btn-light:disabled,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-light.border:disabled,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-secondary:not(.btn-success):disabled {
+  background-color: #1e293b !important;
+  color: rgba(226, 232, 240, 0.45) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 /* Modal asignación permisos por rol */
 .admin-page .role-permisos-modal {
   overflow: hidden;
