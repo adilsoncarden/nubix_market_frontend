@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useFavorites } from "../../store/FavoritesContext";
 import { useAuth } from "../../store/AuthContext";
 import { FAVORITES_LOGIN_MESSAGE, promptLoginRequired } from "../../utils/swalConfig";
+import { isTodayDealProduct } from "../../utils/todayDealProducts";
 import ProductCartActions from "../shared/ProductCartActions";
 import { handleProductImageError } from "../../features/products/services/productService";
 
@@ -12,9 +13,10 @@ const PAYMENT_LOGOS = (
     </span>
 );
 
-export default function FlashProductCard({ p, showTodayDeal = false }) {
+export default function FlashProductCard({ p }) {
     const { toggleFavorite, isFavorite } = useFavorites();
     const { token } = useAuth();
+    const showTodayDeal = isTodayDealProduct(p.id);
 
     const currentPrice = Number(p.price ?? p.precio) || 0;
     const priceOld = (currentPrice * 1.22).toFixed(2);
