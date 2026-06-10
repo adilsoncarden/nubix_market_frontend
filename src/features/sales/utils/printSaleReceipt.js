@@ -4,9 +4,21 @@ import {
     mapSaleDetailLine,
 } from "../services/saleService";
 
-const VERDE = [25, 135, 84];
-const NEGRO = [40, 40, 40];
-const GRIS = [245, 245, 245];
+const COLORS = {
+    VERDE: [25, 135, 84],
+    NEGRO: [40, 40, 40],
+    GRIS_FONDO: [248, 250, 252],
+    GRIS_LINEA: [203, 213, 225],
+};
+
+const PAGE = {
+    WIDTH: 210,
+    HEIGHT: 297,
+    LEFT: 14,
+    RIGHT: 196,
+    FOOTER_H: 40,
+    CONTENT_BOTTOM: 262,
+};
 
 function getComprobanteTitle(tipo) {
     if (tipo === "BOLETA") return "BOLETA ELECTRÓNICA";
@@ -37,110 +49,208 @@ function getClientDocument(sale) {
     return null;
 }
 
-export async function printSaleReceipt(sale) {
-    const { default: jsPDF } = await import("jspdf");
+function formatMoney(value) {
+    return `S/ ${Number(value ?? 0).toFixed(2)}`;
+}
 
-    const doc = new jsPDF();
+function drawSaleHeader(doc, sale) {
     const tipo = sale.tipoComprobante || "TICKET";
-    const items = (sale.detalles || []).map((raw) => {
-        const d = mapSaleDetailLine(raw);
-        return {
-            name: d.producto?.nombre || "Producto",
-            qty: d.cantidad,
-            price: d.precioUnitario,
-            subtotal: d.subtotal,
-        };
-    });
 
-    doc.setFillColor(...VERDE);
-    doc.rect(0, 0, 210, 48, "F");
+    doc.setFillColor(...COLORS.VERDE);
+    doc.rect(0, 0, PAGE.WIDTH, 48, "F");
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    doc.text("NUBIX MARKET", 14, 20);
+    doc.text("NUBIX MARKET", PAGE.LEFT, 20);
 
     doc.setFontSize(12);
-    doc.text(getComprobanteTitle(tipo), 196, 20, { align: "right" });
+    doc.text(getComprobanteTitle(tipo), PAGE.RIGHT, 20, { align: "right" });
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
-    doc.text(`Venta #${sale.id}`, 196, 28, { align: "right" });
-    doc.text(formatSaleDateTime(sale), 196, 34, { align: "right" });
+    doc.text(`Venta #${sale.id}`, PAGE.RIGHT, 28, { align: "right" });
+    doc.text(formatSaleDateTime(sale), PAGE.RIGHT, 34, { align: "right" });
 
-    doc.setTextColor(...NEGRO);
+    doc.setTextColor(...COLORS.NEGRO);
     doc.setFontSize(10);
     let y = 60;
 
     doc.setFont("helvetica", "bold");
-    doc.text("Cliente:", 14, y);
+    doc.text("Cliente:", PAGE.LEFT, y);
     doc.setFont("helvetica", "normal");
-    doc.text(getSaleClientLabel(sale), 196, y, { align: "right" });
+    doc.text(getSaleClientLabel(sale), PAGE.RIGHT, y, { align: "right" });
     y += 8;
 
     const docInfo = getClientDocument(sale);
     if (docInfo) {
         doc.setFont("helvetica", "bold");
-        doc.text(`${docInfo.label}:`, 14, y);
+        doc.text(`${docInfo.label}:`, PAGE.LEFT, y);
         doc.setFont("helvetica", "normal");
-        doc.text(String(docInfo.value), 196, y, { align: "right" });
+        doc.text(String(docInfo.value), PAGE.RIGHT, y, { align: "right" });
         y += 8;
         if (docInfo.extra) {
-            doc.text(docInfo.extra, 14, y);
+            doc.text(docInfo.extra, PAGE.LEFT, y);
             y += 8;
         }
     }
 
     doc.setFont("helvetica", "bold");
-    doc.text("Método de pago:", 14, y);
+    doc.text("Método de pago:", PAGE.LEFT, y);
     doc.setFont("helvetica", "normal");
-    doc.text(sale.metodoPago || "—", 196, y, { align: "right" });
-    y += 10;
+    doc.text(sale.metodoPago || "—", PAGE.RIGHT, y, { align: "right" });
 
-    doc.setDrawColor(200);
-    doc.line(14, y, 196, y);
-    y += 8;
+    return y + 12;
+}
+
+function drawContinuationHeader(doc, sale) {
+    doc.setFillColor(...COLORS.VERDE);
+    doc.rect(0, 0, PAGE.WIDTH, 20, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.text("NUBIX MARKET", PAGE.LEFT, 13);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+        `${getComprobanteTitle(sale.tipoComprobante)} · Venta #${sale.id}`,
+        PAGE.RIGHT,
+        13,
+        { align: "right" },
+    );
+    return 30;
+}
+
+function drawTableHeader(doc, startY) {
+    doc.setDrawColor(...COLORS.GRIS_LINEA);
+    doc.line(PAGE.LEFT, startY, PAGE.RIGHT, startY);
+    startY += 8;
 
     doc.setFont("helvetica", "bold");
-    doc.text("Artículo", 14, y);
-    doc.text("Cant.", 120, y);
-    doc.text("Subtotal", 196, y, { align: "right" });
-    y += 6;
-    doc.line(14, y, 196, y);
-    y += 6;
+    doc.setTextColor(...COLORS.NEGRO);
+    doc.text("Artículo", PAGE.LEFT, startY);
+    doc.text("Cant.", 120, startY);
+    doc.text("Subtotal", PAGE.RIGHT, startY, { align: "right" });
+    startY += 6;
+    doc.line(PAGE.LEFT, startY, PAGE.RIGHT, startY);
 
+    return startY + 6;
+}
+
+function measureItemRow(doc, name) {
+    const lines = doc.splitTextToSize(String(name), 95);
+    const rowHeight = Math.max(7, lines.length * 5 + 2);
+    return { lines, rowHeight };
+}
+
+function drawItemRow(doc, item, currentY, index, lines, rowHeight) {
+    if (index % 2 === 0) {
+        doc.setFillColor(...COLORS.GRIS_FONDO);
+        doc.rect(PAGE.LEFT, currentY - 5, 182, rowHeight, "F");
+    }
     doc.setFont("helvetica", "normal");
-    items.forEach((item, index) => {
-        if (index % 2 === 0) {
-            doc.setFillColor(...GRIS);
-            doc.rect(14, y - 5, 182, 7, "F");
-        }
-        doc.text(String(item.name).substring(0, 52), 14, y);
-        doc.text(String(item.qty), 124, y);
-        doc.text(`S/ ${item.subtotal.toFixed(2)}`, 196, y, { align: "right" });
-        y += 7;
+    doc.text(lines, PAGE.LEFT, currentY);
+    doc.text(String(item.qty), 124, currentY);
+    doc.text(formatMoney(item.subtotal), PAGE.RIGHT, currentY, {
+        align: "right",
     });
+    return currentY + rowHeight;
+}
 
-    y += 6;
+function ensureTableSpace(doc, currentY, rowHeight, sale, onNewPage) {
+    if (currentY + rowHeight <= PAGE.CONTENT_BOTTOM) return currentY;
+    doc.addPage();
+    onNewPage();
+    let y = drawContinuationHeader(doc, sale);
+    return drawTableHeader(doc, y);
+}
+
+function drawTotalsBlock(doc, startY, sale) {
     const subtotal = Number(sale.subtotal ?? 0);
     const igv = Number(sale.igv ?? 0);
     const total = Number(sale.total ?? 0);
+    const boxLeft = 118;
+    let y = startY + 8;
 
-    doc.text("Subtotal (sin IGV):", 150, y, { align: "right" });
-    doc.text(`S/ ${subtotal.toFixed(2)}`, 196, y, { align: "right" });
-    y += 7;
-    doc.text("IGV (13%):", 150, y, { align: "right" });
-    doc.text(`S/ ${igv.toFixed(2)}`, 196, y, { align: "right" });
-    y += 7;
-    doc.setFont("helvetica", "bold");
-    doc.text("TOTAL:", 150, y, { align: "right" });
-    doc.setTextColor(...VERDE);
-    doc.text(`S/ ${total.toFixed(2)}`, 196, y, { align: "right" });
+    doc.setDrawColor(...COLORS.GRIS_LINEA);
+    doc.setLineWidth(0.6);
+    doc.line(boxLeft, y, PAGE.RIGHT, y);
+    y += 10;
 
-    y += 16;
-    doc.setTextColor(...NEGRO);
+    doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.text("¡Gracias por su compra!", 14, y);
+    doc.setTextColor(...COLORS.NEGRO);
+
+    doc.text("Subtotal (sin IGV):", boxLeft + 4, y);
+    doc.text(formatMoney(subtotal), PAGE.RIGHT, y, { align: "right" });
+    y += 8;
+    doc.text("IGV (13%):", boxLeft + 4, y);
+    doc.text(formatMoney(igv), PAGE.RIGHT, y, { align: "right" });
+    y += 10;
+
+    doc.setLineWidth(0.8);
+    doc.line(boxLeft, y, PAGE.RIGHT, y);
+    y += 10;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("TOTAL:", boxLeft + 4, y);
+    doc.setTextColor(...COLORS.VERDE);
+    doc.text(formatMoney(total), PAGE.RIGHT, y, { align: "right" });
+    y += 6;
+    doc.setDrawColor(...COLORS.GRIS_LINEA);
+    doc.setLineWidth(0.6);
+    doc.line(boxLeft, y, PAGE.RIGHT, y);
+
+    return y + 14;
+}
+
+function drawThanksMessage(doc, startY) {
+    let y = startY + 6;
+    doc.setDrawColor(...COLORS.GRIS_LINEA);
+    doc.line(55, y, 155, y);
+    y += 14;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...COLORS.NEGRO);
+    doc.text("¡Gracias por su compra!", PAGE.WIDTH / 2, y, {
+        align: "center",
+    });
+    return y + 10;
+}
+
+export async function printSaleReceipt(sale) {
+    const { default: jsPDF } = await import("jspdf");
+    const doc = new jsPDF();
+
+    const items = (sale.detalles || []).map((raw) => {
+        const d = mapSaleDetailLine(raw);
+        return {
+            name: d.producto?.nombre || "Producto",
+            qty: d.cantidad,
+            subtotal: d.subtotal,
+        };
+    });
+
+    let currentY = drawSaleHeader(doc, sale);
+    currentY = drawTableHeader(doc, currentY);
+
+    let rowIndex = 0;
+    items.forEach((item) => {
+        const { lines, rowHeight } = measureItemRow(doc, item.name);
+        currentY = ensureTableSpace(doc, currentY, rowHeight, sale, () => {
+            rowIndex = 0;
+        });
+        currentY = drawItemRow(doc, item, currentY, rowIndex, lines, rowHeight);
+        rowIndex += 1;
+    });
+
+    const footerTop = PAGE.HEIGHT - PAGE.FOOTER_H - 8;
+    if (currentY + 70 > footerTop) {
+        doc.addPage();
+        currentY = drawContinuationHeader(doc, sale) + 8;
+    }
+
+    currentY = drawTotalsBlock(doc, currentY, sale);
+    drawThanksMessage(doc, currentY);
 
     doc.autoPrint({ variant: "non-conform" });
     const blobUrl = doc.output("bloburl");
