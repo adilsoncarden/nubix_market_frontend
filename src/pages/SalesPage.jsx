@@ -21,6 +21,8 @@ import { reportService } from "../features/reports/services/reportService";
 import { clientService } from "../features/users/services/clientService";
 import { Toast } from "../utils/swalConfig";
 import { getApiErrorMessage, isForbiddenError } from "../utils/apiErrorUtils";
+import SearchInput from "../components/admin/SearchInput";
+import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 import {
     filterSales,
     TIPO_ENTREGA_OPTIONS,
@@ -424,51 +426,21 @@ const SalesPage = () => {
                 </div>
             </div>
 
-            {/* Buscador y filtros */}
-            <div className="row g-3 mb-4">
-                <div className="col-md-3">
-                    <div
-                        className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "12px" }}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div
-                                className="bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "40px", height: "40px" }}
-                            >
-                                <i className="bi bi-receipt fs-5"></i>
-                            </div>
-                            <div className="ms-3">
-                                <small
-                                    className="text-muted d-block fw-bold"
-                                    style={{ fontSize: "10px" }}
-                                >
-                                    RESULTADOS
-                                </small>
-                                <h4 className="fw-bold mb-0">
-                                    {filteredSales.length}
-                                </h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-9">
-                    <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
-                        style={{ borderRadius: "12px", height: "100%" }}
-                    >
-                        <i className="bi bi-search text-muted me-3"></i>
-                        <input
-                            type="text"
-                            className="form-control border-0 shadow-none bg-transparent"
-                            placeholder="Buscar por cliente, orden, tipo de entrega, estado o código..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ fontSize: "0.9rem" }}
-                        />
-                    </div>
-                </div>
-            </div>
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-receipt fs-4",
+                        label: "Resultados",
+                        value: filteredSales.length,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por cliente, orden, tipo de entrega, estado o código..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </AdminToolbarPanel>
 
             <div
                 className="card border-0 shadow-sm p-3 mb-4"

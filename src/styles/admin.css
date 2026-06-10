@@ -504,6 +504,18 @@
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
+.admin-toolbar-stats--multi {
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-toolbar-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-shrink: 0;
+}
+
 .admin-toolbar-stats-icon {
   flex-shrink: 0;
   width: 48px;
@@ -543,6 +555,14 @@
   gap: 1rem;
   padding: 1.25rem 1.5rem;
   min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .admin-toolbar-stats--multi {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 
 .admin-search-field {

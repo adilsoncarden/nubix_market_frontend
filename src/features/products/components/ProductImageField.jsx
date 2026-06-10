@@ -133,10 +133,7 @@ const ProductImageField = ({
                 >
                     <i className="bi bi-image text-muted fs-2 d-block mb-2"></i>
                     <p className="mb-0 text-muted small">
-                        Haz clic para subir la imagen (se guardará en Cloudinary)
-                    </p>
-                    <p className="mb-0 text-muted small mt-1">
-                        Sin imagen se mostrará un placeholder en la tienda
+                        Haz clic para subir la imagen
                     </p>
                 </div>
             )}

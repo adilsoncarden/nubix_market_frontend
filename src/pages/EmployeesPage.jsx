@@ -3,6 +3,8 @@ import { employeeService } from "../features/users/services/employeeService";
 import { securityService } from "../features/security/services/securityService";
 import Swal from "sweetalert2";
 import { Modal, Tooltip } from "bootstrap";
+import SearchInput from "../components/admin/SearchInput";
+import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 
 const isSupremeAdminRoleName = (nombre) => {
     const n = String(nombre ?? "").trim().toUpperCase();
@@ -215,34 +217,24 @@ const EmployeesPage = () => {
                 </button>
             </div>
 
-            {/* BUSCADOR Y MÉTRICA */}
-            <div className="row g-3 mb-4">
-                <div className="col-md-3">
-                    <div className="card border-0 shadow-sm p-3" style={{ borderRadius: '12px' }}>
-                        <div className="d-flex align-items-center">
-                            <div className="bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                                <i className="bi bi-shield-check fs-5"></i>
-                            </div>
-                            <div className="ms-3">
-                                <small className="text-muted d-block fw-bold" style={{ fontSize: '10px' }}>ACTIVOS</small>
-                                <h4 className="fw-bold mb-0">{employees.length}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-9">
-                    <div className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card" style={{ borderRadius: '12px', height: '100%' }}>
-                        <i className="bi bi-search text-muted me-3"></i>
-                        <input 
-                            type="text" 
-                            className="form-control border-0 shadow-none bg-transparent" 
-                            placeholder="Buscar por nombre, correo o rol..."
-                            value={searchTerm}
-                            onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}}
-                        />
-                    </div>
-                </div>
-            </div>
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-shield-check fs-4",
+                        label: "Activos",
+                        value: employees.length,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por nombre, correo o rol..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </AdminToolbarPanel>
 
             {/* TABLA COMPACTA */}
             <div className="card shadow-sm border-0 overflow-hidden" style={{ borderRadius: '12px' }}>

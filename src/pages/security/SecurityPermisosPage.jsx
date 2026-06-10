@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal } from "bootstrap";
 import AdminPagination from "../../components/admin/AdminPagination";
 import { PERMISO_MODULOS, MODULO_FILTER_ALL } from "../../features/security/constants/securityModules";
+import SearchInput from "../../components/admin/SearchInput";
+import AdminToolbarPanel from "../../components/admin/AdminToolbarPanel";
 import { securityService } from "../../features/security/services/securityService";
 import { useAdminPagination } from "../../hooks/useAdminPagination";
 import { Toast, confirmDelete } from "../../utils/swalConfig";
@@ -156,49 +158,37 @@ export default function SecurityPermisosPage() {
                 </button>
             </div>
 
-            <div className="admin-toolbar-panel admin-permisos-toolbar mb-4">
-                <div className="admin-toolbar-stats">
-                    <div className="admin-toolbar-stats-icon bg-emerald-100 text-emerald-600">
-                        <i className="bi bi-shield-check fs-4"></i>
-                    </div>
-                    <div>
-                        <p className="admin-toolbar-stats-label mb-0">
-                            Permisos registrados
-                        </p>
-                        <p className="admin-toolbar-stats-value mb-0">
-                            {totalItems}
-                        </p>
-                    </div>
-                </div>
-                <div className="admin-toolbar-divider" aria-hidden="true" />
-                <div className="admin-toolbar-search">
-                    <label className="admin-search-field flex-grow-1 mb-0">
-                        <i className="bi bi-search" aria-hidden="true"></i>
-                        <input
-                            type="search"
-                            className="admin-search-input"
-                            placeholder="Buscar por nombre, descripción o módulo..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </label>
-                    <select
-                        className="form-select admin-filter-select admin-toolbar-select"
-                        value={filterModulo}
-                        onChange={(e) => setFilterModulo(e.target.value)}
-                        aria-label="Filtrar por módulo"
-                    >
-                        <option value={MODULO_FILTER_ALL}>
-                            Todos los módulos
+            <AdminToolbarPanel
+                className="admin-permisos-toolbar"
+                stats={[
+                    {
+                        icon: "bi bi-shield-check fs-4",
+                        label: "Permisos registrados",
+                        value: totalItems,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por nombre, descripción o módulo..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <select
+                    className="form-select admin-filter-select admin-toolbar-select"
+                    value={filterModulo}
+                    onChange={(e) => setFilterModulo(e.target.value)}
+                    aria-label="Filtrar por módulo"
+                >
+                    <option value={MODULO_FILTER_ALL}>
+                        Todos los módulos
+                    </option>
+                    {modulos.map((m) => (
+                        <option key={m} value={m}>
+                            {m}
                         </option>
-                        {modulos.map((m) => (
-                            <option key={m} value={m}>
-                                {m}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            </div>
+                    ))}
+                </select>
+            </AdminToolbarPanel>
 
             <div
                 className="card shadow-sm border-0 overflow-hidden"
@@ -323,7 +313,7 @@ export default function SecurityPermisosPage() {
                             <div className="modal-body">
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold small">
-                                        Módulo *
+                                        Módulo
                                     </label>
                                     <select
                                         className="form-select admin-filter-select w-100"
@@ -346,7 +336,7 @@ export default function SecurityPermisosPage() {
                                 </div>
                                 <div className="mb-3">
                                     <label className="form-label fw-semibold small">
-                                        Nombre (slug único) *
+                                        Nombre (slug único)
                                     </label>
                                     <input
                                         type="text"
@@ -364,7 +354,7 @@ export default function SecurityPermisosPage() {
                                 </div>
                                 <div className="mb-0">
                                     <label className="form-label fw-semibold small">
-                                        Descripción *
+                                        Descripción
                                     </label>
                                     <textarea
                                         className="form-control"

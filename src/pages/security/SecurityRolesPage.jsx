@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal } from "bootstrap";
 import AdminPagination from "../../components/admin/AdminPagination";
+import SearchInput from "../../components/admin/SearchInput";
+import AdminToolbarPanel from "../../components/admin/AdminToolbarPanel";
 import PermissionCheckboxPanel from "../../features/security/components/PermissionCheckboxPanel";
 import { securityService } from "../../features/security/services/securityService";
 import { useAdminPagination } from "../../hooks/useAdminPagination";
@@ -186,44 +188,21 @@ export default function SecurityRolesPage() {
                 </button>
             </div>
 
-            <div className="row g-4 mb-4">
-                <div className="col-md-4">
-                    <div
-                        className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div
-                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "48px", height: "48px" }}
-                            >
-                                <i className="bi bi-person-badge fs-4"></i>
-                            </div>
-                            <div className="ms-3">
-                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
-                                    Roles
-                                </h6>
-                                <h3 className="fw-bold mb-0">{totalItems}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-8">
-                    <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
-                        style={{ borderRadius: "15px", minHeight: "72px" }}
-                    >
-                        <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
-                        <input
-                            type="search"
-                            className="form-control border-0 shadow-none bg-transparent"
-                            placeholder="Buscar por nombre o descripción..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
-            </div>
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-person-badge fs-4",
+                        label: "Roles",
+                        value: totalItems,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por nombre o descripción..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </AdminToolbarPanel>
 
             <div
                 className="card shadow-sm border-0 overflow-hidden"
@@ -361,7 +340,7 @@ export default function SecurityRolesPage() {
                                 <div className="row g-4 role-form-section flex-shrink-0">
                                     <div className="col-md-6">
                                         <label className="form-label fw-semibold small">
-                                            Nombre del rol *
+                                            Nombre del rol
                                         </label>
                                         <input
                                             type="text"
