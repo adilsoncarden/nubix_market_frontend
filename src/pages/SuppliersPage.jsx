@@ -7,6 +7,7 @@ import { exportSuppliersPdf } from "../features/suppliers/utils/exportSuppliersP
 import { Toast } from "../utils/swalConfig";
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
+import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
 
 const SuppliersPage = () => {
     const {
@@ -373,73 +374,30 @@ const SuppliersPage = () => {
                 )}
             </div>
 
-            <div
-                className="modal fade"
-                ref={modalRef}
-                tabIndex="-1"
-                data-bs-backdrop="static"
+            <AdminModal
+                modalRef={modalRef}
+                scrollable
+                title={
+                    selectedSupplier
+                        ? "Editar Proveedor"
+                        : "Nuevo Proveedor"
+                }
+                onClose={() => bsModal.current.hide()}
+                closeDisabled={saving}
             >
-                <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                    <div
-                        className="modal-content border-0 shadow-lg"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="modal-header border-0 pt-4 px-4 pb-0">
-                            <h5 className="modal-title fw-bold text-dark d-flex align-items-center">
-                                <span
-                                    className="bg-emerald-600 rounded-circle d-inline-block me-2"
-                                    style={{ width: "10px", height: "10px" }}
-                                ></span>
-                                {selectedSupplier
-                                    ? "Editar Proveedor"
-                                    : "Nuevo Proveedor"}
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close shadow-none"
-                                onClick={() => bsModal.current.hide()}
-                                disabled={saving}
-                                aria-label="Cerrar"
-                            ></button>
-                        </div>
-                        <div className="modal-body p-4">
-                            <SupplierForm
-                                key={formkey}
-                                supplier={selectedSupplier}
-                                onSave={handleSave}
-                                loading={saving}
-                            />
-
-                            <div className="d-flex justify-content-end gap-2 mt-4">
-                                <button
-                                    type="button"
-                                    className="btn btn-light fw-bold text-secondary px-4 border"
-                                    onClick={() => bsModal.current.hide()}
-                                    disabled={saving}
-                                    style={{ borderRadius: "10px" }}
-                                >
-                                    Cerrar
-                                </button>
-                                <button
-                                    type="submit"
-                                    form="supplierForm"
-                                    className="btn btn-success px-4 py-2 fw-bold shadow-sm admin-btn-primary"
-                                    disabled={saving}
-                                >
-                                    {saving ? (
-                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                    ) : (
-                                        <i className="bi bi-save2-fill me-2"></i>
-                                    )}
-                                    {saving
-                                        ? "Guardando..."
-                                        : "Confirmar Datos"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <SupplierForm
+                    key={formkey}
+                    supplier={selectedSupplier}
+                    onSave={handleSave}
+                    loading={saving}
+                />
+                <AdminModalActions
+                    onClose={() => bsModal.current.hide()}
+                    submitForm="supplierForm"
+                    saving={saving}
+                    confirmLabel="Confirmar Datos"
+                />
+            </AdminModal>
         </div>
     );
 };

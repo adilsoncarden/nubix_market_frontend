@@ -664,6 +664,63 @@
   background: var(--bs-body-bg);
 }
 
+/* ─── Modales CRUD unificados (productos, categorías, proveedores) ─ */
+.admin-modal-content {
+  border-radius: 15px;
+}
+
+.admin-modal-header {
+  padding: 1.5rem 1.5rem 0;
+  align-items: center;
+}
+
+.admin-modal-title {
+  gap: 0.5rem;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.admin-modal-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--admin-accent, #10b981);
+  flex-shrink: 0;
+}
+
+.admin-modal-body .form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 0.4rem;
+}
+
+.admin-modal-body .form-control,
+.admin-modal-body .form-select {
+  border-radius: 10px;
+  border-color: #e2e8f0;
+  padding: 0.55rem 0.85rem;
+}
+
+.admin-modal-body .form-control:focus,
+.admin-modal-body .form-select:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-soft);
+}
+
+.admin-modal-footer {
+  border-color: #eef2f6 !important;
+}
+
+.admin-modal-btn-secondary {
+  border-radius: 10px;
+}
+
+.admin-modal-btn-primary {
+  border-radius: 10px;
+}
+
 /* Modal asignación permisos por rol */
 .admin-page .role-permisos-modal {
   overflow: hidden;

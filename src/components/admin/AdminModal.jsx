@@ -1,0 +1,93 @@
+/**
+ * Modal base del panel administrativo (diseño unificado).
+ */
+export default function AdminModal({
+    modalRef,
+    title,
+    onClose,
+    size = "",
+    scrollable = false,
+    closeDisabled = false,
+    children,
+}) {
+    const dialogClasses = [
+        "modal-dialog",
+        "modal-dialog-centered",
+        size === "lg" ? "modal-lg" : "",
+        scrollable ? "modal-dialog-scrollable" : "",
+    ]
+        .filter(Boolean)
+        .join(" ");
+
+    return (
+        <div
+            className="modal fade admin-modal"
+            ref={modalRef}
+            tabIndex="-1"
+            data-bs-backdrop="static"
+        >
+            <div className={dialogClasses}>
+                <div className="modal-content admin-modal-content border-0 shadow-lg">
+                    <div className="modal-header admin-modal-header border-0">
+                        <h5 className="modal-title admin-modal-title fw-bold text-dark d-flex align-items-center mb-0">
+                            <span
+                                className="admin-modal-indicator"
+                                aria-hidden="true"
+                            />
+                            {title}
+                        </h5>
+                        <button
+                            type="button"
+                            className="btn-close shadow-none"
+                            onClick={onClose}
+                            disabled={closeDisabled}
+                            aria-label="Cerrar"
+                        />
+                    </div>
+                    <div className="modal-body admin-modal-body p-4">
+                        {children}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+/**
+ * Acciones inferiores estándar: Cerrar + Confirmar (submit externo por form id).
+ */
+export function AdminModalActions({
+    onClose,
+    submitForm,
+    saving = false,
+    closeDisabled = false,
+    confirmLabel = "Confirmar",
+    savingLabel = "Guardando...",
+    confirmIcon = "bi-save2-fill",
+}) {
+    return (
+        <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top admin-modal-footer">
+            <button
+                type="button"
+                className="btn btn-light fw-bold text-secondary px-4 border admin-modal-btn-secondary"
+                onClick={onClose}
+                disabled={closeDisabled || saving}
+            >
+                Cerrar
+            </button>
+            <button
+                type="submit"
+                form={submitForm}
+                className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary admin-modal-btn-primary"
+                disabled={saving}
+            >
+                {saving ? (
+                    <span className="spinner-border spinner-border-sm me-2" />
+                ) : (
+                    <i className={`bi ${confirmIcon} me-2`} />
+                )}
+                {saving ? savingLabel : confirmLabel}
+            </button>
+        </div>
+    );
+}

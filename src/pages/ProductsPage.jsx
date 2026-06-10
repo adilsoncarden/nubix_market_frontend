@@ -16,6 +16,7 @@ import { exportProductsPdf } from "../features/products/utils/exportProductsPdf"
 import { Toast, confirmDelete } from "../utils/swalConfig";
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
+import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
 import Swal from "sweetalert2";
 
 const ProductsPage = () => {
@@ -508,76 +509,38 @@ const ProductsPage = () => {
                 )}
             </div>
 
-            <div
-                className="modal fade"
-                ref={modalRef}
-                tabIndex="-1"
-                data-bs-backdrop="static"
+            <AdminModal
+                modalRef={modalRef}
+                size="lg"
+                title={
+                    selectedProduct
+                        ? "Actualizar Producto"
+                        : "Registrar Producto"
+                }
+                onClose={() => bsModal.current.hide()}
             >
-                <div className="modal-dialog modal-lg modal-dialog-centered">
-                    <div
-                        className="modal-content border-0 shadow-lg"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="modal-header border-0 pt-4 px-4 pb-0">
-                            <h5 className="modal-title fw-bold text-dark d-flex align-items-center">
-                                <i
-                                    className={`bi ${selectedProduct ? "bi-pencil-square" : "bi-box-seam"} text-emerald-600 me-2`}
-                                ></i>
-                                {selectedProduct
-                                    ? "Actualizar Producto"
-                                    : "Registrar Producto"}
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close shadow-none"
-                                onClick={() => bsModal.current.hide()}
-                            ></button>
-                        </div>
-                        <div className="modal-body p-4">
-                            <ProductImageField
-                                key={`img-${formkey}-${selectedProduct?.id ?? "new"}`}
-                                urlImagen={formUrlImagen}
-                                onUrlImagenChange={setFormUrlImagen}
-                                disabled={saving}
-                            />
-                            <ProductForm
-                                key={formkey}
-                                product={selectedProduct}
-                                categories={categories}
-                                onSave={handleSave}
-                                loading={saving}
-                            />
-
-                            <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                                <button
-                                    type="button"
-                                    className="btn btn-light fw-bold text-secondary px-4 border"
-                                    onClick={() => bsModal.current.hide()}
-                                    style={{ borderRadius: "10px" }}
-                                >
-                                    Cerrar
-                                </button>
-                                <button
-                                    type="submit"
-                                    form="productForm"
-                                    className="btn btn-success px-5 fw-bold shadow-sm admin-btn-primary"
-                                    disabled={saving}
-                                >
-                                    {saving ? (
-                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                    ) : (
-                                        <i className="bi bi-cloud-upload-fill me-2"></i>
-                                    )}
-                                    {saving
-                                        ? "Guardando..."
-                                        : "Confirmar Registro"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <ProductImageField
+                    key={`img-${formkey}-${selectedProduct?.id ?? "new"}`}
+                    urlImagen={formUrlImagen}
+                    onUrlImagenChange={setFormUrlImagen}
+                    disabled={saving}
+                />
+                <ProductForm
+                    key={formkey}
+                    product={selectedProduct}
+                    categories={categories}
+                    onSave={handleSave}
+                    loading={saving}
+                />
+                <AdminModalActions
+                    onClose={() => bsModal.current.hide()}
+                    submitForm="productForm"
+                    saving={saving}
+                    savingLabel="Guardando..."
+                    confirmLabel="Confirmar Registro"
+                    confirmIcon="bi-cloud-upload-fill"
+                />
+            </AdminModal>
 
         </div>
     );

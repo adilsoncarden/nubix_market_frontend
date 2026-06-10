@@ -8,6 +8,7 @@ import { reportService } from "../features/reports/services/reportService";
 import { exportCategoriesPdf } from "../features/categories/utils/exportCategoriesPdf";
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
+import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
 
 const CategoriesPage = () => {
     const { categories, loading, handleDelete, setCategories } =
@@ -355,71 +356,29 @@ const CategoriesPage = () => {
                 )}
             </div>
 
-            {/* MODAL VERDE */}
-            <div
-                className="modal fade"
-                ref={modalRef}
-                tabIndex="-1"
-                data-bs-backdrop="static"
+            <AdminModal
+                modalRef={modalRef}
+                title={
+                    selectedCategory
+                        ? "Editar Información"
+                        : "Nueva Categoría"
+                }
+                onClose={() => bsModal.current.hide()}
             >
-                <div className="modal-dialog modal-dialog-centered">
-                    <div
-                        className="modal-content border-0 shadow-lg"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="modal-header border-0 pt-4 px-4 pb-0">
-                            <h5 className="modal-title fw-bold text-dark d-flex align-items-center">
-                                <span
-                                    className="bg-emerald-600 rounded-circle d-inline-block me-2"
-                                    style={{ width: "10px", height: "10px" }}
-                                ></span>
-                                {selectedCategory
-                                    ? "Editar Información"
-                                    : "Nueva Categoría"}
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close shadow-none"
-                                onClick={() => bsModal.current.hide()}
-                            ></button>
-                        </div>
-                        <div className="modal-body p-4">
-                            <CategoryForm
-                                key={formKey}
-                                category={selectedCategory}
-                                onSave={handleSave}
-                                loading={saving}
-                            />
-
-                            <div className="d-flex justify-content-end gap-2 mt-4">
-                                <button
-                                    type="button"
-                                    className="btn btn-light fw-bold text-secondary px-4 border"
-                                    onClick={() => bsModal.current.hide()}
-                                    style={{ borderRadius: "10px" }}
-                                >
-                                    Cerrar
-                                </button>
-                                <button
-                                    type="submit"
-                                    form="categoryForm"
-                                    className="btn btn-success px-4 fw-bold shadow-sm admin-btn-primary"
-                                    disabled={saving}
-                                >
-                                    {saving ? (
-                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                    ) : (
-                                        <i className="bi bi-save2-fill me-2"></i>
-                                    )}
-                                    {saving
-                                        ? "Procesando..."
-                                        : "Confirmar Datos"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <CategoryForm
+                    key={formKey}
+                    category={selectedCategory}
+                    onSave={handleSave}
+                    loading={saving}
+                />
+                <AdminModalActions
+                    onClose={() => bsModal.current.hide()}
+                    submitForm="categoryForm"
+                    saving={saving}
+                    savingLabel="Procesando..."
+                    confirmLabel="Confirmar Datos"
+                />
+            </AdminModal>
 
         </div>
     );
