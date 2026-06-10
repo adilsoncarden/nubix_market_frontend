@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal } from "bootstrap";
 import AdminPagination from "../../components/admin/AdminPagination";
 import { PERMISO_MODULOS, MODULO_FILTER_ALL } from "../../features/security/constants/securityModules";
+import SearchInput from "../../components/admin/SearchInput";
+import AdminToolbarPanel from "../../components/admin/AdminToolbarPanel";
+import AdminModal, { AdminModalActions } from "../../components/admin/AdminModal";
 import { securityService } from "../../features/security/services/securityService";
 import { useAdminPagination } from "../../hooks/useAdminPagination";
 import { Toast, confirmDelete } from "../../utils/swalConfig";
@@ -156,49 +159,37 @@ export default function SecurityPermisosPage() {
                 </button>
             </div>
 
-            <div className="admin-toolbar-panel admin-permisos-toolbar mb-4">
-                <div className="admin-toolbar-stats">
-                    <div className="admin-toolbar-stats-icon bg-emerald-100 text-emerald-600">
-                        <i className="bi bi-shield-check fs-4"></i>
-                    </div>
-                    <div>
-                        <p className="admin-toolbar-stats-label mb-0">
-                            Permisos registrados
-                        </p>
-                        <p className="admin-toolbar-stats-value mb-0">
-                            {totalItems}
-                        </p>
-                    </div>
-                </div>
-                <div className="admin-toolbar-divider" aria-hidden="true" />
-                <div className="admin-toolbar-search">
-                    <label className="admin-search-field flex-grow-1 mb-0">
-                        <i className="bi bi-search" aria-hidden="true"></i>
-                        <input
-                            type="search"
-                            className="admin-search-input"
-                            placeholder="Buscar por nombre, descripción o módulo..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </label>
-                    <select
-                        className="form-select admin-filter-select admin-toolbar-select"
-                        value={filterModulo}
-                        onChange={(e) => setFilterModulo(e.target.value)}
-                        aria-label="Filtrar por módulo"
-                    >
-                        <option value={MODULO_FILTER_ALL}>
-                            Todos los módulos
+            <AdminToolbarPanel
+                className="admin-permisos-toolbar"
+                stats={[
+                    {
+                        icon: "bi bi-shield-check fs-4",
+                        label: "Permisos registrados",
+                        value: totalItems,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por nombre, descripción o módulo..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <select
+                    className="form-select admin-filter-select admin-toolbar-select"
+                    value={filterModulo}
+                    onChange={(e) => setFilterModulo(e.target.value)}
+                    aria-label="Filtrar por módulo"
+                >
+                    <option value={MODULO_FILTER_ALL}>
+                        Todos los módulos
+                    </option>
+                    {modulos.map((m) => (
+                        <option key={m} value={m}>
+                            {m}
                         </option>
-                        {modulos.map((m) => (
-                            <option key={m} value={m}>
-                                {m}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-            </div>
+                    ))}
+                </select>
+            </AdminToolbarPanel>
 
             <div
                 className="card shadow-sm border-0 overflow-hidden"
@@ -304,103 +295,74 @@ export default function SecurityPermisosPage() {
                 />
             </div>
 
-            <div className="modal fade" ref={modalRef} tabIndex={-1}>
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content border-0 shadow-lg">
-                        <form onSubmit={handleSave}>
-                            <div className="modal-header border-0">
-                                <h5 className="modal-title fw-bold">
-                                    {selected
-                                        ? "Editar permiso"
-                                        : "Nuevo permiso"}
-                                </h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    data-bs-dismiss="modal"
-                                />
-                            </div>
-                            <div className="modal-body">
-                                <div className="mb-3">
-                                    <label className="form-label fw-semibold small">
-                                        Módulo *
-                                    </label>
-                                    <select
-                                        className="form-select admin-filter-select w-100"
-                                        style={{ maxWidth: "100%" }}
-                                        value={form.modulo}
-                                        onChange={(e) =>
-                                            setForm((f) => ({
-                                                ...f,
-                                                modulo: e.target.value,
-                                            }))
-                                        }
-                                        required
-                                    >
-                                        {modulos.map((m) => (
-                                            <option key={m} value={m}>
-                                                {m}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label fw-semibold small">
-                                        Nombre (slug único) *
-                                    </label>
-                                    <input
-                                        type="text"
-                                        className="form-control"
-                                        placeholder=""
-                                        value={form.nombre}
-                                        onChange={(e) =>
-                                            setForm((f) => ({
-                                                ...f,
-                                                nombre: e.target.value,
-                                            }))
-                                        }
-                                        required
-                                    />
-                                </div>
-                                <div className="mb-0">
-                                    <label className="form-label fw-semibold small">
-                                        Descripción *
-                                    </label>
-                                    <textarea
-                                        className="form-control"
-                                        rows={3}
-                                        placeholder=""
-                                        value={form.descripcion}
-                                        onChange={(e) =>
-                                            setForm((f) => ({
-                                                ...f,
-                                                descripcion: e.target.value,
-                                            }))
-                                        }
-                                        required
-                                    />
-                                </div>
-                            </div>
-                            <div className="modal-footer border-0">
-                                <button
-                                    type="button"
-                                    className="btn btn-light"
-                                    data-bs-dismiss="modal"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn btn-success fw-bold admin-btn-primary"
-                                    disabled={saving}
-                                >
-                                    {saving ? "Guardando..." : "Guardar"}
-                                </button>
-                            </div>
-                        </form>
+            <AdminModal
+                modalRef={modalRef}
+                title={selected ? "Editar Permiso" : "Nuevo Permiso"}
+                onClose={() => bsModal.current?.hide()}
+                closeDisabled={saving}
+            >
+                <form onSubmit={handleSave}>
+                    <div className="mb-3">
+                        <label className="form-label">Módulo</label>
+                        <select
+                            className="form-select"
+                            value={form.modulo}
+                            onChange={(e) =>
+                                setForm((f) => ({
+                                    ...f,
+                                    modulo: e.target.value,
+                                }))
+                            }
+                            required
+                        >
+                            {modulos.map((m) => (
+                                <option key={m} value={m}>
+                                    {m}
+                                </option>
+                            ))}
+                        </select>
                     </div>
-                </div>
-            </div>
+                    <div className="mb-3">
+                        <label className="form-label">Nombre (slug único)</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder=""
+                            value={form.nombre}
+                            onChange={(e) =>
+                                setForm((f) => ({
+                                    ...f,
+                                    nombre: e.target.value,
+                                }))
+                            }
+                            required
+                        />
+                    </div>
+                    <div className="mb-0">
+                        <label className="form-label">Descripción</label>
+                        <textarea
+                            className="form-control"
+                            rows={3}
+                            placeholder=""
+                            value={form.descripcion}
+                            onChange={(e) =>
+                                setForm((f) => ({
+                                    ...f,
+                                    descripcion: e.target.value,
+                                }))
+                            }
+                            required
+                        />
+                    </div>
+                    <AdminModalActions
+                        onClose={() => bsModal.current?.hide()}
+                        inlineSubmit
+                        saving={saving}
+                        cancelLabel="Cancelar"
+                        confirmLabel="Guardar"
+                    />
+                </form>
+            </AdminModal>
         </div>
     );
 }

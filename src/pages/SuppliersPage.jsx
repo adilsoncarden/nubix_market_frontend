@@ -5,6 +5,9 @@ import SupplierForm from "../features/suppliers/components/SupplierForm";
 import { reportService } from "../features/reports/services/reportService";
 import { exportSuppliersPdf } from "../features/suppliers/utils/exportSuppliersPdf";
 import { Toast } from "../utils/swalConfig";
+import SearchInput from "../components/admin/SearchInput";
+import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
+import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
 
 const SuppliersPage = () => {
     const {
@@ -166,44 +169,21 @@ const SuppliersPage = () => {
                 </div>
             </div>
 
-            <div className="row g-4 mb-4">
-                <div className="col-md-3">
-                    <div
-                        className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div
-                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "48px", height: "48px" }}
-                            >
-                                <i className="bi bi-people-fill fs-4"></i>
-                            </div>
-                            <div className="ms-3">
-                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
-                                    Resultados
-                                </h6>
-                                <h3 className="fw-bold mb-0">{totalResultados}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-9">
-                    <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
-                        style={{ borderRadius: "15px", height: "100%" }}
-                    >
-                        <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
-                        <input
-                            type="text"
-                            className="form-control border-0 shadow-none bg-transparent"
-                            placeholder="Buscar por RUC, razón social o teléfono..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
-            </div>
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-people-fill fs-4",
+                        label: "Resultados",
+                        value: totalResultados,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por RUC, razón social o teléfono..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </AdminToolbarPanel>
 
             <div
                 className="card shadow-sm border-0 overflow-hidden"
@@ -394,73 +374,30 @@ const SuppliersPage = () => {
                 )}
             </div>
 
-            <div
-                className="modal fade"
-                ref={modalRef}
-                tabIndex="-1"
-                data-bs-backdrop="static"
+            <AdminModal
+                modalRef={modalRef}
+                scrollable
+                title={
+                    selectedSupplier
+                        ? "Editar Proveedor"
+                        : "Nuevo Proveedor"
+                }
+                onClose={() => bsModal.current.hide()}
+                closeDisabled={saving}
             >
-                <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                    <div
-                        className="modal-content border-0 shadow-lg"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="modal-header border-0 pt-4 px-4 pb-0">
-                            <h5 className="modal-title fw-bold text-dark d-flex align-items-center">
-                                <span
-                                    className="bg-emerald-600 rounded-circle d-inline-block me-2"
-                                    style={{ width: "10px", height: "10px" }}
-                                ></span>
-                                {selectedSupplier
-                                    ? "Editar Proveedor"
-                                    : "Nuevo Proveedor"}
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close shadow-none"
-                                onClick={() => bsModal.current.hide()}
-                                disabled={saving}
-                                aria-label="Cerrar"
-                            ></button>
-                        </div>
-                        <div className="modal-body p-4">
-                            <SupplierForm
-                                key={formkey}
-                                supplier={selectedSupplier}
-                                onSave={handleSave}
-                                loading={saving}
-                            />
-
-                            <div className="d-flex justify-content-end gap-2 mt-4">
-                                <button
-                                    type="button"
-                                    className="btn btn-light fw-bold text-secondary px-4 border"
-                                    onClick={() => bsModal.current.hide()}
-                                    disabled={saving}
-                                    style={{ borderRadius: "10px" }}
-                                >
-                                    Cerrar
-                                </button>
-                                <button
-                                    type="submit"
-                                    form="supplierForm"
-                                    className="btn btn-success px-4 py-2 fw-bold shadow-sm admin-btn-primary"
-                                    disabled={saving}
-                                >
-                                    {saving ? (
-                                        <span className="spinner-border spinner-border-sm me-2"></span>
-                                    ) : (
-                                        <i className="bi bi-save2-fill me-2"></i>
-                                    )}
-                                    {saving
-                                        ? "Guardando..."
-                                        : "Confirmar Datos"}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <SupplierForm
+                    key={formkey}
+                    supplier={selectedSupplier}
+                    onSave={handleSave}
+                    loading={saving}
+                />
+                <AdminModalActions
+                    onClose={() => bsModal.current.hide()}
+                    submitForm="supplierForm"
+                    saving={saving}
+                    confirmLabel="Confirmar Datos"
+                />
+            </AdminModal>
         </div>
     );
 };

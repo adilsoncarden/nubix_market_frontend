@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Modal } from "bootstrap";
+import AdminModal, { AdminModalActions } from "../../components/admin/AdminModal";
 import AdminPagination from "../../components/admin/AdminPagination";
+import SearchInput from "../../components/admin/SearchInput";
+import AdminToolbarPanel from "../../components/admin/AdminToolbarPanel";
 import PermissionCheckboxPanel from "../../features/security/components/PermissionCheckboxPanel";
 import { securityService } from "../../features/security/services/securityService";
 import { useAdminPagination } from "../../hooks/useAdminPagination";
@@ -186,44 +189,21 @@ export default function SecurityRolesPage() {
                 </button>
             </div>
 
-            <div className="row g-4 mb-4">
-                <div className="col-md-4">
-                    <div
-                        className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "15px" }}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div
-                                className="flex-shrink-0 bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "48px", height: "48px" }}
-                            >
-                                <i className="bi bi-person-badge fs-4"></i>
-                            </div>
-                            <div className="ms-3">
-                                <h6 className="text-muted mb-0 small fw-bold text-uppercase">
-                                    Roles
-                                </h6>
-                                <h3 className="fw-bold mb-0">{totalItems}</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-8">
-                    <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
-                        style={{ borderRadius: "15px", minHeight: "72px" }}
-                    >
-                        <i className="bi bi-search text-emerald-600 me-3 fs-5"></i>
-                        <input
-                            type="search"
-                            className="form-control border-0 shadow-none bg-transparent"
-                            placeholder="Buscar por nombre o descripción..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                </div>
-            </div>
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-person-badge fs-4",
+                        label: "Roles",
+                        value: totalItems,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por nombre o descripción..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </AdminToolbarPanel>
 
             <div
                 className="card shadow-sm border-0 overflow-hidden"
@@ -330,126 +310,89 @@ export default function SecurityRolesPage() {
                 />
             </div>
 
-            <div
-                className="modal fade"
-                ref={modalRef}
-                tabIndex={-1}
-                data-bs-backdrop="static"
+            <AdminModal
+                modalRef={modalRef}
+                size="xl"
+                title={
+                    selectedRol
+                        ? `Editar rol: ${selectedRol.nombre}`
+                        : "Nuevo rol"
+                }
+                onClose={() => bsModal.current?.hide()}
+                closeDisabled={saving}
+                contentClassName="role-permisos-modal d-flex flex-column"
+                contentStyle={{ maxHeight: "min(90vh, 720px)" }}
+                bodyClassName="flex-grow-1 min-h-0 overflow-hidden d-flex flex-column role-modal-body p-4 pt-0"
             >
-                <div className="modal-dialog modal-xl modal-dialog-centered">
-                    <div
-                        className="modal-content border-0 shadow-lg d-flex flex-column role-permisos-modal"
-                        style={{ maxHeight: "min(90vh, 720px)" }}
-                    >
-                        <form
-                            onSubmit={handleSave}
-                            className="d-flex flex-column flex-grow-1 min-h-0"
-                        >
-                            <div className="modal-header border-0 flex-shrink-0 bg-body">
-                                <h5 className="modal-title fw-bold">
-                                    {selectedRol
-                                        ? `Editar rol: ${selectedRol.nombre}`
-                                        : "Nuevo rol"}
-                                </h5>
-                                <button
-                                    type="button"
-                                    className="btn-close"
-                                    data-bs-dismiss="modal"
-                                />
-                            </div>
-                            <div className="modal-body flex-grow-1 min-h-0 overflow-hidden d-flex flex-column role-modal-body">
-                                <div className="row g-4 role-form-section flex-shrink-0">
-                                    <div className="col-md-6">
-                                        <label className="form-label fw-semibold small">
-                                            Nombre del rol *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            placeholder=""
-                                            value={rolForm.nombre}
-                                            onChange={(e) =>
-                                                setRolForm((f) => ({
-                                                    ...f,
-                                                    nombre: e.target.value,
-                                                }))
-                                            }
-                                            disabled={
-                                                selectedRol &&
-                                                ROLES_BASE.includes(
-                                                    selectedRol.nombre,
-                                                )
-                                            }
-                                            required
-                                        />
-                                    </div>
-                                    <div className="col-md-6">
-                                        <label className="form-label fw-semibold small">
-                                            Descripción
-                                        </label>
-                                        <input
-                                            type="text"
-                                            className="form-control"
-                                            placeholder=""
-                                            value={rolForm.descripcion}
-                                            onChange={(e) =>
-                                                setRolForm((f) => ({
-                                                    ...f,
-                                                    descripcion:
-                                                        e.target.value,
-                                                }))
-                                            }
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="permissions-section-header d-flex align-items-center justify-content-between flex-shrink-0">
-                                    <h6 className="permissions-section-title mb-0">
-                                        <i className="bi bi-shield-check me-2 text-emerald-600"></i>
-                                        Permisos asignados
-                                    </h6>
-                                    <span className="permissions-section-count">
-                                        {selectedPermisoIds.length} seleccionados
-                                    </span>
-                                </div>
-                                <div className="permission-panel-scroll flex-grow-1 overflow-y-auto">
-                                    <PermissionCheckboxPanel
-                                        permisos={permisos}
-                                        selectedIds={selectedPermisoIds}
-                                        onToggle={togglePermiso}
-                                    />
-                                </div>
-                            </div>
-                            <div className="modal-footer border-0 flex-shrink-0 bg-body border-top">
-                                <button
-                                    type="button"
-                                    className="btn btn-light"
-                                    data-bs-dismiss="modal"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="btn btn-success fw-bold admin-btn-primary"
-                                    disabled={saving}
-                                >
-                                    {saving ? (
-                                        <>
-                                            <span className="spinner-border spinner-border-sm me-2"></span>
-                                            Guardando...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <i className="bi bi-save me-2"></i>
-                                            Guardar cambios
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
+                <form
+                    onSubmit={handleSave}
+                    className="d-flex flex-column flex-grow-1 min-h-0"
+                >
+                    <div className="row g-4 role-form-section flex-shrink-0">
+                        <div className="col-md-6">
+                            <label className="form-label">Nombre del rol</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder=""
+                                value={rolForm.nombre}
+                                onChange={(e) =>
+                                    setRolForm((f) => ({
+                                        ...f,
+                                        nombre: e.target.value,
+                                    }))
+                                }
+                                disabled={
+                                    selectedRol &&
+                                    ROLES_BASE.includes(selectedRol.nombre)
+                                }
+                                required
+                            />
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label">Descripción</label>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder=""
+                                value={rolForm.descripcion}
+                                onChange={(e) =>
+                                    setRolForm((f) => ({
+                                        ...f,
+                                        descripcion: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
                     </div>
-                </div>
-            </div>
+
+                    <div className="permissions-section-header d-flex align-items-center justify-content-between flex-shrink-0">
+                        <h6 className="permissions-section-title mb-0">
+                            <i className="bi bi-shield-check me-2 text-emerald-600"></i>
+                            Permisos asignados
+                        </h6>
+                        <span className="permissions-section-count">
+                            {selectedPermisoIds.length} seleccionados
+                        </span>
+                    </div>
+                    <div className="permission-panel-scroll flex-grow-1 overflow-y-auto">
+                        <PermissionCheckboxPanel
+                            permisos={permisos}
+                            selectedIds={selectedPermisoIds}
+                            onToggle={togglePermiso}
+                        />
+                    </div>
+                    <AdminModalActions
+                        onClose={() => bsModal.current?.hide()}
+                        inlineSubmit
+                        saving={saving}
+                        cancelLabel="Cancelar"
+                        confirmLabel="Guardar cambios"
+                        confirmIcon="bi-save"
+                        savingLabel="Guardando..."
+                    />
+                </form>
+            </AdminModal>
         </div>
     );
 }

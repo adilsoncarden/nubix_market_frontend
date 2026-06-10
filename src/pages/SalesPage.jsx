@@ -21,6 +21,9 @@ import { reportService } from "../features/reports/services/reportService";
 import { clientService } from "../features/users/services/clientService";
 import { Toast } from "../utils/swalConfig";
 import { getApiErrorMessage, isForbiddenError } from "../utils/apiErrorUtils";
+import AdminModal from "../components/admin/AdminModal";
+import SearchInput from "../components/admin/SearchInput";
+import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 import {
     filterSales,
     TIPO_ENTREGA_OPTIONS,
@@ -424,51 +427,21 @@ const SalesPage = () => {
                 </div>
             </div>
 
-            {/* Buscador y filtros */}
-            <div className="row g-3 mb-4">
-                <div className="col-md-3">
-                    <div
-                        className="card border-0 shadow-sm p-3"
-                        style={{ borderRadius: "12px" }}
-                    >
-                        <div className="d-flex align-items-center">
-                            <div
-                                className="bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center"
-                                style={{ width: "40px", height: "40px" }}
-                            >
-                                <i className="bi bi-receipt fs-5"></i>
-                            </div>
-                            <div className="ms-3">
-                                <small
-                                    className="text-muted d-block fw-bold"
-                                    style={{ fontSize: "10px" }}
-                                >
-                                    RESULTADOS
-                                </small>
-                                <h4 className="fw-bold mb-0">
-                                    {filteredSales.length}
-                                </h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-9">
-                    <div
-                        className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card"
-                        style={{ borderRadius: "12px", height: "100%" }}
-                    >
-                        <i className="bi bi-search text-muted me-3"></i>
-                        <input
-                            type="text"
-                            className="form-control border-0 shadow-none bg-transparent"
-                            placeholder="Buscar por cliente, orden, tipo de entrega, estado o código..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ fontSize: "0.9rem" }}
-                        />
-                    </div>
-                </div>
-            </div>
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-receipt fs-4",
+                        label: "Resultados",
+                        value: filteredSales.length,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por cliente, orden, tipo de entrega, estado o código..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </AdminToolbarPanel>
 
             <div
                 className="card border-0 shadow-sm p-3 mb-4"
@@ -569,19 +542,39 @@ const SalesPage = () => {
                         </div>
                     ) : currentItems.length > 0 ? (
                         <div className="table-responsive">
-                            <table className="table table-hover mb-0">
-                                <thead className="table-light">
+                            <table className="table table-hover align-middle mb-0">
+                                <thead className="bg-light">
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Cliente</th>
-                                        <th>Vendedor</th>
-                                        <th>Fecha</th>
-                                        <th>Total</th>
-                                        <th>Método Pago</th>
-                                        <th>Estado Pago</th>
-                                        <th>Estado Pedido</th>
-                                        <th>Entrega</th>
-                                        <th>Acciones</th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            ID
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Cliente
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Vendedor
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Fecha
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Total
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Método Pago
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Estado Pago
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Estado Pedido
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Entrega
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Acciones
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -794,40 +787,23 @@ const SalesPage = () => {
                 )}
             </div>
 
-            {/* Modal */}
-            <div
-                className="modal fade"
+            <AdminModal
+                modalRef={modalRef}
                 id="ventaModal"
-                ref={modalRef}
-                tabIndex="-1"
-                aria-labelledby="ventaModalLabel"
-                aria-hidden="true"
+                titleId="ventaModalLabel"
+                size="lg"
+                scrollable
+                title="Nueva Venta"
+                onClose={() => bsModal.current?.hide()}
+                closeDisabled={saving}
             >
-                <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                    <div className="modal-content">
-                        <div className="modal-header bg-success text-white">
-                            <h5 className="modal-title" id="ventaModalLabel">
-                                <i className="bi bi-plus-circle me-2"></i>Nueva
-                                Venta
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close btn-close-white"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"
-                            ></button>
-                        </div>
-                        <div className="modal-body">
-                            <VentaForm
-                                key={formkey}
-                                active={ventaFormActive}
-                                onSave={handleSave}
-                                loading={saving}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <VentaForm
+                    key={formkey}
+                    active={ventaFormActive}
+                    onSave={handleSave}
+                    loading={saving}
+                />
+            </AdminModal>
 
             <ExportSalesModal
                 show={showExportModal}

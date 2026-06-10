@@ -179,9 +179,18 @@
 .admin-shell[data-bs-theme="dark"] .bg-light,
 .admin-shell[data-bs-theme="dark"] .table-light,
 .admin-shell[data-bs-theme="dark"] thead.bg-light,
-.admin-shell[data-bs-theme="dark"] .admin-page thead.bg-light {
+.admin-shell[data-bs-theme="dark"] thead.table-light,
+.admin-shell[data-bs-theme="dark"] .admin-page thead.bg-light,
+.admin-shell[data-bs-theme="dark"] .admin-page thead.table-light {
   background-color: var(--bs-tertiary-bg) !important;
   color: var(--bs-body-color) !important;
+}
+
+.admin-shell[data-bs-theme="dark"] thead.table-light th,
+.admin-shell[data-bs-theme="dark"] .admin-page thead.table-light th {
+  background-color: var(--bs-tertiary-bg) !important;
+  color: var(--bs-secondary-color) !important;
+  border-bottom-color: var(--bs-border-color) !important;
 }
 
 .admin-shell[data-bs-theme="dark"] .text-dark,
@@ -262,7 +271,9 @@
 }
 
 .admin-shell[data-bs-theme="dark"] .btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%);
+  --bs-btn-close-filter: invert(1) grayscale(100%) brightness(200%);
+  filter: var(--bs-btn-close-filter);
+  opacity: 0.9;
 }
 
 .admin-shell[data-bs-theme="dark"] .btn-outline-secondary {
@@ -504,6 +515,18 @@
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
+.admin-toolbar-stats--multi {
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-toolbar-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  flex-shrink: 0;
+}
+
 .admin-toolbar-stats-icon {
   flex-shrink: 0;
   width: 48px;
@@ -543,6 +566,14 @@
   gap: 1rem;
   padding: 1.25rem 1.5rem;
   min-width: 0;
+}
+
+@media (max-width: 767.98px) {
+  .admin-toolbar-stats--multi {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }
 
 .admin-search-field {
@@ -644,22 +675,226 @@
   background: var(--bs-body-bg);
 }
 
+/* ─── Modales CRUD unificados (productos, categorías, proveedores) ─ */
+.admin-modal-content {
+  border-radius: 15px;
+}
+
+.admin-modal-header {
+  padding: 1.5rem 1.5rem 0;
+  align-items: center;
+}
+
+.admin-shell .modal-header .btn-close,
+.admin-modal-header .admin-modal-close {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin: -0.25rem -0.25rem -0.25rem auto;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.admin-shell .modal-header .btn-close:hover,
+.admin-shell .modal-header .btn-close:focus,
+.admin-modal-header .admin-modal-close:hover,
+.admin-modal-header .admin-modal-close:focus {
+  opacity: 1;
+  background-color: rgba(15, 23, 42, 0.08);
+  box-shadow: none;
+  outline: none;
+}
+
+.admin-shell .modal-header .btn-close:active,
+.admin-modal-header .admin-modal-close:active {
+  transform: scale(0.94);
+}
+
+.admin-modal-title {
+  gap: 0.5rem;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.admin-modal-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--admin-accent, #10b981);
+  flex-shrink: 0;
+}
+
+.admin-modal-body .form-label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 0.4rem;
+}
+
+.admin-modal-body .form-control,
+.admin-modal-body .form-select {
+  border-radius: 10px;
+  border-color: #e2e8f0;
+  padding: 0.55rem 0.85rem;
+}
+
+.admin-modal-body .form-control:focus,
+.admin-modal-body .form-select:focus,
+.admin-modal-body textarea.form-control:focus {
+  border-color: var(--admin-accent);
+  box-shadow: 0 0 0 3px var(--admin-accent-soft);
+}
+
+.admin-modal-body textarea.form-control {
+  border-radius: 10px;
+  border-color: #e2e8f0;
+  padding: 0.55rem 0.85rem;
+}
+
+.admin-modal-body .input-group .form-control {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.admin-modal-body .input-group .btn {
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.admin-modal-footer {
+  border-color: #eef2f6 !important;
+}
+
+.admin-modal-btn-secondary {
+  border-radius: 10px;
+}
+
+.admin-modal-btn-primary {
+  border-radius: 10px;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-title {
+  color: var(--bs-body-color) !important;
+}
+
+.admin-shell[data-bs-theme="dark"] .modal-header .btn-close,
+.admin-shell[data-bs-theme="dark"] .admin-modal-header .admin-modal-close {
+  --bs-btn-close-filter: invert(1) grayscale(100%) brightness(250%);
+  filter: var(--bs-btn-close-filter);
+  opacity: 0.92;
+}
+
+.admin-shell[data-bs-theme="dark"] .modal-header .btn-close:hover,
+.admin-shell[data-bs-theme="dark"] .modal-header .btn-close:focus,
+.admin-shell[data-bs-theme="dark"] .admin-modal-header .admin-modal-close:hover,
+.admin-shell[data-bs-theme="dark"] .admin-modal-header .admin-modal-close:focus {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .form-label {
+  color: var(--bs-secondary-color);
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer {
+  border-color: var(--bs-border-color) !important;
+}
+
+/* Botón secundario (Cerrar / Cancelar) en modales — solo dark mode */
+.admin-shell[data-bs-theme="dark"] .admin-modal-btn-secondary,
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer .btn-light,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-light.border,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-secondary:not(.btn-success) {
+  background-color: #334155 !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-btn-secondary:hover,
+.admin-shell[data-bs-theme="dark"] .admin-modal-btn-secondary:focus,
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer .btn-light:hover,
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer .btn-light:focus,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-light.border:hover,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-light.border:focus,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-secondary:not(.btn-success):hover,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-secondary:not(.btn-success):focus {
+  background-color: #475569 !important;
+  color: #f8fafc !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  box-shadow: none;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-btn-secondary:disabled,
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer .btn-light:disabled,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-light.border:disabled,
+.admin-shell[data-bs-theme="dark"] .modal-footer .btn-secondary:not(.btn-success):disabled {
+  background-color: #1e293b !important;
+  color: rgba(226, 232, 240, 0.45) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Modal ventas: tabla de productos y totales (subtotal, IGV, total) */
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--bs-body-color);
+  --bs-table-hover-bg: var(--bs-tertiary-bg);
+  --bs-table-border-color: var(--bs-border-color);
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table thead.table-light,
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table tr.table-light {
+  --bs-table-bg: var(--bs-secondary-bg);
+  --bs-table-color: var(--bs-body-color);
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table thead.table-light th {
+  background-color: var(--bs-secondary-bg) !important;
+  color: var(--bs-secondary-color) !important;
+  border-bottom-color: var(--bs-border-color) !important;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table tfoot tr.table-light > td {
+  background-color: var(--bs-secondary-bg) !important;
+  color: #cbd5e1 !important;
+  border-color: var(--bs-border-color) !important;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table tfoot tr.table-light:first-child > td {
+  border-top: 1px solid var(--bs-border-color);
+  padding-top: 0.85rem;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table tfoot tr.table-light:last-child > td {
+  padding-bottom: 0.85rem;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table tfoot tr.table-light.fw-bold > td {
+  color: #f1f5f9 !important;
+  font-weight: 700;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .table tfoot tr.table-light.fw-bold .text-success {
+  color: var(--admin-accent, #34d399) !important;
+  font-weight: 800;
+}
+
 /* Modal asignación permisos por rol */
 .admin-page .role-permisos-modal {
   overflow: hidden;
   border-radius: 16px;
 }
 
-.admin-page .role-permisos-modal .modal-header {
-  padding: 1.25rem 1.5rem 1rem;
-}
-
 .admin-page .role-permisos-modal .role-modal-body {
-  padding: 0.5rem 1.5rem 1.25rem;
-}
-
-.admin-page .role-permisos-modal .modal-footer {
-  padding: 1rem 1.5rem 1.25rem;
+  padding-top: 0;
 }
 
 .admin-page .role-permisos-modal .role-form-section {

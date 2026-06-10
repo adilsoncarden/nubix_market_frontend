@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { clientService } from "../features/users/services/clientService";
 import Swal from "sweetalert2";
 import { Modal } from "bootstrap";
+import SearchInput from "../components/admin/SearchInput";
+import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 
 const ClientsPage = () => {
     const [clients, setClients] = useState([]);
@@ -98,48 +100,26 @@ const ClientsPage = () => {
                         Gestión de usuarios y accesos a la plataforma
                     </p>
                 </div>
-                <div
-                    className="card border-0 shadow-sm px-3 py-2"
-                    style={{ borderRadius: "10px" }}
-                >
-                    <div className="d-flex align-items-center">
-                        <div
-                            className="bg-emerald-100 text-emerald-600 rounded-circle me-2 d-flex align-items-center justify-content-center"
-                            style={{ width: "10px", height: "10px" }}
-                        ></div>
-                        <span
-                            className="text-secondary fw-bold text-uppercase"
-                            style={{ fontSize: "10px" }}
-                        >
-                            Registrados:
-                        </span>
-                        <span className="ms-2 fw-bold text-dark">
-                            {clients.length}
-                        </span>
-                    </div>
-                </div>
             </div>
 
-            {/* BUSCADOR */}
-            <div
-                className="card border-0 shadow-sm mb-4"
-                style={{ borderRadius: "12px" }}
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-people-fill fs-4",
+                        label: "Registrados",
+                        value: clients.length,
+                    },
+                ]}
             >
-                <div className="card-body py-2 px-3 d-flex align-items-center">
-                    <i className="bi bi-search text-muted me-3"></i>
-                    <input
-                        type="text"
-                        className="form-control border-0 shadow-none bg-transparent"
-                        placeholder="Buscar por nombre de usuario o correo..."
-                        value={searchTerm}
-                        onChange={(e) => {
-                            setSearchTerm(e.target.value);
-                            setCurrentPage(1);
-                        }}
-                        style={{ fontSize: "0.85rem" }}
-                    />
-                </div>
-            </div>
+                <SearchInput
+                    placeholder="Buscar por nombre de usuario o correo..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </AdminToolbarPanel>
 
             {/* TABLA COMPACTA */}
             <div

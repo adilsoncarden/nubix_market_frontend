@@ -1,22 +1,87 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useCart } from "../store/CartContext";
+import { useCartProductQty } from "../features/cart/hooks/useCartProductQty";
 import {
     productService,
     handleProductImageError,
 } from "../features/products/services/productService";
 import { mapProductoToShopItem } from "../features/products/utils/mapProducto";
+import { useShopProducts } from "../features/products/hooks/useShopProducts";
+import FlashProductCard from "../components/landing/FlashProductCard";
+import "../styles/product-detail.css";
+import "../styles/landing.css";
+
+const MAX_RELATED = 6;
+
+function buildProductHighlights(producto) {
+    const bullets = [];
+
+    if (producto.category) {
+        bullets.push(`Ideal para la sección de ${producto.category} en tu hogar.`);
+    }
+
+    if (producto.stock > 0) {
+        bullets.push(
+            `${producto.stock} unidad${producto.stock === 1 ? "" : "es"} disponible${producto.stock === 1 ? "" : "s"} para compra online.`,
+        );
+    }
+
+    if (producto.descripcion) {
+        const sentences = producto.descripcion
+            .split(/[.\n]/)
+            .map((s) => s.trim())
+            .filter((s) => s.length > 8);
+        bullets.push(...sentences.slice(0, 3));
+    }
+
+    if (bullets.length === 0) {
+        bullets.push("Producto seleccionado del catálogo Nubix Market.");
+        bullets.push("Calidad y frescura para el abastecimiento de tu hogar.");
+    }
+
+    return bullets.slice(0, 4);
+}
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const { addToCart } = useCart();
+  const { products: catalogProducts } = useShopProducts();
   const [producto, setProducto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [bgPos, setBgPos] = useState("50% 50%");
   const [isZooming, setIsZooming] = useState(false);
   const [cantidad, setCantidad] = useState(1);
+
+  const productPayload = useMemo(
+    () =>
+      producto
+        ? {
+            id: producto.id,
+            name: producto.name,
+            category: producto.category,
+            priceBase: producto.priceBase,
+            price: producto.price,
+            stock: producto.stock,
+            unit: producto.unit || "und",
+            img: producto.img,
+          }
+        : null,
+    [producto],
+  );
+
+  const {
+    cartQty,
+    inCart,
+    handleAdd,
+    handleDecrease,
+    handleIncrease,
+  } = useCartProductQty(producto?.id, productPayload);
+
+  useEffect(() => {
+    if (!producto) return;
+    setCantidad(cartQty > 0 ? cartQty : 1);
+  }, [producto?.id, cartQty]);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +100,23 @@ const ProductDetail = () => {
       });
     return () => { cancelled = true; };
   }, [id]);
+
+  const relatedProducts = useMemo(() => {
+    if (!producto?.category) return [];
+    return catalogProducts
+      .filter(
+        (p) =>
+          p.id !== producto.id &&
+          p.category &&
+          p.category === producto.category,
+      )
+      .slice(0, MAX_RELATED);
+  }, [catalogProducts, producto]);
+
+  const highlights = useMemo(
+    () => (producto ? buildProductHighlights(producto) : []),
+    [producto],
+  );
 
   if (loading) {
     return (
@@ -62,19 +144,35 @@ const ProductDetail = () => {
     setBgPos(`${x}% ${y}%`);
   };
 
-  const handleAgregarAlCarrito = () => {
-    for (let i = 0; i < cantidad; i++) {
-      addToCart({
-        id: producto.id,
-        name: producto.name,
-        price: producto.price,
-        img: producto.img,
-      });
+  const displayQty = inCart ? cartQty : cantidad;
+
+  const handleDecreaseQty = async () => {
+    if (inCart) {
+      await handleDecrease();
+      return;
     }
+    setCantidad((prev) => Math.max(1, prev - 1));
   };
 
+  const handleIncreaseQty = async () => {
+    if (inCart) {
+      await handleIncrease();
+      return;
+    }
+    setCantidad((prev) => Math.min(producto.stock, prev + 1));
+  };
+
+  const handleAgregarAlCarrito = async () => {
+    if (inCart) return;
+    await handleAdd(null, cantidad);
+  };
+
+  const descriptionText =
+    producto.descripcion?.trim() ||
+    "Producto disponible en Nubix Market. Consulta disponibilidad y agrega al carrito para completar tu compra.";
+
   return (
-    <div className="container py-5">
+    <div className="product-detail-page container py-5">
       <nav aria-label="breadcrumb" className="mb-4">
         <ol className="breadcrumb">
           <li className="breadcrumb-item"><Link to="/" className="text-decoration-none text-dark">Inicio</Link></li>
@@ -86,7 +184,7 @@ const ProductDetail = () => {
       <div className="row g-5">
         <div className="col-md-6">
           <div
-            className="zoom-container rounded-4 shadow-sm border border-light"
+            className="product-detail-zoom-container rounded-4 shadow-sm border border-light"
             onMouseMove={handleMouseMove}
             onMouseEnter={() => setIsZooming(true)}
             onMouseLeave={() => { setIsZooming(false); setBgPos("50% 50%"); }}
@@ -115,53 +213,157 @@ const ProductDetail = () => {
                 <span className="badge bg-success rounded-pill px-3 py-1" style={{ fontSize: "0.75rem" }}>{producto.tag}</span>
               )}
             </div>
-            <h1 className="fw-black text-dark mb-2 display-6">{producto.name}</h1>
-            <p className="text-muted small mb-3">Código: <strong className="text-dark">{producto.codigo}</strong></p>
+            <h1 className="product-detail-fw-black text-dark mb-3 display-6">{producto.name}</h1>
             <hr className="my-3 text-muted opacity-25" />
 
             <div className="price-box my-3 p-3 bg-light rounded-4 d-inline-block w-100">
               <span className="text-muted fs-6 d-block">Precio Online:</span>
-              <h2 className="text-success fw-black display-5 mb-0">S/ {producto.price.toFixed(2)}</h2>
+              <h2 className="text-success product-detail-fw-black display-5 mb-0">S/ {producto.price.toFixed(2)}</h2>
               <div className={`mt-2 fw-bold d-flex align-items-center gap-2 ${producto.stock > 0 ? "text-success" : "text-danger"}`}>
                 <i className={`bi ${producto.stock > 0 ? "bi-check-circle-fill" : "bi-x-circle-fill"}`}></i>
                 {producto.stock > 0 ? `Stock disponible: ${producto.stock} unidades` : "Sin stock"}
               </div>
             </div>
-
-            {producto.descripcion && (
-              <p className="text-secondary mt-3">{producto.descripcion}</p>
-            )}
           </div>
 
           <div className="mt-4 p-4 rounded-4 border border-light bg-white shadow-sm">
+            {inCart && (
+              <p className="small text-success fw-semibold mb-3 mb-md-2">
+                <i className="bi bi-cart-check-fill me-1" />
+                En tu carrito ({cartQty} {cartQty === 1 ? "unidad" : "unidades"})
+              </p>
+            )}
             <div className="row align-items-center g-3">
               <div className="col-auto">
                 <span className="small d-block text-muted mb-1 fw-bold">Cantidad:</span>
                 <div className="d-flex align-items-center border rounded-pill bg-light p-1">
-                  <button type="button" className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5" onClick={() => setCantidad(Math.max(1, cantidad - 1))}>-</button>
-                  <span className="px-3 fw-bold fs-6" style={{ minWidth: "30px", textAlign: "center" }}>{cantidad}</span>
-                  <button type="button" className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5" onClick={() => setCantidad(Math.min(producto.stock, cantidad + 1))} disabled={cantidad >= producto.stock}>+</button>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5"
+                    onClick={handleDecreaseQty}
+                  >
+                    {inCart && cartQty === 1 ? (
+                      <i className="bi bi-trash" />
+                    ) : (
+                      "-"
+                    )}
+                  </button>
+                  <span className="px-3 fw-bold fs-6" style={{ minWidth: "30px", textAlign: "center" }}>
+                    {displayQty}
+                  </span>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-link text-dark p-0 px-2 text-decoration-none fw-bold fs-5"
+                    onClick={handleIncreaseQty}
+                    disabled={displayQty >= producto.stock}
+                  >
+                    +
+                  </button>
                 </div>
               </div>
               <div className="col">
-                <button
-                  className="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
-                  onClick={handleAgregarAlCarrito}
-                  disabled={producto.stock <= 0}
-                  style={{ backgroundColor: "#28a745", border: "none" }}
-                >
-                  <i className="bi bi-cart-plus-fill me-2"></i> Agregar al Carrito
-                </button>
+                {inCart ? (
+                  <Link
+                    to="/cart"
+                    className="btn btn-outline-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
+                  >
+                    <i className="bi bi-cart3 me-2"></i> Ver carrito
+                  </Link>
+                ) : (
+                  <button
+                    className="btn btn-success w-100 rounded-pill py-3 fw-bold shadow-sm text-uppercase"
+                    onClick={handleAgregarAlCarrito}
+                    disabled={producto.stock <= 0}
+                    style={{ backgroundColor: "#28a745", border: "none" }}
+                  >
+                    <i className="bi bi-cart-plus-fill me-2"></i> Agregar al Carrito
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <style>{`
-        .zoom-container { width: 100%; height: 450px; overflow: hidden; cursor: zoom-in; background-repeat: no-repeat; background-position: 50% 50%; background-color: #ffffff; display: flex; align-items: center; justify-content: center; }
-        .fw-black { font-weight: 900 !important; }
-      `}</style>
+      <div className="product-detail-divider" />
+
+      <section className="product-detail-section">
+        <div className="product-detail-card">
+          <h2 className="product-detail-section-title">Descripción del producto</h2>
+          <p className="product-detail-description">{descriptionText}</p>
+          {highlights.length > 0 && (
+            <ul className="product-detail-highlights">
+              {highlights.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      <section className="product-detail-section">
+        <div className="product-detail-card">
+          <h2 className="product-detail-section-title">Información del producto</h2>
+          <div className="product-detail-info-grid">
+            <div className="product-detail-info-item">
+              <span className="product-detail-info-label">Categoría</span>
+              <span className="product-detail-info-value">{producto.category || "—"}</span>
+            </div>
+            <div className="product-detail-info-item">
+              <span className="product-detail-info-label">Código del producto</span>
+              <span className="product-detail-info-value">{producto.codigo || "—"}</span>
+            </div>
+            <div className="product-detail-info-item">
+              <span className="product-detail-info-label">Stock disponible</span>
+              <span
+                className={`product-detail-info-value ${producto.stock > 0 ? "stock-ok" : "stock-low"}`}
+              >
+                {producto.stock > 0
+                  ? `${producto.stock} unidad${producto.stock === 1 ? "" : "es"}`
+                  : "Sin stock"}
+              </span>
+            </div>
+            {producto.marca && (
+              <div className="product-detail-info-item">
+                <span className="product-detail-info-label">Marca</span>
+                <span className="product-detail-info-value">{producto.marca}</span>
+              </div>
+            )}
+            {producto.origen && (
+              <div className="product-detail-info-item">
+                <span className="product-detail-info-label">Origen</span>
+                <span className="product-detail-info-value">{producto.origen}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {relatedProducts.length > 0 && (
+        <>
+          <div className="product-detail-divider" />
+          <section className="product-detail-section">
+            <div className="product-detail-related-header">
+              <h2 className="product-detail-section-title mb-0">Productos relacionados</h2>
+              {producto.category && (
+                <Link
+                  to={`/shop?category=${encodeURIComponent(producto.category)}`}
+                  className="product-detail-related-link"
+                >
+                  Ver más en {producto.category}
+                </Link>
+              )}
+            </div>
+            <div className="product-detail-related-scroll">
+              {relatedProducts.map((p) => (
+                <div key={p.id} className="product-detail-related-item">
+                  <FlashProductCard p={p} />
+                </div>
+              ))}
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 };

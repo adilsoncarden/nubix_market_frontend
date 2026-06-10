@@ -3,6 +3,9 @@ import { employeeService } from "../features/users/services/employeeService";
 import { securityService } from "../features/security/services/securityService";
 import Swal from "sweetalert2";
 import { Modal, Tooltip } from "bootstrap";
+import SearchInput from "../components/admin/SearchInput";
+import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
+import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
 
 const isSupremeAdminRoleName = (nombre) => {
     const n = String(nombre ?? "").trim().toUpperCase();
@@ -215,34 +218,24 @@ const EmployeesPage = () => {
                 </button>
             </div>
 
-            {/* BUSCADOR Y MÉTRICA */}
-            <div className="row g-3 mb-4">
-                <div className="col-md-3">
-                    <div className="card border-0 shadow-sm p-3" style={{ borderRadius: '12px' }}>
-                        <div className="d-flex align-items-center">
-                            <div className="bg-emerald-100 text-emerald-600 rounded-3 d-flex align-items-center justify-content-center" style={{ width: '40px', height: '40px' }}>
-                                <i className="bi bi-shield-check fs-5"></i>
-                            </div>
-                            <div className="ms-3">
-                                <small className="text-muted d-block fw-bold" style={{ fontSize: '10px' }}>ACTIVOS</small>
-                                <h4 className="fw-bold mb-0">{employees.length}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="col-md-9">
-                    <div className="card border-0 shadow-sm p-2 d-flex flex-row align-items-center px-3 admin-search-card" style={{ borderRadius: '12px', height: '100%' }}>
-                        <i className="bi bi-search text-muted me-3"></i>
-                        <input 
-                            type="text" 
-                            className="form-control border-0 shadow-none bg-transparent" 
-                            placeholder="Buscar por nombre, correo o rol..."
-                            value={searchTerm}
-                            onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}}
-                        />
-                    </div>
-                </div>
-            </div>
+            <AdminToolbarPanel
+                stats={[
+                    {
+                        icon: "bi bi-shield-check fs-4",
+                        label: "Activos",
+                        value: employees.length,
+                    },
+                ]}
+            >
+                <SearchInput
+                    placeholder="Buscar por nombre, correo o rol..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setCurrentPage(1);
+                    }}
+                />
+            </AdminToolbarPanel>
 
             {/* TABLA COMPACTA */}
             <div className="card shadow-sm border-0 overflow-hidden" style={{ borderRadius: '12px' }}>
@@ -325,113 +318,121 @@ const EmployeesPage = () => {
                 )}
             </div>
 
-            {/* MODAL EDITAR / REGISTRAR */}
-            <div className="modal fade" ref={modalRef} tabIndex="-1" data-bs-backdrop="static">
-                <div className="modal-dialog modal-dialog-centered">
-                    <div className="modal-content border-0 shadow-lg modal-emp-custom" style={{ borderRadius: '15px' }}>
-                        <div className="modal-header border-0 pt-4 px-4 pb-0">
-                            <h5 className="modal-title fw-bold text-dark d-flex align-items-center">
-                                <i className={`bi ${formData.id ? 'bi-person-gear' : 'bi-person-plus'} text-emerald-600 me-2`}></i>
-                                {formData.id ? "Actualizar Personal" : "Nuevo Registro"}
-                            </h5>
-                            <button type="button" className="btn-close shadow-none" onClick={() => bsModal.current.hide()}></button>
-                        </div>
-                        <form onSubmit={handleSubmit}>
-                            <div className="modal-body p-4">
-                                <div className="mb-3">
-                                    <label className="form-label extra-small fw-bold text-muted text-uppercase">Nombre de Usuario</label>
-                                    <input type="text" className="form-control bg-light border-0 py-2 shadow-none" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} required style={{ borderRadius: '10px' }} />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="form-label extra-small fw-bold text-muted text-uppercase">Correo Institucional</label>
-                                    <input type="email" className="form-control bg-light border-0 py-2 shadow-none" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required style={{ borderRadius: '10px' }} />
-                                </div>
-                                {!formData.id && (
-                                    <div className="mb-3">
-                                        <label className="form-label extra-small fw-bold text-muted text-uppercase">Contraseña Temporal</label>
-                                        <div className="input-group">
-                                            <input
-                                                id="temporalPassword"
-                                                type={showPassword ? "text" : "password"}
-                                                placeholder=""
-                                                className="form-control bg-light border-0 py-2 shadow-none"
-                                                value={formData.password}
-                                                onChange={(e) =>
-                                                    setFormData({
-                                                        ...formData,
-                                                        password: e.target.value,
-                                                    })
-                                                }
-                                                required
-                                                style={{
-                                                    borderRadius: "10px 0 0 10px",
-                                                }}
-                                            />
-                                            <button
-                                                className="btn btn-outline-secondary"
-                                                type="button"
-                                                id="toggleEmployeePassword"
-                                                data-bs-toggle="tooltip"
-                                                title={
-                                                    showPassword
-                                                        ? "Ocultar contraseña"
-                                                        : "Mostrar contraseña"
-                                                }
-                                                onClick={() =>
-                                                    setShowPassword((v) => !v)
-                                                }
-                                                style={{
-                                                    borderRadius: "0 10px 10px 0",
-                                                }}
-                                            >
-                                                <i
-                                                    className={`bi bi-eye${showPassword ? "-slash" : ""}`}
-                                                ></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="mb-0">
-                                    <label className="form-label extra-small fw-bold text-muted text-uppercase">Rol de Acceso</label>
-                                    {assignableRoles.length > 0 ? (
-                                        <select
-                                            className="form-select bg-light border-0 py-2 shadow-none"
-                                            value={formData.rolId}
-                                            onChange={(e) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    rolId: Number(e.target.value),
-                                                })
-                                            }
-                                            style={{ borderRadius: "10px" }}
-                                            required
-                                        >
-                                            {assignableRoles.map((rol) => (
-                                                <option key={rol.id} value={rol.id}>
-                                                    {rol.nombre}
-                                                    {rol.descripcion
-                                                        ? ` — ${rol.descripcion}`
-                                                        : ""}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    ) : (
-                                        <p className="text-muted small mb-0">
-                                            No hay roles asignables disponibles.
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            <div className="modal-footer border-0 p-4 pt-0 gap-2">
-                                <button type="button" className="btn btn-light px-4 fw-bold text-secondary" style={{ borderRadius: '10px' }} onClick={() => bsModal.current.hide()}>Cancelar</button>
-                                <button type="submit" className="btn btn-success px-4 fw-bold shadow-sm admin-btn-primary" style={{ height: '42px' }}>
-                                    <i className="bi bi-cloud-arrow-up me-2"></i> {formData.id ? "Guardar Cambios" : "Completar Registro"}
+            <AdminModal
+                modalRef={modalRef}
+                title={formData.id ? "Actualizar Personal" : "Nuevo Registro"}
+                onClose={() => bsModal.current.hide()}
+            >
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                        <label className="form-label">Nombre de Usuario</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={formData.username}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    username: e.target.value,
+                                })
+                            }
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label className="form-label">Correo Institucional</label>
+                        <input
+                            type="email"
+                            className="form-control"
+                            value={formData.email}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    email: e.target.value,
+                                })
+                            }
+                            required
+                        />
+                    </div>
+                    {!formData.id && (
+                        <div className="mb-3">
+                            <label className="form-label">Contraseña Temporal</label>
+                            <div className="input-group">
+                                <input
+                                    id="temporalPassword"
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder=""
+                                    className="form-control"
+                                    value={formData.password}
+                                    onChange={(e) =>
+                                        setFormData({
+                                            ...formData,
+                                            password: e.target.value,
+                                        })
+                                    }
+                                    required
+                                />
+                                <button
+                                    className="btn btn-outline-secondary"
+                                    type="button"
+                                    id="toggleEmployeePassword"
+                                    data-bs-toggle="tooltip"
+                                    title={
+                                        showPassword
+                                            ? "Ocultar contraseña"
+                                            : "Mostrar contraseña"
+                                    }
+                                    onClick={() => setShowPassword((v) => !v)}
+                                >
+                                    <i
+                                        className={`bi bi-eye${showPassword ? "-slash" : ""}`}
+                                    />
                                 </button>
                             </div>
-                        </form>
+                        </div>
+                    )}
+                    <div className="mb-0">
+                        <label className="form-label">Rol de Acceso</label>
+                        {assignableRoles.length > 0 ? (
+                            <select
+                                className="form-select"
+                                value={formData.rolId}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        rolId: Number(e.target.value),
+                                    })
+                                }
+                                required
+                            >
+                                {assignableRoles.map((rol) => (
+                                    <option key={rol.id} value={rol.id}>
+                                        {rol.nombre}
+                                        {rol.descripcion
+                                            ? ` — ${rol.descripcion}`
+                                            : ""}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : (
+                            <p className="text-muted small mb-0">
+                                No hay roles asignables disponibles.
+                            </p>
+                        )}
                     </div>
-                </div>
-            </div>
+                    <AdminModalActions
+                        onClose={() => bsModal.current.hide()}
+                        inlineSubmit
+                        cancelLabel="Cancelar"
+                        confirmLabel={
+                            formData.id
+                                ? "Guardar Cambios"
+                                : "Completar Registro"
+                        }
+                        confirmIcon="bi-cloud-arrow-up"
+                    />
+                </form>
+            </AdminModal>
 
         </div>
     );
