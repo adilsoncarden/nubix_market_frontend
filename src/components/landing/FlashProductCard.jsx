@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
-import { useFavorites } from "../../store/FavoritesContext";
-import { useAuth } from "../../store/AuthContext";
-import { FAVORITES_LOGIN_MESSAGE, promptLoginRequired } from "../../utils/swalConfig";
 import { isTodayDealProduct } from "../../utils/todayDealProducts";
 import ProductCartActions from "../shared/ProductCartActions";
+import ProductFavoriteButton from "../shared/ProductFavoriteButton";
 import { handleProductImageError } from "../../features/products/services/productService";
 
 const PAYMENT_LOGOS = (
@@ -14,8 +12,6 @@ const PAYMENT_LOGOS = (
 );
 
 export default function FlashProductCard({ p }) {
-    const { toggleFavorite, isFavorite } = useFavorites();
-    const { token } = useAuth();
     const showTodayDeal = isTodayDealProduct(p.id);
 
     const currentPrice = Number(p.price ?? p.precio) || 0;
@@ -23,28 +19,6 @@ export default function FlashProductCard({ p }) {
     const priceNormal = currentPrice.toFixed(2);
     const priceCard = (currentPrice * 0.94).toFixed(2);
     const vendor = p.category || "Nubix Market";
-    const favorited = isFavorite(p.id);
-
-    const buildProductPayload = () => ({
-        id: p.id,
-        name: p.name || p.nombre,
-        category: p.category,
-        priceBase: p.priceBase,
-        price: currentPrice,
-        stock: p.stock,
-        unit: p.unit || "und",
-        img: p.img,
-    });
-
-    const handleFavorite = async (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (!token) {
-            await promptLoginRequired(FAVORITES_LOGIN_MESSAGE);
-            return;
-        }
-        await toggleFavorite(p.id, buildProductPayload());
-    };
 
     return (
         <div className="flash-product-card">
@@ -77,21 +51,7 @@ export default function FlashProductCard({ p }) {
 
             <div className="flash-card-actions">
                 <ProductCartActions product={p} />
-                <button
-                    type="button"
-                    className={`btn-flash-fav${favorited ? " active" : ""}`}
-                    onClick={handleFavorite}
-                    aria-label="Favoritos"
-                    title={
-                        favorited
-                            ? "Quitar de favoritos"
-                            : "Agregar a favoritos"
-                    }
-                >
-                    <i
-                        className={`bi ${favorited ? "bi-heart-fill" : "bi-heart"}`}
-                    />
-                </button>
+                <ProductFavoriteButton product={p} />
             </div>
         </div>
     );

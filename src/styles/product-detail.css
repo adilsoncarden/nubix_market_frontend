@@ -160,6 +160,14 @@
   font-weight: 900 !important;
 }
 
+.product-detail-actions {
+  min-width: 0;
+}
+
+.product-detail-actions .btn-flash-fav {
+  flex-shrink: 0;
+}
+
 @media (max-width: 767.98px) {
   .product-detail-card {
     padding: 1.25rem 1.25rem;
