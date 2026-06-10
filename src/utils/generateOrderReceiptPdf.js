@@ -1,3 +1,9 @@
+import {
+    measureClosingHeight,
+    resolveTableRowStartY,
+    ensureClosingFits,
+} from "./receiptPdfLayout";
+
 const COLORS = {
     VERDE_NUBIX: [34, 153, 84],
     NEGRO_TEXTO: [40, 40, 40],
@@ -12,8 +18,10 @@ const PAGE = {
     LEFT: 15,
     RIGHT: 195,
     FOOTER_H: 52,
-    CONTENT_BOTTOM: 262,
 };
+
+/** Última coordenada Y usable antes del footer fijo */
+const MAX_FLOW_Y = PAGE.HEIGHT - PAGE.FOOTER_H;
 
 function formatMoney(value) {
     return `S/ ${Number(value ?? 0).toFixed(2)}`;
@@ -86,7 +94,7 @@ function drawFirstPageHeader(doc, orden) {
         doc.text(String(codigoRecojo), PAGE.RIGHT, y, { align: "right" });
     }
 
-    return y + 16;
+    return y + 14;
 }
 
 function drawContinuationHeader(doc, orden) {
@@ -124,7 +132,7 @@ function drawTableHeader(doc, startY) {
 
     doc.line(PAGE.LEFT, startY + 11, PAGE.RIGHT, startY + 11);
 
-    return startY + 19;
+    return startY + 17;
 }
 
 function measureItemRow(doc, item) {
@@ -152,26 +160,15 @@ function drawItemRow(doc, item, currentY, index, lines, rowHeight) {
     return currentY + rowHeight;
 }
 
-function ensureTableSpace(doc, currentY, rowHeight, orden, onNewPage) {
-    if (currentY + rowHeight <= PAGE.CONTENT_BOTTOM) {
-        return currentY;
-    }
-
-    doc.addPage();
-    onNewPage();
-    let y = drawContinuationHeader(doc, orden);
-    return drawTableHeader(doc, y);
-}
-
 function drawTotalsBlock(doc, startY, orden) {
     const { subtotalBase, igv, delivery, total } = orden;
     const boxLeft = 118;
-    let y = startY + 10;
+    let y = startY + 8;
 
     doc.setDrawColor(...COLORS.GRIS_LINEA);
     doc.setLineWidth(0.6);
     doc.line(boxLeft, y, PAGE.RIGHT, y);
-    y += 10;
+    y += 8;
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
@@ -188,13 +185,13 @@ function drawTotalsBlock(doc, startY, orden) {
     rows.forEach(([label, value]) => {
         doc.text(label, boxLeft + 4, y);
         doc.text(value, PAGE.RIGHT, y, { align: "right" });
-        y += 8;
+        y += 7;
     });
 
     y += 2;
     doc.setLineWidth(0.8);
     doc.line(boxLeft, y, PAGE.RIGHT, y);
-    y += 10;
+    y += 9;
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
@@ -203,30 +200,30 @@ function drawTotalsBlock(doc, startY, orden) {
     doc.setTextColor(...COLORS.VERDE_NUBIX);
     doc.text(formatMoney(total), PAGE.RIGHT, y, { align: "right" });
 
-    y += 6;
+    y += 5;
     doc.setDrawColor(...COLORS.GRIS_LINEA);
     doc.setLineWidth(0.6);
     doc.line(boxLeft, y, PAGE.RIGHT, y);
 
-    return y + 14;
+    return y + 10;
 }
 
 function drawThanksMessage(doc, startY) {
-    let y = startY + 6;
+    let y = startY + 4;
 
     doc.setDrawColor(...COLORS.GRIS_LINEA);
     doc.setLineWidth(0.5);
     doc.line(55, y, 155, y);
 
-    y += 16;
-    doc.setFontSize(14);
+    y += 12;
+    doc.setFontSize(13);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...COLORS.NEGRO_TEXTO);
     doc.text("¡Gracias por su compra!", PAGE.WIDTH / 2, y, {
         align: "center",
     });
 
-    return y + 12;
+    return y + 10;
 }
 
 function drawFooter(doc) {
@@ -252,43 +249,58 @@ function drawFooter(doc) {
     doc.text("www.nubixmarket.com", 130, footerY + 33);
 }
 
-function estimateClosingHeight(orden) {
-    const deliveryRows = (orden.delivery ?? 0) > 0 ? 8 : 0;
-    return 10 + 8 * 2 + deliveryRows + 28 + 30 + 20;
+function beginContinuationPage(doc, orden) {
+    let y = drawContinuationHeader(doc, orden);
+    return drawTableHeader(doc, y);
 }
 
 export async function generateOrderReceiptPdf(orden) {
     const { default: jsPDF } = await import("jspdf");
     const doc = new jsPDF();
     const items = Array.isArray(orden.items) ? orden.items : [];
+    const closingHeight = measureClosingHeight(orden);
 
     let currentY = drawFirstPageHeader(doc, orden);
     currentY = drawTableHeader(doc, currentY);
 
     let rowIndex = 0;
-    items.forEach((item) => {
+    items.forEach((item, itemIndex) => {
         const { lines, rowHeight } = measureItemRow(doc, item);
-        currentY = ensureTableSpace(doc, currentY, rowHeight, orden, () => {
-            rowIndex = 0;
+        const nextY = resolveTableRowStartY({
+            doc,
+            currentY,
+            rowHeight,
+            items,
+            itemIndex,
+            maxFlowY: MAX_FLOW_Y,
+            closingHeight,
+            measureRow: measureItemRow,
+            onNewPage: () => {
+                rowIndex = 0;
+            },
         });
+
+        if (nextY === null) {
+            currentY = beginContinuationPage(doc, orden);
+        }
+
         currentY = drawItemRow(doc, item, currentY, rowIndex, lines, rowHeight);
         rowIndex += 1;
     });
 
-    const closingHeight = estimateClosingHeight(orden);
-    const footerTop = PAGE.HEIGHT - PAGE.FOOTER_H - 8;
-
-    if (currentY + closingHeight > footerTop) {
-        doc.addPage();
-        currentY = drawContinuationHeader(doc, orden) + 8;
+    const closingStart = ensureClosingFits(
+        doc,
+        currentY,
+        closingHeight,
+        MAX_FLOW_Y,
+        () => {},
+    );
+    if (closingStart === null) {
+        currentY = drawContinuationHeader(doc, orden) + 6;
     }
 
     currentY = drawTotalsBlock(doc, currentY, orden);
-    currentY = drawThanksMessage(doc, currentY);
-
-    if (currentY + PAGE.FOOTER_H + 8 > PAGE.HEIGHT) {
-        doc.addPage();
-    }
+    drawThanksMessage(doc, currentY);
 
     drawFooter(doc);
     doc.save(`${orden.tipo}-${orden.numero}.pdf`);

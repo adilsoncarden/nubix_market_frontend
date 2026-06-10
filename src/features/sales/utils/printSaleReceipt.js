@@ -3,6 +3,11 @@ import {
     getSaleClientLabel,
     mapSaleDetailLine,
 } from "../services/saleService";
+import {
+    measureClosingHeight,
+    resolveTableRowStartY,
+    ensureClosingFits,
+} from "../../../utils/receiptPdfLayout";
 
 const COLORS = {
     VERDE: [25, 135, 84],
@@ -16,9 +21,9 @@ const PAGE = {
     HEIGHT: 297,
     LEFT: 14,
     RIGHT: 196,
-    FOOTER_H: 40,
-    CONTENT_BOTTOM: 262,
 };
+
+const MAX_FLOW_Y = PAGE.HEIGHT - 12;
 
 function getComprobanteTitle(tipo) {
     if (tipo === "BOLETA") return "BOLETA ELECTRÓNICA";
@@ -135,8 +140,8 @@ function drawTableHeader(doc, startY) {
     return startY + 6;
 }
 
-function measureItemRow(doc, name) {
-    const lines = doc.splitTextToSize(String(name), 95);
+function measureItemRow(doc, item) {
+    const lines = doc.splitTextToSize(String(item.name), 95);
     const rowHeight = Math.max(7, lines.length * 5 + 2);
     return { lines, rowHeight };
 }
@@ -155,14 +160,6 @@ function drawItemRow(doc, item, currentY, index, lines, rowHeight) {
     return currentY + rowHeight;
 }
 
-function ensureTableSpace(doc, currentY, rowHeight, sale, onNewPage) {
-    if (currentY + rowHeight <= PAGE.CONTENT_BOTTOM) return currentY;
-    doc.addPage();
-    onNewPage();
-    let y = drawContinuationHeader(doc, sale);
-    return drawTableHeader(doc, y);
-}
-
 function drawTotalsBlock(doc, startY, sale) {
     const subtotal = Number(sale.subtotal ?? 0);
     const igv = Number(sale.igv ?? 0);
@@ -173,7 +170,7 @@ function drawTotalsBlock(doc, startY, sale) {
     doc.setDrawColor(...COLORS.GRIS_LINEA);
     doc.setLineWidth(0.6);
     doc.line(boxLeft, y, PAGE.RIGHT, y);
-    y += 10;
+    y += 8;
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
@@ -181,33 +178,33 @@ function drawTotalsBlock(doc, startY, sale) {
 
     doc.text("Subtotal (sin IGV):", boxLeft + 4, y);
     doc.text(formatMoney(subtotal), PAGE.RIGHT, y, { align: "right" });
-    y += 8;
+    y += 7;
     doc.text("IGV (13%):", boxLeft + 4, y);
     doc.text(formatMoney(igv), PAGE.RIGHT, y, { align: "right" });
-    y += 10;
+    y += 8;
 
     doc.setLineWidth(0.8);
     doc.line(boxLeft, y, PAGE.RIGHT, y);
-    y += 10;
+    y += 9;
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
     doc.text("TOTAL:", boxLeft + 4, y);
     doc.setTextColor(...COLORS.VERDE);
     doc.text(formatMoney(total), PAGE.RIGHT, y, { align: "right" });
-    y += 6;
+    y += 5;
     doc.setDrawColor(...COLORS.GRIS_LINEA);
     doc.setLineWidth(0.6);
     doc.line(boxLeft, y, PAGE.RIGHT, y);
 
-    return y + 14;
+    return y + 10;
 }
 
 function drawThanksMessage(doc, startY) {
-    let y = startY + 6;
+    let y = startY + 4;
     doc.setDrawColor(...COLORS.GRIS_LINEA);
     doc.line(55, y, 155, y);
-    y += 14;
+    y += 12;
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...COLORS.NEGRO);
@@ -215,6 +212,11 @@ function drawThanksMessage(doc, startY) {
         align: "center",
     });
     return y + 10;
+}
+
+function beginContinuationPage(doc, sale) {
+    let y = drawContinuationHeader(doc, sale);
+    return drawTableHeader(doc, y);
 }
 
 export async function printSaleReceipt(sale) {
@@ -230,23 +232,45 @@ export async function printSaleReceipt(sale) {
         };
     });
 
+    const closingHeight = measureClosingHeight(sale, { hasDelivery: false });
+
     let currentY = drawSaleHeader(doc, sale);
     currentY = drawTableHeader(doc, currentY);
 
     let rowIndex = 0;
-    items.forEach((item) => {
-        const { lines, rowHeight } = measureItemRow(doc, item.name);
-        currentY = ensureTableSpace(doc, currentY, rowHeight, sale, () => {
-            rowIndex = 0;
+    items.forEach((item, itemIndex) => {
+        const { lines, rowHeight } = measureItemRow(doc, item);
+        const nextY = resolveTableRowStartY({
+            doc,
+            currentY,
+            rowHeight,
+            items,
+            itemIndex,
+            maxFlowY: MAX_FLOW_Y,
+            closingHeight,
+            measureRow: measureItemRow,
+            onNewPage: () => {
+                rowIndex = 0;
+            },
         });
+
+        if (nextY === null) {
+            currentY = beginContinuationPage(doc, sale);
+        }
+
         currentY = drawItemRow(doc, item, currentY, rowIndex, lines, rowHeight);
         rowIndex += 1;
     });
 
-    const footerTop = PAGE.HEIGHT - PAGE.FOOTER_H - 8;
-    if (currentY + 70 > footerTop) {
-        doc.addPage();
-        currentY = drawContinuationHeader(doc, sale) + 8;
+    const closingStart = ensureClosingFits(
+        doc,
+        currentY,
+        closingHeight,
+        MAX_FLOW_Y,
+        () => {},
+    );
+    if (closingStart === null) {
+        currentY = drawContinuationHeader(doc, sale) + 6;
     }
 
     currentY = drawTotalsBlock(doc, currentY, sale);
