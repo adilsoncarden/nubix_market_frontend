@@ -1,5 +1,11 @@
 import { useCallback, useMemo } from "react";
 import { useCart } from "../../../store/CartContext";
+import {
+    stockToastLimited,
+    stockToastMaxReached,
+    stockToastOutOfStock,
+} from "../../../utils/swalConfig";
+import { canIncreaseQty, resolveAddQty } from "../../../utils/stockUtils";
 
 export function findCartItem(items, productId) {
     if (productId == null) return undefined;
@@ -24,15 +30,35 @@ export function useCartProductQty(productId, productPayload = null) {
     const inCart = cartQty > 0;
     const stock = productPayload?.stock ?? cartItem?.stock ?? 0;
 
+    const handleStockLimit = useCallback(() => {
+        if (stock <= 0) {
+            stockToastOutOfStock();
+            return;
+        }
+        stockToastMaxReached();
+    }, [stock]);
+
     const handleAdd = useCallback(
         async (e, qty = 1) => {
             e?.preventDefault?.();
             e?.stopPropagation?.();
             if (!productPayload) return false;
-            const amount = Math.max(1, Math.floor(Number(qty) || 1));
-            return addToCart(productPayload, amount);
+
+            const result = resolveAddQty(cartQty, qty, stock);
+            if (!result.ok) {
+                if (result.reason === "out") {
+                    stockToastOutOfStock();
+                } else if (result.reason === "max") {
+                    stockToastMaxReached();
+                } else if (result.reason === "partial") {
+                    stockToastLimited(result.available);
+                }
+                return false;
+            }
+
+            return addToCart(productPayload, result.qtyToAdd);
         },
-        [addToCart, productPayload],
+        [addToCart, cartQty, productPayload, stock],
     );
 
     const handleDecrease = useCallback(
@@ -53,10 +79,13 @@ export function useCartProductQty(productId, productPayload = null) {
             e?.preventDefault?.();
             e?.stopPropagation?.();
             if (cartQty <= 0 || productId == null) return false;
-            if (stock > 0 && cartQty >= stock) return false;
+            if (!canIncreaseQty(cartQty, stock)) {
+                handleStockLimit();
+                return false;
+            }
             return setQty(productId, cartQty + 1);
         },
-        [cartQty, productId, setQty, stock],
+        [cartQty, handleStockLimit, productId, setQty, stock],
     );
 
     return {
@@ -66,6 +95,7 @@ export function useCartProductQty(productId, productPayload = null) {
         handleAdd,
         handleDecrease,
         handleIncrease,
+        handleStockLimit,
         setQty,
         removeFromCart,
     };

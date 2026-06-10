@@ -7,6 +7,11 @@ import "../styles/cart.css";
 import ProductQtyControl from "../components/shared/ProductQtyControl";
 import CheckoutModal from "../components/checkout/CheckoutModal";
 import { generateOrderReceiptPdf } from "../utils/generateOrderReceiptPdf";
+import {
+    stockToastMaxReached,
+    stockToastOutOfStock,
+} from "../utils/swalConfig";
+import { canIncreaseQty } from "../utils/stockUtils";
 
 // ─── Envío de email al backend ────────────────────────────────────────────────
 const enviarEmailConfirmacion = async (orden) => {
@@ -708,6 +713,13 @@ export default function CartPage() {
                                     pillClassName="cart-item-controls"
                                     btnClassName="qty-btn"
                                     valueClassName="qty-value"
+                                    onStockLimit={() => {
+                                        if (item.stock <= 0) {
+                                            stockToastOutOfStock();
+                                        } else {
+                                            stockToastMaxReached();
+                                        }
+                                    }}
                                     onDecrease={async (e) => {
                                         e?.preventDefault?.();
                                         if (item.qty === 1) {
@@ -718,6 +730,14 @@ export default function CartPage() {
                                     }}
                                     onIncrease={async (e) => {
                                         e?.preventDefault?.();
+                                        if (!canIncreaseQty(item.qty, item.stock)) {
+                                            if (item.stock <= 0) {
+                                                stockToastOutOfStock();
+                                            } else {
+                                                stockToastMaxReached();
+                                            }
+                                            return;
+                                        }
                                         await setQty(item.id, item.qty + 1);
                                     }}
                                 />

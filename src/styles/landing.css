@@ -1555,6 +1555,20 @@ body.search-overlay-active {
   cursor: not-allowed;
 }
 
+.btn-flash-sold-out,
+.btn-flash-add-cart.btn-flash-sold-out {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+  cursor: not-allowed !important;
+  opacity: 1;
+  font-weight: 600;
+}
+
+.btn-search-add-oval.btn-flash-sold-out {
+  border-radius: 999px;
+}
+
 .btn-flash-fav {
   width: 42px;
   height: 42px;
@@ -1623,6 +1637,12 @@ body.search-overlay-active {
 
 .flash-qty-btn:disabled {
   opacity: 0.4;
+}
+
+.flash-qty-btn.qty-btn--at-limit,
+.qty-btn.qty-btn--at-limit {
+  color: #94a3b8;
+  cursor: pointer;
 }
 
 .flash-qty-btn.qty-btn--remove,

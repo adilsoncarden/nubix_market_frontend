@@ -168,6 +168,13 @@
   flex-shrink: 0;
 }
 
+.btn-product-sold-out {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  cursor: not-allowed;
+}
+
 @media (max-width: 767.98px) {
   .product-detail-card {
     padding: 1.25rem 1.25rem;

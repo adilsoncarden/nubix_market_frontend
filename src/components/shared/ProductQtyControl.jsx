@@ -6,12 +6,22 @@ export default function ProductQtyControl({
     stock = 0,
     onDecrease,
     onIncrease,
+    onStockLimit,
     pillClassName = "flash-qty-pill",
     btnClassName = "flash-qty-btn",
     valueClassName = "flash-qty-value",
 }) {
     const isRemoveAction = qty === 1;
-    const plusDisabled = stock > 0 && qty >= stock;
+    const safeStock = Math.max(0, Number(stock) || 0);
+    const atStockLimit = safeStock <= 0 || qty >= safeStock;
+
+    const handleIncreaseClick = (e) => {
+        if (atStockLimit) {
+            onStockLimit?.();
+            return;
+        }
+        onIncrease(e);
+    };
 
     return (
         <div className={pillClassName}>
@@ -37,11 +47,12 @@ export default function ProductQtyControl({
             </span>
             <button
                 type="button"
-                className={btnClassName}
-                onClick={onIncrease}
-                aria-label="Aumentar cantidad"
-                title="Aumentar cantidad"
-                disabled={plusDisabled}
+                className={`${btnClassName}${atStockLimit ? " qty-btn--at-limit" : ""}`}
+                onClick={handleIncreaseClick}
+                aria-label={
+                    atStockLimit ? "Stock limitado" : "Aumentar cantidad"
+                }
+                title={atStockLimit ? "Stock limitado" : "Aumentar cantidad"}
             >
                 <span aria-hidden="true">+</span>
             </button>

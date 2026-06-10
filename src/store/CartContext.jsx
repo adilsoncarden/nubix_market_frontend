@@ -21,7 +21,11 @@ import {
     cartToastFirstAdded,
     cartToastRemovedComplete,
     promptLoginRequired,
+    stockToastLimited,
+    stockToastMaxReached,
+    stockToastOutOfStock,
 } from "../utils/swalConfig";
+import { clampQtyToStock, resolveAddQty } from "../utils/stockUtils";
 import {
     hasWebSessionToken,
     loadCartFromLocalStorage,
@@ -249,10 +253,21 @@ export function CartProvider({ children }) {
                 totalPriceBase,
                 addToCart: async (p, qty = 1) => {
                     if (!token) return requireLoginForCart();
-                    const amount = Math.max(1, Math.floor(Number(qty) || 1));
                     const prevItems = snapshotItems();
                     const prevQty =
                         prevItems.find((i) => i.id === p.id)?.qty ?? 0;
+                    const addResult = resolveAddQty(prevQty, qty, p.stock);
+                    if (!addResult.ok) {
+                        if (addResult.reason === "out") {
+                            stockToastOutOfStock();
+                        } else if (addResult.reason === "max") {
+                            stockToastMaxReached();
+                        } else if (addResult.reason === "partial") {
+                            stockToastLimited(addResult.available);
+                        }
+                        return false;
+                    }
+                    const amount = addResult.qtyToAdd;
                     const isFirstAdd = prevQty === 0;
 
                     dispatch({
@@ -299,21 +314,37 @@ export function CartProvider({ children }) {
                 setQty: async (id, qty) => {
                     if (!token) return requireLoginForCart();
                     const prevItems = snapshotItems();
-                    const prevQty =
-                        prevItems.find((i) => i.id === id)?.qty ?? 0;
+                    const cartItem = prevItems.find((i) => i.id === id);
+                    const prevQty = cartItem?.qty ?? 0;
+                    const stock = cartItem?.stock ?? 0;
+                    let nextQty = qty;
 
-                    dispatch({ type: "SET_QTY", id, qty });
+                    if (nextQty > 0 && stock <= 0) {
+                        stockToastOutOfStock();
+                        return false;
+                    }
+
+                    if (nextQty > stock) {
+                        stockToastLimited(stock);
+                        nextQty = clampQtyToStock(nextQty, stock);
+                        if (nextQty === prevQty) {
+                            stockToastMaxReached();
+                            return false;
+                        }
+                    }
+
+                    dispatch({ type: "SET_QTY", id, qty: nextQty });
                     bumpCartIcon();
-                    if (prevQty === 1 && qty < 1) {
+                    if (prevQty === 1 && nextQty < 1) {
                         cartToastRemovedComplete();
                     }
 
                     try {
-                        if (qty < 1) {
+                        if (nextQty < 1) {
                             await api.delete(`/carrito/items/${id}`);
                         } else {
                             await api.put(`/carrito/items/${id}`, null, {
-                                params: { cantidad: qty },
+                                params: { cantidad: nextQty },
                             });
                         }
                         return true;
