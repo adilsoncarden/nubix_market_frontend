@@ -3,18 +3,42 @@
  */
 export default function AdminModal({
     modalRef,
+    id,
     title,
+    titleId,
     onClose,
     size = "",
     scrollable = false,
     closeDisabled = false,
+    contentClassName = "",
+    contentStyle,
+    bodyClassName = "",
     children,
 }) {
     const dialogClasses = [
         "modal-dialog",
         "modal-dialog-centered",
         size === "lg" ? "modal-lg" : "",
+        size === "xl" ? "modal-xl" : "",
         scrollable ? "modal-dialog-scrollable" : "",
+    ]
+        .filter(Boolean)
+        .join(" ");
+
+    const contentClasses = [
+        "modal-content",
+        "admin-modal-content",
+        "border-0",
+        "shadow-lg",
+        contentClassName,
+    ]
+        .filter(Boolean)
+        .join(" ");
+
+    const bodyClasses = [
+        "modal-body",
+        "admin-modal-body",
+        bodyClassName || "p-4",
     ]
         .filter(Boolean)
         .join(" ");
@@ -22,14 +46,20 @@ export default function AdminModal({
     return (
         <div
             className="modal fade admin-modal"
+            id={id}
             ref={modalRef}
             tabIndex="-1"
             data-bs-backdrop="static"
+            aria-labelledby={titleId}
+            aria-hidden="true"
         >
             <div className={dialogClasses}>
-                <div className="modal-content admin-modal-content border-0 shadow-lg">
+                <div className={contentClasses} style={contentStyle}>
                     <div className="modal-header admin-modal-header border-0">
-                        <h5 className="modal-title admin-modal-title fw-bold text-dark d-flex align-items-center mb-0">
+                        <h5
+                            className="modal-title admin-modal-title fw-bold text-dark d-flex align-items-center mb-0"
+                            id={titleId}
+                        >
                             <span
                                 className="admin-modal-indicator"
                                 aria-hidden="true"
@@ -44,9 +74,7 @@ export default function AdminModal({
                             aria-label="Cerrar"
                         />
                     </div>
-                    <div className="modal-body admin-modal-body p-4">
-                        {children}
-                    </div>
+                    <div className={bodyClasses}>{children}</div>
                 </div>
             </div>
         </div>

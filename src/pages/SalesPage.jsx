@@ -21,6 +21,7 @@ import { reportService } from "../features/reports/services/reportService";
 import { clientService } from "../features/users/services/clientService";
 import { Toast } from "../utils/swalConfig";
 import { getApiErrorMessage, isForbiddenError } from "../utils/apiErrorUtils";
+import AdminModal from "../components/admin/AdminModal";
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 import {
@@ -766,40 +767,23 @@ const SalesPage = () => {
                 )}
             </div>
 
-            {/* Modal */}
-            <div
-                className="modal fade"
+            <AdminModal
+                modalRef={modalRef}
                 id="ventaModal"
-                ref={modalRef}
-                tabIndex="-1"
-                aria-labelledby="ventaModalLabel"
-                aria-hidden="true"
+                titleId="ventaModalLabel"
+                size="lg"
+                scrollable
+                title="Nueva Venta"
+                onClose={() => bsModal.current?.hide()}
+                closeDisabled={saving}
             >
-                <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-                    <div className="modal-content">
-                        <div className="modal-header bg-success text-white">
-                            <h5 className="modal-title" id="ventaModalLabel">
-                                <i className="bi bi-plus-circle me-2"></i>Nueva
-                                Venta
-                            </h5>
-                            <button
-                                type="button"
-                                className="btn-close btn-close-white"
-                                data-bs-dismiss="modal"
-                                aria-label="Close"
-                            ></button>
-                        </div>
-                        <div className="modal-body">
-                            <VentaForm
-                                key={formkey}
-                                active={ventaFormActive}
-                                onSave={handleSave}
-                                loading={saving}
-                            />
-                        </div>
-                    </div>
-                </div>
-            </div>
+                <VentaForm
+                    key={formkey}
+                    active={ventaFormActive}
+                    onSave={handleSave}
+                    loading={saving}
+                />
+            </AdminModal>
 
             <ExportSalesModal
                 show={showExportModal}
