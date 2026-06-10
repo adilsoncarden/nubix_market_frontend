@@ -179,9 +179,18 @@
 .admin-shell[data-bs-theme="dark"] .bg-light,
 .admin-shell[data-bs-theme="dark"] .table-light,
 .admin-shell[data-bs-theme="dark"] thead.bg-light,
-.admin-shell[data-bs-theme="dark"] .admin-page thead.bg-light {
+.admin-shell[data-bs-theme="dark"] thead.table-light,
+.admin-shell[data-bs-theme="dark"] .admin-page thead.bg-light,
+.admin-shell[data-bs-theme="dark"] .admin-page thead.table-light {
   background-color: var(--bs-tertiary-bg) !important;
   color: var(--bs-body-color) !important;
+}
+
+.admin-shell[data-bs-theme="dark"] thead.table-light th,
+.admin-shell[data-bs-theme="dark"] .admin-page thead.table-light th {
+  background-color: var(--bs-tertiary-bg) !important;
+  color: var(--bs-secondary-color) !important;
+  border-bottom-color: var(--bs-border-color) !important;
 }
 
 .admin-shell[data-bs-theme="dark"] .text-dark,
@@ -262,7 +271,9 @@
 }
 
 .admin-shell[data-bs-theme="dark"] .btn-close {
-  filter: invert(1) grayscale(100%) brightness(200%);
+  --bs-btn-close-filter: invert(1) grayscale(100%) brightness(200%);
+  filter: var(--bs-btn-close-filter);
+  opacity: 0.9;
 }
 
 .admin-shell[data-bs-theme="dark"] .btn-outline-secondary {
@@ -674,6 +685,35 @@
   align-items: center;
 }
 
+.admin-shell .modal-header .btn-close,
+.admin-modal-header .admin-modal-close {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin: -0.25rem -0.25rem -0.25rem auto;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition:
+    opacity 0.15s ease,
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.admin-shell .modal-header .btn-close:hover,
+.admin-shell .modal-header .btn-close:focus,
+.admin-modal-header .admin-modal-close:hover,
+.admin-modal-header .admin-modal-close:focus {
+  opacity: 1;
+  background-color: rgba(15, 23, 42, 0.08);
+  box-shadow: none;
+  outline: none;
+}
+
+.admin-shell .modal-header .btn-close:active,
+.admin-modal-header .admin-modal-close:active {
+  transform: scale(0.94);
+}
+
 .admin-modal-title {
   gap: 0.5rem;
   font-size: 1.15rem;
@@ -736,6 +776,33 @@
 
 .admin-modal-btn-primary {
   border-radius: 10px;
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-title {
+  color: var(--bs-body-color) !important;
+}
+
+.admin-shell[data-bs-theme="dark"] .modal-header .btn-close,
+.admin-shell[data-bs-theme="dark"] .admin-modal-header .admin-modal-close {
+  --bs-btn-close-filter: invert(1) grayscale(100%) brightness(250%);
+  filter: var(--bs-btn-close-filter);
+  opacity: 0.92;
+}
+
+.admin-shell[data-bs-theme="dark"] .modal-header .btn-close:hover,
+.admin-shell[data-bs-theme="dark"] .modal-header .btn-close:focus,
+.admin-shell[data-bs-theme="dark"] .admin-modal-header .admin-modal-close:hover,
+.admin-shell[data-bs-theme="dark"] .admin-modal-header .admin-modal-close:focus {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-body .form-label {
+  color: var(--bs-secondary-color);
+}
+
+.admin-shell[data-bs-theme="dark"] .admin-modal-footer {
+  border-color: var(--bs-border-color) !important;
 }
 
 /* Modal asignación permisos por rol */

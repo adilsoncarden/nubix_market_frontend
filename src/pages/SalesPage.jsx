@@ -542,19 +542,39 @@ const SalesPage = () => {
                         </div>
                     ) : currentItems.length > 0 ? (
                         <div className="table-responsive">
-                            <table className="table table-hover mb-0">
-                                <thead className="table-light">
+                            <table className="table table-hover align-middle mb-0">
+                                <thead className="bg-light">
                                     <tr>
-                                        <th>ID</th>
-                                        <th>Cliente</th>
-                                        <th>Vendedor</th>
-                                        <th>Fecha</th>
-                                        <th>Total</th>
-                                        <th>Método Pago</th>
-                                        <th>Estado Pago</th>
-                                        <th>Estado Pedido</th>
-                                        <th>Entrega</th>
-                                        <th>Acciones</th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            ID
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Cliente
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Vendedor
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Fecha
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Total
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Método Pago
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Estado Pago
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Estado Pedido
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Entrega
+                                        </th>
+                                        <th className="py-3 text-secondary small fw-bold">
+                                            Acciones
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>

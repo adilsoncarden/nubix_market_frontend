@@ -68,7 +68,7 @@ export default function AdminModal({
                         </h5>
                         <button
                             type="button"
-                            className="btn-close shadow-none"
+                            className="btn-close shadow-none admin-modal-close"
                             onClick={onClose}
                             disabled={closeDisabled}
                             aria-label="Cerrar"
