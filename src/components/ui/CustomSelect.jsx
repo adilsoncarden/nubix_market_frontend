@@ -59,6 +59,7 @@ export default function CustomSelect({
     const [highlightIndex, setHighlightIndex] = useState(-1);
     const [menuStyle, setMenuStyle] = useState({});
     const [flipUp, setFlipUp] = useState(false);
+    const [isDarkMenu, setIsDarkMenu] = useState(false);
     const rootRef = useRef(null);
     const triggerRef = useRef(null);
     const menuRef = useRef(null);
@@ -122,10 +123,25 @@ export default function CustomSelect({
         [emitChange, closeMenu],
     );
 
+    const resolveDarkMenu = useCallback(() => {
+        const root = rootRef.current;
+        if (!root) return false;
+        return Boolean(
+            root.closest('[data-bs-theme="dark"]') ||
+                root.closest(".dark"),
+        );
+    }, []);
+
     const toggleOpen = useCallback(() => {
         if (disabled) return;
-        setOpen((prev) => !prev);
-    }, [disabled]);
+        setOpen((prev) => {
+            const next = !prev;
+            if (next) {
+                setIsDarkMenu(resolveDarkMenu());
+            }
+            return next;
+        });
+    }, [disabled, resolveDarkMenu]);
 
     useEffect(() => {
         if (!open) return undefined;
@@ -198,6 +214,7 @@ export default function CustomSelect({
         if (event.key === "ArrowDown") {
             event.preventDefault();
             if (!open) {
+                setIsDarkMenu(resolveDarkMenu());
                 setOpen(true);
                 return;
             }
@@ -213,6 +230,7 @@ export default function CustomSelect({
         if (event.key === "ArrowUp") {
             event.preventDefault();
             if (!open) {
+                setIsDarkMenu(resolveDarkMenu());
                 setOpen(true);
                 return;
             }
@@ -296,7 +314,7 @@ export default function CustomSelect({
                         ref={menuRef}
                         id={listId}
                         role="listbox"
-                        className={`nubix-custom-select-menu${flipUp ? " is-flipped" : ""}`}
+                        className={`nubix-custom-select-menu${flipUp ? " is-flipped" : ""}${isDarkMenu ? " nubix-custom-select-menu--dark" : ""}`}
                         style={menuStyle}
                         onKeyDown={handleMenuKeyDown}
                     >

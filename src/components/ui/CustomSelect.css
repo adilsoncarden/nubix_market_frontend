@@ -176,41 +176,94 @@
     border: 0;
 }
 
-/* Admin modo oscuro */
-.admin-shell[data-bs-theme="dark"] .nubix-custom-select-trigger {
-    --nubix-select-bg: var(--bs-secondary-bg);
-    --nubix-select-bg-hover: var(--bs-tertiary-bg);
-    --nubix-select-border: var(--bs-border-color);
+/* Admin — trigger en modo oscuro */
+.admin-shell[data-bs-theme="dark"] .nubix-custom-select-trigger,
+.dark .nubix-custom-select-trigger {
+    --nubix-select-bg: var(--bs-secondary-bg, #1e293b);
+    --nubix-select-bg-hover: var(--bs-tertiary-bg, #334155);
+    --nubix-select-border: var(--bs-border-color, #374151);
     --nubix-select-border-hover: #34d399;
-    --nubix-select-text: var(--bs-body-color);
+    --nubix-select-text: var(--bs-body-color, #e5e7eb);
+    --nubix-select-text-muted: #94a3b8;
     --nubix-select-focus: #34d399;
     --nubix-select-focus-ring: rgba(52, 211, 153, 0.22);
 }
 
-.admin-shell[data-bs-theme="dark"] .nubix-custom-select-chevron {
+.admin-shell[data-bs-theme="dark"] .nubix-custom-select-chevron,
+.dark .nubix-custom-select-chevron {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%236ee7b7' d='M4 6l4 4 4-4z'/%3E%3C/svg%3E");
 }
 
-.admin-shell[data-bs-theme="dark"] .nubix-custom-select-menu {
-    background: var(--bs-body-bg);
-    border-color: var(--bs-border-color);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+.admin-shell[data-bs-theme="dark"] .nubix-custom-select.is-disabled .nubix-custom-select-trigger,
+.dark .nubix-custom-select.is-disabled .nubix-custom-select-trigger {
+    background-color: #1e293b;
+    color: #64748b;
 }
 
-.admin-shell[data-bs-theme="dark"] .nubix-custom-select-option {
-    color: var(--bs-body-color);
+/* Dropdown en portal — clase aplicada cuando el trigger está en dark mode */
+.nubix-custom-select-menu--dark {
+    background: #1f2937;
+    border: 1px solid #374151;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    scrollbar-color: rgba(34, 197, 94, 0.45) #1f2937;
+    scrollbar-width: thin;
 }
 
-.admin-shell[data-bs-theme="dark"] .nubix-custom-select-option:hover:not(:disabled),
-.admin-shell[data-bs-theme="dark"] .nubix-custom-select-option.is-highlighted:not(:disabled) {
-    background-color: rgba(16, 185, 129, 0.15);
-    color: #6ee7b7;
+.nubix-custom-select-menu--dark::-webkit-scrollbar {
+    width: 8px;
 }
 
-.admin-shell[data-bs-theme="dark"] .nubix-custom-select-option.is-selected {
-    background-color: rgba(16, 185, 129, 0.28);
-    color: #6ee7b7;
-    border-left-color: #34d399;
+.nubix-custom-select-menu--dark::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 10px;
+}
+
+.nubix-custom-select-menu--dark::-webkit-scrollbar-thumb {
+    background: rgba(34, 197, 94, 0.35);
+    border-radius: 10px;
+}
+
+.nubix-custom-select-menu--dark::-webkit-scrollbar-thumb:hover {
+    background: rgba(34, 197, 94, 0.55);
+}
+
+.nubix-custom-select-menu--dark .nubix-custom-select-option {
+    color: #e5e7eb;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.nubix-custom-select-menu--dark .nubix-custom-select-option:last-child {
+    border-bottom: none;
+}
+
+.nubix-custom-select-menu--dark .nubix-custom-select-option:hover:not(:disabled),
+.nubix-custom-select-menu--dark .nubix-custom-select-option.is-highlighted:not(:disabled) {
+    background-color: rgba(34, 197, 94, 0.2);
+    color: #ecfdf5;
+}
+
+.nubix-custom-select-menu--dark .nubix-custom-select-option.is-selected {
+    background-color: #16a34a;
+    color: #ffffff;
+    border-left-color: #4ade80;
+    font-weight: 600;
+}
+
+.nubix-custom-select-menu--dark .nubix-custom-select-option.is-selected:hover:not(:disabled),
+.nubix-custom-select-menu--dark
+    .nubix-custom-select-option.is-selected.is-highlighted:not(:disabled) {
+    background-color: #15803d;
+    color: #ffffff;
+}
+
+.nubix-custom-select-menu--dark .nubix-custom-select-option:disabled {
+    color: #6b7280;
+    opacity: 0.55;
 }
 
 .checkout-modal .nubix-custom-select-trigger {
