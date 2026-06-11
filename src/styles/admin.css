@@ -344,6 +344,68 @@
   letter-spacing: 0.5px;
 }
 
+/* Dashboard — ventas recientes (barras + KPIs) */
+.dashboard-sales-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.dashboard-sales-kpi {
+  background: var(--bs-tertiary-bg, #f8fafc);
+  border: 1px solid var(--bs-border-color, #e2e8f0);
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
+}
+
+.dashboard-sales-kpi-label {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.2rem;
+}
+
+.dashboard-sales-kpi-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #198754;
+  line-height: 1.2;
+}
+
+.admin-shell[data-bs-theme="dark"] .dashboard-sales-kpi-value {
+  color: #34d399;
+}
+
+.dashboard-sales-change {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+}
+
+.dashboard-sales-change--up {
+  background: rgba(25, 135, 84, 0.12);
+  color: #198754;
+}
+
+.dashboard-sales-change--down {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.admin-shell[data-bs-theme="dark"] .dashboard-sales-change--up {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+}
+
+@media (max-width: 575.98px) {
+  .dashboard-sales-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
 .admin-shell .table-custom thead {
   background-color: var(--bs-tertiary-bg);
 }

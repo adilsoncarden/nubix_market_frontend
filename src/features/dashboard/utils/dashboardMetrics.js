@@ -34,6 +34,8 @@ const getWeekdayIndex = (fecha) => {
     return day === 0 ? 6 : day - 1;
 };
 
+const RECENT_SALES_DAYS = 5;
+
 export const buildLast7Days = () => {
     const days = [];
     for (let i = 6; i >= 0; i -= 1) {
@@ -45,6 +47,48 @@ export const buildLast7Days = () => {
         });
     }
     return days;
+};
+
+export const buildRecentDays = (count = RECENT_SALES_DAYS) => {
+    const days = [];
+    for (let i = count - 1; i >= 0; i -= 1) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const key = getLocalDateKey(date);
+        let label;
+        if (i === 0) {
+            label = "Hoy";
+        } else if (i === 1) {
+            label = "Ayer";
+        } else {
+            label = date.toLocaleDateString("es-PE", {
+                day: "numeric",
+                month: "short",
+            });
+        }
+        days.push({ key, label });
+    }
+    return days;
+};
+
+export const roundChartAmount = (value) =>
+    Math.round((Number(value) || 0) * 100) / 100;
+
+/** Eje Y del gráfico: S/ 1000 sin decimales innecesarios */
+export const formatChartYAxis = (value) => {
+    const n = roundChartAmount(value);
+    if (n === 0) return "0";
+    return n.toLocaleString("es-PE", { maximumFractionDigits: 0 });
+};
+
+/** Etiqueta compacta sobre barras */
+export const formatChartBarLabel = (value) => {
+    const n = roundChartAmount(value);
+    if (n <= 0) return "";
+    if (n >= 1000) {
+        return `S/ ${n.toLocaleString("es-PE", { maximumFractionDigits: 0 })}`;
+    }
+    return `S/ ${Number.isInteger(n) ? n : n.toFixed(2)}`;
 };
 
 export const computeDashboardMetrics = ({
@@ -60,8 +104,8 @@ export const computeDashboardMetrics = ({
     );
     const totalProductos = products.length;
     const totalClientes = clients.length;
-
     const todayKey = getLocalDateKey();
+
     const ventasHoy = sales.filter(
         (sale) => getSaleDateKey(sale.fecha) === todayKey,
     ).length;
@@ -70,11 +114,27 @@ export const computeDashboardMetrics = ({
     ).length;
 
     const last7Days = buildLast7Days();
-    const salesTrend = last7Days.map((day) =>
-        sales
-            .filter((sale) => getSaleDateKey(sale.fecha) === day.key)
-            .reduce((sum, sale) => sum + (sale.total || 0), 0),
+    const recentDays = buildRecentDays(RECENT_SALES_DAYS);
+
+    const sumSalesForDay = (dayKey) =>
+        roundChartAmount(
+            sales
+                .filter((sale) => getSaleDateKey(sale.fecha) === dayKey)
+                .reduce((sum, sale) => sum + (sale.total || 0), 0),
+        );
+
+    const salesTrend = last7Days.map((day) => sumSalesForDay(day.key));
+    const salesRecentAmounts = recentDays.map((day) => sumSalesForDay(day.key));
+    const salesRecentTotal = roundChartAmount(
+        salesRecentAmounts.reduce((sum, value) => sum + value, 0),
     );
+
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayKey = getLocalDateKey(yesterdayDate);
+
+    const salesTodayAmount = sumSalesForDay(todayKey);
+    const salesYesterdayAmount = sumSalesForDay(yesterdayKey);
 
     const categoryStockMap = {};
     products.forEach((product) => {
@@ -183,6 +243,21 @@ export const computeDashboardMetrics = ({
         pedidosPendientes,
         salesTrendLabels: last7Days.map((day) => day.label),
         salesTrend,
+        salesRecentLabels: recentDays.map((day) => day.label),
+        salesRecentAmounts,
+        salesRecentTotal,
+        salesTodayAmount,
+        salesYesterdayAmount,
+        salesDayChange:
+            salesYesterdayAmount > 0
+                ? Math.round(
+                      ((salesTodayAmount - salesYesterdayAmount) /
+                          salesYesterdayAmount) *
+                          100,
+                  )
+                : salesTodayAmount > 0
+                  ? 100
+                  : 0,
         categoryLabels:
             categoryLabels.length > 0 ? categoryLabels : ["Sin datos"],
         categorySeries:
