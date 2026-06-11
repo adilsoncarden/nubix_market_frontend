@@ -4,6 +4,7 @@ import Swal from "sweetalert2";
 import { Modal } from "bootstrap";
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
+import AdminResponsiveTable from "../components/admin/AdminResponsiveTable";
 
 const ClientsPage = () => {
     const [clients, setClients] = useState([]);
@@ -126,7 +127,7 @@ const ClientsPage = () => {
                 className="card shadow-sm border-0 overflow-hidden"
                 style={{ borderRadius: "12px" }}
             >
-                <div className="table-responsive">
+                <AdminResponsiveTable>
                     <table className="table table-hover align-middle mb-0">
                         <thead className="bg-light">
                             <tr style={{ fontSize: "0.75rem" }}>
@@ -210,7 +211,7 @@ const ClientsPage = () => {
                             )}
                         </tbody>
                     </table>
-                </div>
+                </AdminResponsiveTable>
 
                 {/* PAGINACIÓN */}
                 {!loading && totalPages > 1 && (

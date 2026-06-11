@@ -14,6 +14,7 @@ import {
     normalizeList,
 } from "../features/dashboard/utils/dashboardMetrics";
 import "../styles/admin.css";
+import AdminResponsiveTable from "./admin/AdminResponsiveTable";
 
 const AdminLayout = () => {
     const { adminSessionUser } = useAuth();
@@ -277,7 +278,7 @@ const AdminLayout = () => {
                     <div className="container-fluid px-0">
                         {isDashboardHome ? (
                             <div className="animate__animated animate__fadeIn">
-                                <div className="row g-4 mb-4">
+                                <div className="row g-4 mb-4 admin-dashboard-metrics">
                                     {metrics.stats.map((stat, i) => (
                                         <div
                                             className="col-12 col-md-6 col-lg-3"
@@ -312,7 +313,7 @@ const AdminLayout = () => {
                                     ))}
                                 </div>
 
-                                <div className="row g-4 mb-4">
+                                <div className="row g-4 mb-4 admin-dashboard-charts">
                                     <div className="col-lg-8">
                                         <div className="card card-dashboard p-4 shadow-sm h-100">
                                             <h6 className="chart-title mb-4">
@@ -341,7 +342,7 @@ const AdminLayout = () => {
                                     </div>
                                 </div>
 
-                                <div className="row g-4 mb-4">
+                                <div className="row g-4 mb-4 admin-dashboard-charts">
                                     <div className="col-lg-6">
                                         <div className="card card-dashboard p-4 shadow-sm h-100">
                                             <h6 className="chart-title mb-4">
@@ -376,7 +377,7 @@ const AdminLayout = () => {
                                             <h6 className="chart-title mb-4">
                                                 Alerta de Inventario Crítico
                                             </h6>
-                                            <div className="table-responsive">
+                                            <AdminResponsiveTable>
                                                 <table className="table table-custom align-middle">
                                                     <thead>
                                                         <tr>
@@ -456,7 +457,7 @@ const AdminLayout = () => {
                                                         )}
                                                     </tbody>
                                                 </table>
-                                            </div>
+                                            </AdminResponsiveTable>
                                         </div>
                                     </div>
                                 </div>
