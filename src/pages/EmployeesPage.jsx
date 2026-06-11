@@ -7,6 +7,7 @@ import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
 import CustomSelect from "../components/ui/CustomSelect";
+import AdminResponsiveTable from "../components/admin/AdminResponsiveTable";
 
 const isSupremeAdminRoleName = (nombre) => {
     const n = String(nombre ?? "").trim().toUpperCase();
@@ -240,7 +241,7 @@ const EmployeesPage = () => {
 
             {/* TABLA COMPACTA */}
             <div className="card shadow-sm border-0 overflow-hidden" style={{ borderRadius: '12px' }}>
-                <div className="table-responsive">
+                <AdminResponsiveTable>
                     <table className="table table-hover align-middle mb-0">
                         <thead className="bg-light">
                             <tr style={{ fontSize: '0.75rem' }}>
@@ -282,7 +283,7 @@ const EmployeesPage = () => {
                             )}
                         </tbody>
                     </table>
-                </div>
+                </AdminResponsiveTable>
 
                 {/* PAGINACIÓN */}
                 {!loading && totalPages > 1 && (

@@ -6,6 +6,7 @@ import SearchInput from "../../components/admin/SearchInput";
 import CustomSelect from "../../components/ui/CustomSelect";
 import AdminToolbarPanel from "../../components/admin/AdminToolbarPanel";
 import AdminModal, { AdminModalActions } from "../../components/admin/AdminModal";
+import AdminResponsiveTable from "../../components/admin/AdminResponsiveTable";
 import { securityService } from "../../features/security/services/securityService";
 import { useAdminPagination } from "../../hooks/useAdminPagination";
 import { Toast, confirmDelete } from "../../utils/swalConfig";
@@ -195,7 +196,7 @@ export default function SecurityPermisosPage() {
                 className="card shadow-sm border-0 overflow-hidden"
                 style={{ borderRadius: "15px" }}
             >
-                <div className="table-responsive">
+                <AdminResponsiveTable>
                     <table className="table table-hover align-middle mb-0 admin-premium-table">
                         <thead className="bg-light">
                             <tr>
@@ -283,7 +284,7 @@ export default function SecurityPermisosPage() {
                             )}
                         </tbody>
                     </table>
-                </div>
+                </AdminResponsiveTable>
 
                 <AdminPagination
                     currentPage={currentPage}

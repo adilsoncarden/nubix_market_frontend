@@ -4,6 +4,7 @@ import AdminModal, { AdminModalActions } from "../../components/admin/AdminModal
 import AdminPagination from "../../components/admin/AdminPagination";
 import SearchInput from "../../components/admin/SearchInput";
 import AdminToolbarPanel from "../../components/admin/AdminToolbarPanel";
+import AdminResponsiveTable from "../../components/admin/AdminResponsiveTable";
 import PermissionCheckboxPanel from "../../features/security/components/PermissionCheckboxPanel";
 import { securityService } from "../../features/security/services/securityService";
 import { useAdminPagination } from "../../hooks/useAdminPagination";
@@ -209,7 +210,7 @@ export default function SecurityRolesPage() {
                 className="card shadow-sm border-0 overflow-hidden"
                 style={{ borderRadius: "15px" }}
             >
-                <div className="table-responsive">
+                <AdminResponsiveTable>
                     <table className="table table-hover align-middle mb-0 admin-premium-table">
                         <thead className="bg-light">
                             <tr>
@@ -298,7 +299,7 @@ export default function SecurityRolesPage() {
                             )}
                         </tbody>
                     </table>
-                </div>
+                </AdminResponsiveTable>
 
                 <AdminPagination
                     currentPage={currentPage}

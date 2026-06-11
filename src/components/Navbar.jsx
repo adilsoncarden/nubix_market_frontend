@@ -10,6 +10,7 @@ import { FAVORITES_LOGIN_MESSAGE, promptLoginRequired } from "../utils/swalConfi
 import api from "../config/axios";
 import logoImage from "../assets/logo.png";
 import { useShopProducts } from "../features/products/hooks/useShopProducts";
+import { User, Package, LogOut, LayoutDashboard } from "lucide-react";
 import "../styles/landing.css";
 
 export default function Navbar() {
@@ -210,6 +211,11 @@ export default function Navbar() {
         ? `/shop?search=${encodeURIComponent(searchValue.trim())}`
         : "/shop";
 
+    const userDisplayName = user?.username?.toUpperCase() || "USUARIO";
+    const userInitial = (user?.username || user?.email || "U")
+        .charAt(0)
+        .toUpperCase();
+
     return (
         <>
             <style>{`
@@ -218,8 +224,6 @@ export default function Navbar() {
         .action-icon-btn { color: var(--text-dark); width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; cursor: pointer; }
         .action-icon-btn:hover { background-color: #f1f5f9; color: var(--nubix-green); }
         .dropdown-menu-wow { border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 16px; padding: 8px; }
-        .btn-logout-mini { display: flex; align-items: center; gap: 8px; color: #dc3545; background: #fff5f5; border-radius: 8px; padding: 6px 12px; font-size: 0.75rem; font-weight: 600; border: none; transition: all 0.2s; }
-        .btn-logout-mini:hover { background: #fee2e2; }
         .notif-dropdown { width: 320px; max-height: 380px; overflow-y: auto; }
         .notif-item { border-bottom: 1px solid #f1f5f9; padding: 10px 8px; }
         .notif-item:last-child { border-bottom: none; }
@@ -465,34 +469,92 @@ export default function Navbar() {
                                     </button>
                                     {userMenuOpen && (
                                         <div
-                                            className="position-absolute end-0 dropdown-menu-wow bg-white mt-2 p-2"
-                                            style={{ minWidth: "150px" }}
+                                            className="user-menu-dropdown"
+                                            role="menu"
+                                            aria-label="Menú de usuario"
                                         >
-                                            <Link
-                                                className="dropdown-item mb-2"
-                                                to="/perfil"
-                                                onClick={() => setUserMenuOpen(false)}
-                                            >
-                                                <i className="bi bi-person me-2" />
-                                                Mi Perfil
-                                            </Link>
-                                            <Link
-                                                className="dropdown-item mb-2"
-                                                to="/mis-pedidos"
-                                                onClick={() => setUserMenuOpen(false)}
-                                            >
-                                                <i className="bi bi-box-seam me-2" />
-                                                Mis Pedidos
-                                            </Link>
-                                            {showPanelAdminLink && (
-                                                <Link className="dropdown-item mb-2" to="/admin/dashboard">
-                                                    Panel Admin
+                                            <div className="user-menu-header">
+                                                <div
+                                                    className="user-menu-avatar"
+                                                    aria-hidden="true"
+                                                >
+                                                    {userInitial}
+                                                </div>
+                                                <div className="user-menu-meta">
+                                                    <div className="user-menu-name">
+                                                        {userDisplayName}
+                                                    </div>
+                                                    {user?.email && (
+                                                        <div className="user-menu-email">
+                                                            {user.email}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div
+                                                className="user-menu-divider"
+                                                aria-hidden="true"
+                                            />
+                                            <nav className="user-menu-items">
+                                                <Link
+                                                    className="user-menu-item"
+                                                    to="/perfil"
+                                                    role="menuitem"
+                                                    onClick={() =>
+                                                        setUserMenuOpen(false)
+                                                    }
+                                                >
+                                                    <User
+                                                        className="user-menu-item-icon"
+                                                        strokeWidth={2}
+                                                    />
+                                                    Mi Perfil
                                                 </Link>
-                                            )}
-                                            <button type="button" className="btn-logout-mini w-100" onClick={handleLogout}>
-                                                <i className="bi bi-box-arrow-left" />
-                                                Cerrar Sesión
-                                            </button>
+                                                <Link
+                                                    className="user-menu-item"
+                                                    to="/mis-pedidos"
+                                                    role="menuitem"
+                                                    onClick={() =>
+                                                        setUserMenuOpen(false)
+                                                    }
+                                                >
+                                                    <Package
+                                                        className="user-menu-item-icon"
+                                                        strokeWidth={2}
+                                                    />
+                                                    Mis Pedidos
+                                                </Link>
+                                                {showPanelAdminLink && (
+                                                    <Link
+                                                        className="user-menu-item"
+                                                        to="/admin/dashboard"
+                                                        role="menuitem"
+                                                        onClick={() =>
+                                                            setUserMenuOpen(
+                                                                false,
+                                                            )
+                                                        }
+                                                    >
+                                                        <LayoutDashboard
+                                                            className="user-menu-item-icon"
+                                                            strokeWidth={2}
+                                                        />
+                                                        Panel Admin
+                                                    </Link>
+                                                )}
+                                                <button
+                                                    type="button"
+                                                    className="user-menu-item user-menu-item--danger"
+                                                    role="menuitem"
+                                                    onClick={handleLogout}
+                                                >
+                                                    <LogOut
+                                                        className="user-menu-item-icon"
+                                                        strokeWidth={2}
+                                                    />
+                                                    Cerrar Sesión
+                                                </button>
+                                            </nav>
                                         </div>
                                     )}
                                 </div>

@@ -9,6 +9,7 @@ import { exportCategoriesPdf } from "../features/categories/utils/exportCategori
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
 import AdminModal, { AdminModalActions } from "../components/admin/AdminModal";
+import AdminResponsiveTable from "../components/admin/AdminResponsiveTable";
 
 const CategoriesPage = () => {
     const { categories, loading, handleDelete, setCategories } =
@@ -201,7 +202,7 @@ const CategoriesPage = () => {
                 className="card shadow-sm border-0 overflow-hidden"
                 style={{ borderRadius: "15px" }}
             >
-                <div className="table-responsive">
+                <AdminResponsiveTable>
                     <table className="table table-hover align-middle mb-0">
                         <thead className="bg-light">
                             <tr>
@@ -290,7 +291,7 @@ const CategoriesPage = () => {
                             )}
                         </tbody>
                     </table>
-                </div>
+                </AdminResponsiveTable>
 
                 {totalPages > 1 && (
                     <div className="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-body admin-pagination-bar">

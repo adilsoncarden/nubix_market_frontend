@@ -24,6 +24,7 @@ import { getApiErrorMessage, isForbiddenError } from "../utils/apiErrorUtils";
 import AdminModal from "../components/admin/AdminModal";
 import SearchInput from "../components/admin/SearchInput";
 import AdminToolbarPanel from "../components/admin/AdminToolbarPanel";
+import AdminResponsiveTable from "../components/admin/AdminResponsiveTable";
 import {
     filterSales,
     TIPO_ENTREGA_OPTIONS,
@@ -542,7 +543,7 @@ const SalesPage = () => {
                             </div>
                         </div>
                     ) : currentItems.length > 0 ? (
-                        <div className="table-responsive">
+                        <AdminResponsiveTable>
                             <table className="table table-hover align-middle mb-0">
                                 <thead className="bg-light">
                                     <tr>
@@ -719,7 +720,7 @@ const SalesPage = () => {
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
+                        </AdminResponsiveTable>
                     ) : (
                         <div className="text-center p-5">
                             <i
