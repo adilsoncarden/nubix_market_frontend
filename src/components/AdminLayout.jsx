@@ -305,86 +305,81 @@ const AdminLayout = () => {
                                     ))}
                                 </div>
 
-                                <div className="row g-4 mb-4 admin-dashboard-charts">
-                                    <div className="col-12">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
-                                                <div>
-                                                    <h6 className="chart-title mb-1">
-                                                        Ventas recientes
-                                                    </h6>
-                                                    <p className="text-muted small mb-0">
-                                                        Ingresos de los últimos 5
-                                                        días
-                                                    </p>
-                                                </div>
-                                                {metrics.salesDayChange !== 0 && (
-                                                    <span
-                                                        className={`badge rounded-pill dashboard-sales-change ${
-                                                            metrics.salesDayChange >=
-                                                            0
-                                                                ? "dashboard-sales-change--up"
-                                                                : "dashboard-sales-change--down"
-                                                        }`}
-                                                    >
-                                                        {metrics.salesDayChange >=
-                                                        0
-                                                            ? "+"
-                                                            : ""}
-                                                        {metrics.salesDayChange}%
-                                                        vs ayer
-                                                    </span>
-                                                )}
+                                <div className="dashboard-charts-split admin-dashboard-charts mb-4">
+                                    <div className="card card-dashboard dashboard-chart-card dashboard-chart-card--sales p-4 shadow-sm">
+                                        <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+                                            <div>
+                                                <h6 className="chart-title mb-1">
+                                                    Ventas recientes
+                                                </h6>
+                                                <p className="text-muted small mb-0">
+                                                    Ingresos de los últimos 5 días
+                                                </p>
                                             </div>
-                                            <div className="dashboard-sales-kpis mb-3">
-                                                <div className="dashboard-sales-kpi">
-                                                    <span className="dashboard-sales-kpi-label">
-                                                        Hoy
-                                                    </span>
-                                                    <strong className="dashboard-sales-kpi-value">
-                                                        {formatCurrency(
-                                                            metrics.salesTodayAmount,
-                                                        )}
-                                                    </strong>
-                                                </div>
-                                                <div className="dashboard-sales-kpi">
-                                                    <span className="dashboard-sales-kpi-label">
-                                                        5 días
-                                                    </span>
-                                                    <strong className="dashboard-sales-kpi-value">
-                                                        {formatCurrency(
-                                                            metrics.salesRecentTotal,
-                                                        )}
-                                                    </strong>
-                                                </div>
-                                                <div className="dashboard-sales-kpi">
-                                                    <span className="dashboard-sales-kpi-label">
-                                                        Pendientes
-                                                    </span>
-                                                    <strong className="dashboard-sales-kpi-value">
-                                                        {metrics.pedidosPendientes}
-                                                    </strong>
-                                                </div>
+                                            {metrics.salesDayChange !== 0 && (
+                                                <span
+                                                    className={`badge rounded-pill dashboard-sales-change ${
+                                                        metrics.salesDayChange >= 0
+                                                            ? "dashboard-sales-change--up"
+                                                            : "dashboard-sales-change--down"
+                                                    }`}
+                                                >
+                                                    {metrics.salesDayChange >= 0
+                                                        ? "+"
+                                                        : ""}
+                                                    {metrics.salesDayChange}% vs
+                                                    ayer
+                                                </span>
+                                            )}
+                                        </div>
+                                        <div className="dashboard-sales-kpis mb-3">
+                                            <div className="dashboard-sales-kpi">
+                                                <span className="dashboard-sales-kpi-label">
+                                                    Hoy
+                                                </span>
+                                                <strong className="dashboard-sales-kpi-value">
+                                                    {formatCurrency(
+                                                        metrics.salesTodayAmount,
+                                                    )}
+                                                </strong>
                                             </div>
+                                            <div className="dashboard-sales-kpi">
+                                                <span className="dashboard-sales-kpi-label">
+                                                    5 días
+                                                </span>
+                                                <strong className="dashboard-sales-kpi-value">
+                                                    {formatCurrency(
+                                                        metrics.salesRecentTotal,
+                                                    )}
+                                                </strong>
+                                            </div>
+                                            <div className="dashboard-sales-kpi">
+                                                <span className="dashboard-sales-kpi-label">
+                                                    Pendientes
+                                                </span>
+                                                <strong className="dashboard-sales-kpi-value">
+                                                    {metrics.pedidosPendientes}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                        <div className="dashboard-chart-body flex-grow-1">
                                             <Chart
                                                 options={salesBarOptions}
                                                 series={salesBarSeries}
                                                 type="bar"
-                                                height={280}
+                                                height={300}
                                             />
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="row g-4 mb-4 admin-dashboard-charts">
-                                    <div className="col-12 col-lg-6 col-xl-5">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-1">
-                                                Stock por Categoría
-                                            </h6>
-                                            <p className="text-muted small mb-3">
-                                                Distribución actual del inventario
-                                            </p>
+                                    <div className="card card-dashboard dashboard-chart-card dashboard-chart-card--stock p-4 shadow-sm">
+                                        <h6 className="chart-title mb-1">
+                                            Stock por Categoría
+                                        </h6>
+                                        <p className="text-muted small mb-3">
+                                            Distribución actual del inventario
+                                        </p>
+                                        <div className="dashboard-chart-body dashboard-chart-body--donut flex-grow-1 d-flex align-items-center justify-content-center">
                                             <Chart
                                                 options={categoryOptions}
                                                 series={categorySeries}

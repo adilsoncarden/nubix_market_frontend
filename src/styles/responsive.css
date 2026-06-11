@@ -558,11 +558,8 @@ small,
   .admin-dashboard-metrics .col-md-3,
   .admin-dashboard-metrics .col-md-4,
   .admin-dashboard-metrics .col-md-6,
-  .admin-dashboard-charts .col-lg-6,
-  .admin-dashboard-charts .col-lg-8,
-  .admin-dashboard-charts .col-lg-4 {
-    flex: 0 0 100%;
-    max-width: 100%;
+  .dashboard-charts-split {
+    grid-template-columns: 1fr !important;
   }
 
   .admin-topbar h5 {

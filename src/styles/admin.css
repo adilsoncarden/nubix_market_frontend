@@ -344,6 +344,52 @@
   letter-spacing: 0.5px;
 }
 
+/* Dashboard — fila de gráficos (ventas + stock) */
+.dashboard-charts-split {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  align-items: stretch;
+}
+
+.dashboard-chart-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  min-width: 0;
+}
+
+.dashboard-chart-body {
+  min-height: 300px;
+}
+
+.dashboard-chart-body--donut {
+  width: 100%;
+}
+
+.dashboard-chart-card--stock .apexcharts-canvas {
+  margin: 0 auto;
+}
+
+@media (max-width: 767.98px) {
+  .dashboard-charts-split {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .dashboard-chart-card--stock .dashboard-chart-body--donut {
+    max-width: 320px;
+    margin: 0 auto;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991.98px) {
+  .dashboard-charts-split {
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: 1.25rem;
+  }
+}
+
 /* Dashboard — ventas recientes (barras + KPIs) */
 .dashboard-sales-kpis {
   display: grid;
