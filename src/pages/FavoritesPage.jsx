@@ -147,7 +147,7 @@ export default function FavoritesPage() {
                     </div>
                 )}
 
-                <div className="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4 favorites-grid">
+                <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 favorites-grid">
                     {items.map((p) => (
                         <div key={p.id} className="col d-flex">
                             <div className="favorites-card-wrap w-100">

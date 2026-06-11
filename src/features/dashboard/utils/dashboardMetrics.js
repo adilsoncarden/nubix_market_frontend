@@ -1,5 +1,4 @@
-const HEATMAP_DAYS = ["Lun", "Mié", "Vie"];
-const HOUR_BUCKETS = ["08am", "10am", "12pm", "02pm", "04pm", "06pm", "08pm"];
+const RECENT_SALES_DAYS = 5;
 
 export const normalizeList = (payload) => {
     if (Array.isArray(payload)) return payload;
@@ -26,32 +25,52 @@ export const formatCurrency = (value) =>
 export const formatNumber = (value) =>
     Number(value || 0).toLocaleString("es-PE");
 
-const getWeekdayIndex = (fecha) => {
-    const key = getSaleDateKey(fecha);
-    if (!key) return null;
-    const date = new Date(`${key}T12:00:00`);
-    const day = date.getDay();
-    return day === 0 ? 6 : day - 1;
-};
-
-export const buildLast7Days = () => {
+export const buildRecentDays = (count = RECENT_SALES_DAYS) => {
     const days = [];
-    for (let i = 6; i >= 0; i -= 1) {
+    for (let i = count - 1; i >= 0; i -= 1) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        days.push({
-            key: getLocalDateKey(date),
-            label: date.toLocaleDateString("es-PE", { weekday: "short" }),
-        });
+        const key = getLocalDateKey(date);
+        let label;
+        if (i === 0) {
+            label = "Hoy";
+        } else if (i === 1) {
+            label = "Ayer";
+        } else {
+            label = date.toLocaleDateString("es-PE", {
+                day: "numeric",
+                month: "short",
+            });
+        }
+        days.push({ key, label });
     }
     return days;
+};
+
+export const roundChartAmount = (value) =>
+    Math.round((Number(value) || 0) * 100) / 100;
+
+/** Eje Y del gráfico: S/ 1000 sin decimales innecesarios */
+export const formatChartYAxis = (value) => {
+    const n = roundChartAmount(value);
+    if (n === 0) return "0";
+    return n.toLocaleString("es-PE", { maximumFractionDigits: 0 });
+};
+
+/** Etiqueta compacta sobre barras */
+export const formatChartBarLabel = (value) => {
+    const n = roundChartAmount(value);
+    if (n <= 0) return "";
+    if (n >= 1000) {
+        return `S/ ${n.toLocaleString("es-PE", { maximumFractionDigits: 0 })}`;
+    }
+    return `S/ ${Number.isInteger(n) ? n : n.toFixed(2)}`;
 };
 
 export const computeDashboardMetrics = ({
     sales = [],
     products = [],
     clients = [],
-    suppliers = [],
 }) => {
     const totalVentas = sales.length;
     const totalIngresos = sales.reduce(
@@ -60,21 +79,32 @@ export const computeDashboardMetrics = ({
     );
     const totalProductos = products.length;
     const totalClientes = clients.length;
-
     const todayKey = getLocalDateKey();
-    const ventasHoy = sales.filter(
-        (sale) => getSaleDateKey(sale.fecha) === todayKey,
-    ).length;
+
     const pedidosPendientes = sales.filter(
         (sale) => sale.estadoPedido === "PENDIENTE",
     ).length;
 
-    const last7Days = buildLast7Days();
-    const salesTrend = last7Days.map((day) =>
-        sales
-            .filter((sale) => getSaleDateKey(sale.fecha) === day.key)
-            .reduce((sum, sale) => sum + (sale.total || 0), 0),
+    const recentDays = buildRecentDays(RECENT_SALES_DAYS);
+
+    const sumSalesForDay = (dayKey) =>
+        roundChartAmount(
+            sales
+                .filter((sale) => getSaleDateKey(sale.fecha) === dayKey)
+                .reduce((sum, sale) => sum + (sale.total || 0), 0),
+        );
+
+    const salesRecentAmounts = recentDays.map((day) => sumSalesForDay(day.key));
+    const salesRecentTotal = roundChartAmount(
+        salesRecentAmounts.reduce((sum, value) => sum + value, 0),
     );
+
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterdayKey = getLocalDateKey(yesterdayDate);
+
+    const salesTodayAmount = sumSalesForDay(todayKey);
+    const salesYesterdayAmount = sumSalesForDay(yesterdayKey);
 
     const categoryStockMap = {};
     products.forEach((product) => {
@@ -85,66 +115,6 @@ export const computeDashboardMetrics = ({
     const categoryLabels = Object.keys(categoryStockMap);
     const categorySeries = categoryLabels.map(
         (label) => categoryStockMap[label],
-    );
-
-    const topSuppliers = [...suppliers]
-        .sort((a, b) => (a.nombre || "").localeCompare(b.nombre || ""))
-        .slice(0, 5);
-    const supplierLabels = topSuppliers.map(
-        (supplier) => supplier.nombre || "Proveedor",
-    );
-    const supplierSeries = topSuppliers.map(() => 1);
-
-    const deliveredCount = sales.filter(
-        (sale) => sale.estadoPedido === "ENTREGADO",
-    ).length;
-    const approvedPayments = sales.filter(
-        (sale) => sale.estadoPago === "APROBADO",
-    ).length;
-    const sellerCount = new Set(
-        sales.map((sale) => sale.vendedor?.username).filter(Boolean),
-    ).size;
-
-    const employeeSeries = [
-        Math.min(100, sellerCount * 15),
-        Math.min(
-            100,
-            Math.round((totalIngresos / Math.max(totalVentas, 1)) * 2),
-        ),
-        Math.min(100, Math.round((totalVentas / Math.max(sellerCount, 1)) * 8)),
-        Math.min(
-            100,
-            Math.round((deliveredCount / Math.max(totalVentas, 1)) * 100),
-        ),
-        Math.min(
-            100,
-            Math.round((approvedPayments / Math.max(totalVentas, 1)) * 100),
-        ),
-    ];
-
-    const heatMapSeries = HEATMAP_DAYS.map((dayLabel, rowIndex) => ({
-        name: dayLabel,
-        data: HOUR_BUCKETS.map((_, hourIndex) => {
-            if (hourIndex !== 2) return 0;
-            const weekdayIndex = rowIndex * 2;
-            return sales.filter(
-                (sale) => getWeekdayIndex(sale.fecha) === weekdayIndex,
-            ).length;
-        }),
-    }));
-
-    const now = new Date();
-    const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-    const monthSales = sales
-        .filter((sale) => getSaleDateKey(sale.fecha)?.startsWith(monthPrefix))
-        .reduce((sum, sale) => sum + (sale.total || 0), 0);
-    const dailyAverage =
-        salesTrend.reduce((sum, value) => sum + value, 0) /
-        Math.max(last7Days.length, 1);
-    const monthlyTarget = Math.max(dailyAverage * 30, monthSales, 1);
-    const goalPercent = Math.min(
-        100,
-        Math.round((monthSales / monthlyTarget) * 100),
     );
 
     const criticalStock = products
@@ -179,22 +149,26 @@ export const computeDashboardMetrics = ({
                 color: "#6f42c1",
             },
         ],
-        ventasHoy,
         pedidosPendientes,
-        salesTrendLabels: last7Days.map((day) => day.label),
-        salesTrend,
+        salesRecentLabels: recentDays.map((day) => day.label),
+        salesRecentAmounts,
+        salesRecentTotal,
+        salesTodayAmount,
+        salesYesterdayAmount,
+        salesDayChange:
+            salesYesterdayAmount > 0
+                ? Math.round(
+                      ((salesTodayAmount - salesYesterdayAmount) /
+                          salesYesterdayAmount) *
+                          100,
+                  )
+                : salesTodayAmount > 0
+                  ? 100
+                  : 0,
         categoryLabels:
             categoryLabels.length > 0 ? categoryLabels : ["Sin datos"],
         categorySeries:
             categorySeries.length > 0 ? categorySeries : [0],
-        supplierLabels:
-            supplierLabels.length > 0 ? supplierLabels : ["Sin proveedores"],
-        supplierSeries:
-            supplierSeries.length > 0 ? supplierSeries : [0],
-        employeeSeries,
-        heatMapSeries,
-        goalPercent,
-        goalRemaining: Math.max(0, 100 - goalPercent),
         criticalStock,
     };
 };

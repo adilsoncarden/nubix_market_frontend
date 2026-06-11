@@ -7,13 +7,15 @@ import Chart from "react-apexcharts";
 import { saleService } from "../features/sales/services/saleService";
 import { productService } from "../features/products/services/productService";
 import { clientService } from "../features/users/services/clientService";
-import { employeeService } from "../features/users/services/employeeService";
-import { getSuppliers } from "../features/suppliers/services/supplierService";
 import {
     computeDashboardMetrics,
+    formatChartBarLabel,
+    formatChartYAxis,
+    formatCurrency,
     normalizeList,
 } from "../features/dashboard/utils/dashboardMetrics";
 import "../styles/admin.css";
+import AdminResponsiveTable from "./admin/AdminResponsiveTable";
 
 const AdminLayout = () => {
     const { adminSessionUser } = useAuth();
@@ -27,8 +29,6 @@ const AdminLayout = () => {
         sales: [],
         products: [],
         clients: [],
-        employees: [],
-        suppliers: [],
     });
 
     const isDashboardHome =
@@ -53,22 +53,17 @@ const AdminLayout = () => {
         const fetchDashboardData = async () => {
             setDashboardLoading(true);
             try {
-                const [sales, products, clients, employees, suppliers] =
-                    await Promise.all([
-                        saleService.getAll(),
-                        productService.getAll(),
-                        clientService.getAll(),
-                        employeeService.getAll(),
-                        getSuppliers(),
-                    ]);
+                const [sales, products, clients] = await Promise.all([
+                    saleService.getAll(),
+                    productService.getAll(),
+                    clientService.getAll(),
+                ]);
 
                 if (!cancelled) {
                     setRawData({
                         sales: normalizeList(sales),
                         products: normalizeList(products),
                         clients: normalizeList(clients),
-                        employees: normalizeList(employees),
-                        suppliers: normalizeList(suppliers),
                     });
                 }
             } catch (err) {
@@ -97,27 +92,76 @@ const AdminLayout = () => {
         [theme],
     );
 
-    const salesOptions = useMemo(
+    const salesBarOptions = useMemo(
         () => ({
-            chart: { id: "sales-chart", toolbar: { show: false } },
-            colors: ["#198754"],
-            stroke: { curve: "smooth", width: 3 },
+            chart: {
+                id: "sales-bar-chart",
+                toolbar: { show: false },
+                fontFamily: "inherit",
+            },
+            colors: [theme === "dark" ? "#34d399" : "#198754"],
+            plotOptions: {
+                bar: {
+                    borderRadius: 8,
+                    borderRadiusApplication: "end",
+                    columnWidth: "48%",
+                    dataLabels: { position: "top" },
+                },
+            },
+            dataLabels: {
+                enabled: true,
+                formatter: (val) => formatChartBarLabel(val),
+                offsetY: -6,
+                style: {
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    colors: [chartTheme.labelColor],
+                },
+            },
             xaxis: {
-                categories: metrics.salesTrendLabels,
-                labels: { style: { colors: chartTheme.foreColor } },
+                categories: metrics.salesRecentLabels,
+                axisBorder: { show: false },
+                axisTicks: { show: false },
+                labels: {
+                    style: {
+                        colors: chartTheme.foreColor,
+                        fontSize: "12px",
+                        fontWeight: 600,
+                    },
+                },
             },
             yaxis: {
-                labels: { style: { colors: chartTheme.foreColor } },
+                min: 0,
+                tickAmount: 4,
+                labels: {
+                    formatter: (val) => `S/ ${formatChartYAxis(val)}`,
+                    style: { colors: chartTheme.foreColor },
+                },
             },
-            grid: { borderColor: chartTheme.gridColor },
-            tooltip: { theme },
+            grid: {
+                borderColor: chartTheme.gridColor,
+                strokeDashArray: 4,
+                padding: { top: 8, right: 8, left: 4, bottom: 0 },
+            },
+            tooltip: {
+                theme,
+                y: {
+                    formatter: (val) => formatCurrency(val),
+                },
+            },
         }),
-        [metrics.salesTrendLabels, chartTheme, theme],
+        [
+            metrics.salesRecentLabels,
+            chartTheme.foreColor,
+            chartTheme.gridColor,
+            chartTheme.labelColor,
+            theme,
+        ],
     );
 
-    const salesSeries = useMemo(
-        () => [{ name: "Ventas", data: metrics.salesTrend }],
-        [metrics.salesTrend],
+    const salesBarSeries = useMemo(
+        () => [{ name: "Ingresos", data: metrics.salesRecentAmounts }],
+        [metrics.salesRecentAmounts],
     );
 
     const categoryOptions = useMemo(
@@ -135,57 +179,6 @@ const AdminLayout = () => {
     );
 
     const categorySeries = metrics.categorySeries;
-
-    const employeeOptions = useMemo(
-        () => ({
-            chart: { toolbar: { show: false } },
-            xaxis: {
-                categories: [
-                    "Equipo",
-                    "Ticket",
-                    "Pedidos",
-                    "Entregas",
-                    "Pagos",
-                ],
-                labels: { style: { colors: chartTheme.foreColor } },
-            },
-            yaxis: {
-                show: false,
-                max: 100,
-            },
-            colors: ["#6f42c1"],
-            fill: { opacity: 0.4 },
-            tooltip: { theme },
-        }),
-        [chartTheme.foreColor, theme],
-    );
-
-    const employeeSeries = useMemo(
-        () => [{ name: "Indicadores", data: metrics.employeeSeries }],
-        [metrics.employeeSeries],
-    );
-
-    const supplierOptions = useMemo(
-        () => ({
-            plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-            colors: ["#20c997"],
-            xaxis: {
-                categories: metrics.supplierLabels,
-                labels: { style: { colors: chartTheme.foreColor } },
-            },
-            yaxis: {
-                labels: { style: { colors: chartTheme.foreColor } },
-            },
-            grid: { borderColor: chartTheme.gridColor },
-            tooltip: { theme },
-        }),
-        [metrics.supplierLabels, chartTheme, theme],
-    );
-
-    const supplierSeries = useMemo(
-        () => [{ name: "Registrados", data: metrics.supplierSeries }],
-        [metrics.supplierSeries],
-    );
 
     return (
         <div
@@ -277,7 +270,7 @@ const AdminLayout = () => {
                     <div className="container-fluid px-0">
                         {isDashboardHome ? (
                             <div className="animate__animated animate__fadeIn">
-                                <div className="row g-4 mb-4">
+                                <div className="row g-4 mb-4 admin-dashboard-metrics">
                                     {metrics.stats.map((stat, i) => (
                                         <div
                                             className="col-12 col-md-6 col-lg-3"
@@ -312,58 +305,85 @@ const AdminLayout = () => {
                                     ))}
                                 </div>
 
-                                <div className="row g-4 mb-4">
-                                    <div className="col-lg-8">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-4">
-                                                Tendencia de Ventas (7D)
-                                            </h6>
-                                            <Chart
-                                                options={salesOptions}
-                                                series={salesSeries}
-                                                type="line"
-                                                height={320}
-                                            />
+                                <div className="dashboard-charts-split admin-dashboard-charts mb-4">
+                                    <div className="card card-dashboard dashboard-chart-card dashboard-chart-card--sales p-4 shadow-sm">
+                                        <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+                                            <div>
+                                                <h6 className="chart-title mb-1">
+                                                    Ventas recientes
+                                                </h6>
+                                                <p className="text-muted small mb-0">
+                                                    Ingresos de los últimos 5 días
+                                                </p>
+                                            </div>
+                                            {metrics.salesDayChange !== 0 && (
+                                                <span
+                                                    className={`badge rounded-pill dashboard-sales-change ${
+                                                        metrics.salesDayChange >= 0
+                                                            ? "dashboard-sales-change--up"
+                                                            : "dashboard-sales-change--down"
+                                                    }`}
+                                                >
+                                                    {metrics.salesDayChange >= 0
+                                                        ? "+"
+                                                        : ""}
+                                                    {metrics.salesDayChange}% vs
+                                                    ayer
+                                                </span>
+                                            )}
                                         </div>
-                                    </div>
-                                    <div className="col-lg-4">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-4">
-                                                Stock por Categoría
-                                            </h6>
-                                            <Chart
-                                                options={categoryOptions}
-                                                series={categorySeries}
-                                                type="donut"
-                                                height={320}
-                                            />
+                                        <div className="dashboard-sales-kpis mb-3">
+                                            <div className="dashboard-sales-kpi">
+                                                <span className="dashboard-sales-kpi-label">
+                                                    Hoy
+                                                </span>
+                                                <strong className="dashboard-sales-kpi-value">
+                                                    {formatCurrency(
+                                                        metrics.salesTodayAmount,
+                                                    )}
+                                                </strong>
+                                            </div>
+                                            <div className="dashboard-sales-kpi">
+                                                <span className="dashboard-sales-kpi-label">
+                                                    5 días
+                                                </span>
+                                                <strong className="dashboard-sales-kpi-value">
+                                                    {formatCurrency(
+                                                        metrics.salesRecentTotal,
+                                                    )}
+                                                </strong>
+                                            </div>
+                                            <div className="dashboard-sales-kpi">
+                                                <span className="dashboard-sales-kpi-label">
+                                                    Pendientes
+                                                </span>
+                                                <strong className="dashboard-sales-kpi-value">
+                                                    {metrics.pedidosPendientes}
+                                                </strong>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div className="row g-4 mb-4">
-                                    <div className="col-lg-6">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-4">
-                                                Top 5 Proveedores
-                                            </h6>
+                                        <div className="dashboard-chart-body flex-grow-1">
                                             <Chart
-                                                options={supplierOptions}
-                                                series={supplierSeries}
+                                                options={salesBarOptions}
+                                                series={salesBarSeries}
                                                 type="bar"
                                                 height={300}
                                             />
                                         </div>
                                     </div>
-                                    <div className="col-lg-6">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-4">
-                                                Rendimiento de Empleados
-                                            </h6>
+
+                                    <div className="card card-dashboard dashboard-chart-card dashboard-chart-card--stock p-4 shadow-sm">
+                                        <h6 className="chart-title mb-1">
+                                            Stock por Categoría
+                                        </h6>
+                                        <p className="text-muted small mb-3">
+                                            Distribución actual del inventario
+                                        </p>
+                                        <div className="dashboard-chart-body dashboard-chart-body--donut flex-grow-1 d-flex align-items-center justify-content-center">
                                             <Chart
-                                                options={employeeOptions}
-                                                series={employeeSeries}
-                                                type="radar"
+                                                options={categoryOptions}
+                                                series={categorySeries}
+                                                type="donut"
                                                 height={300}
                                             />
                                         </div>
@@ -372,11 +392,26 @@ const AdminLayout = () => {
 
                                 <div className="row g-4">
                                     <div className="col-12">
-                                        <div className="card card-dashboard p-4 shadow-sm">
-                                            <h6 className="chart-title mb-4">
-                                                Alerta de Inventario Crítico
-                                            </h6>
-                                            <div className="table-responsive">
+                                        <div className="card card-dashboard card-dashboard-critical p-4 shadow-sm">
+                                            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                                <div>
+                                                    <h6 className="chart-title mb-1">
+                                                        Alerta de Inventario Crítico
+                                                    </h6>
+                                                    <p className="text-muted small mb-0">
+                                                        Productos con stock ≤ 10 unidades
+                                                    </p>
+                                                </div>
+                                                {!dashboardLoading && (
+                                                    <span className="badge dashboard-critical-count rounded-pill">
+                                                        {metrics.criticalStock.length}{" "}
+                                                        {metrics.criticalStock.length === 1
+                                                            ? "producto"
+                                                            : "productos"}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <AdminResponsiveTable>
                                                 <table className="table table-custom align-middle">
                                                     <thead>
                                                         <tr>
@@ -456,7 +491,7 @@ const AdminLayout = () => {
                                                         )}
                                                     </tbody>
                                                 </table>
-                                            </div>
+                                            </AdminResponsiveTable>
                                         </div>
                                     </div>
                                 </div>

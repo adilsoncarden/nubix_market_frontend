@@ -214,14 +214,14 @@ const MainContent = () => {
 
       <section className="container py-4 landing-product-sections">
         <ProductSectionHeader title="Ofertas Flash" timeLeft={timeLeft} seeAllTo="/shop" />
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+        <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 landing-product-grid">
           {renderProductGrid(flashProducts)}
         </div>
       </section>
 
       <section className="container py-4 pb-4 pb-md-5 landing-product-sections">
         <ProductSectionHeader title="Los más pedidos" timeLeft={null} seeAllTo="/shop" />
-        <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+        <div className="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 landing-product-grid">
           {renderProductGrid(
             popularProducts.length > 0
               ? popularProducts

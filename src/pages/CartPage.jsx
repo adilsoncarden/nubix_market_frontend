@@ -665,7 +665,7 @@ export default function CartPage() {
                 />
             )}
 
-            <div className="container cart-page cart-page-premium">
+            <div className="container cart-page cart-page-premium has-checkout-bar">
                 {/* Header */}
                 <div className="cart-header">
                     <h2 className="cart-title">
@@ -803,6 +803,21 @@ export default function CartPage() {
                             Continuar comprando
                         </button>
                     </aside>
+                </div>
+
+                <div className="cart-mobile-checkout-bar" role="region" aria-label="Resumen y pago rápido">
+                    <div className="cart-mobile-checkout-total">
+                        <span>Total</span>
+                        <strong>{formatSoles(cartTotals.total)}</strong>
+                    </div>
+                    <button
+                        type="button"
+                        className="btn-checkout"
+                        onClick={() => setModalPago(true)}
+                    >
+                        <i className="bi bi-lock me-1" aria-hidden="true" />
+                        Proceder al pago
+                    </button>
                 </div>
             </div>
         </>
