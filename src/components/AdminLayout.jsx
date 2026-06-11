@@ -7,8 +7,6 @@ import Chart from "react-apexcharts";
 import { saleService } from "../features/sales/services/saleService";
 import { productService } from "../features/products/services/productService";
 import { clientService } from "../features/users/services/clientService";
-import { employeeService } from "../features/users/services/employeeService";
-import { getSuppliers } from "../features/suppliers/services/supplierService";
 import {
     computeDashboardMetrics,
     formatChartBarLabel,
@@ -31,8 +29,6 @@ const AdminLayout = () => {
         sales: [],
         products: [],
         clients: [],
-        employees: [],
-        suppliers: [],
     });
 
     const isDashboardHome =
@@ -57,22 +53,17 @@ const AdminLayout = () => {
         const fetchDashboardData = async () => {
             setDashboardLoading(true);
             try {
-                const [sales, products, clients, employees, suppliers] =
-                    await Promise.all([
-                        saleService.getAll(),
-                        productService.getAll(),
-                        clientService.getAll(),
-                        employeeService.getAll(),
-                        getSuppliers(),
-                    ]);
+                const [sales, products, clients] = await Promise.all([
+                    saleService.getAll(),
+                    productService.getAll(),
+                    clientService.getAll(),
+                ]);
 
                 if (!cancelled) {
                     setRawData({
                         sales: normalizeList(sales),
                         products: normalizeList(products),
                         clients: normalizeList(clients),
-                        employees: normalizeList(employees),
-                        suppliers: normalizeList(suppliers),
                     });
                 }
             } catch (err) {
@@ -188,57 +179,6 @@ const AdminLayout = () => {
     );
 
     const categorySeries = metrics.categorySeries;
-
-    const employeeOptions = useMemo(
-        () => ({
-            chart: { toolbar: { show: false } },
-            xaxis: {
-                categories: [
-                    "Equipo",
-                    "Ticket",
-                    "Pedidos",
-                    "Entregas",
-                    "Pagos",
-                ],
-                labels: { style: { colors: chartTheme.foreColor } },
-            },
-            yaxis: {
-                show: false,
-                max: 100,
-            },
-            colors: ["#6f42c1"],
-            fill: { opacity: 0.4 },
-            tooltip: { theme },
-        }),
-        [chartTheme.foreColor, theme],
-    );
-
-    const employeeSeries = useMemo(
-        () => [{ name: "Indicadores", data: metrics.employeeSeries }],
-        [metrics.employeeSeries],
-    );
-
-    const supplierOptions = useMemo(
-        () => ({
-            plotOptions: { bar: { borderRadius: 4, horizontal: true } },
-            colors: ["#20c997"],
-            xaxis: {
-                categories: metrics.supplierLabels,
-                labels: { style: { colors: chartTheme.foreColor } },
-            },
-            yaxis: {
-                labels: { style: { colors: chartTheme.foreColor } },
-            },
-            grid: { borderColor: chartTheme.gridColor },
-            tooltip: { theme },
-        }),
-        [metrics.supplierLabels, chartTheme, theme],
-    );
-
-    const supplierSeries = useMemo(
-        () => [{ name: "Registrados", data: metrics.supplierSeries }],
-        [metrics.supplierSeries],
-    );
 
     return (
         <div
@@ -366,7 +306,7 @@ const AdminLayout = () => {
                                 </div>
 
                                 <div className="row g-4 mb-4 admin-dashboard-charts">
-                                    <div className="col-lg-8">
+                                    <div className="col-12">
                                         <div className="card card-dashboard p-4 shadow-sm h-100">
                                             <div className="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
                                                 <div>
@@ -434,44 +374,21 @@ const AdminLayout = () => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="col-lg-4">
+                                </div>
+
+                                <div className="row g-4 mb-4 admin-dashboard-charts">
+                                    <div className="col-12 col-lg-6 col-xl-5">
                                         <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-4">
+                                            <h6 className="chart-title mb-1">
                                                 Stock por Categoría
                                             </h6>
+                                            <p className="text-muted small mb-3">
+                                                Distribución actual del inventario
+                                            </p>
                                             <Chart
                                                 options={categoryOptions}
                                                 series={categorySeries}
                                                 type="donut"
-                                                height={320}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="row g-4 mb-4 admin-dashboard-charts">
-                                    <div className="col-lg-6">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-4">
-                                                Top 5 Proveedores
-                                            </h6>
-                                            <Chart
-                                                options={supplierOptions}
-                                                series={supplierSeries}
-                                                type="bar"
-                                                height={300}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="col-lg-6">
-                                        <div className="card card-dashboard p-4 shadow-sm h-100">
-                                            <h6 className="chart-title mb-4">
-                                                Rendimiento de Empleados
-                                            </h6>
-                                            <Chart
-                                                options={employeeOptions}
-                                                series={employeeSeries}
-                                                type="radar"
                                                 height={300}
                                             />
                                         </div>
@@ -480,10 +397,25 @@ const AdminLayout = () => {
 
                                 <div className="row g-4">
                                     <div className="col-12">
-                                        <div className="card card-dashboard p-4 shadow-sm">
-                                            <h6 className="chart-title mb-4">
-                                                Alerta de Inventario Crítico
-                                            </h6>
+                                        <div className="card card-dashboard card-dashboard-critical p-4 shadow-sm">
+                                            <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                                                <div>
+                                                    <h6 className="chart-title mb-1">
+                                                        Alerta de Inventario Crítico
+                                                    </h6>
+                                                    <p className="text-muted small mb-0">
+                                                        Productos con stock ≤ 10 unidades
+                                                    </p>
+                                                </div>
+                                                {!dashboardLoading && (
+                                                    <span className="badge dashboard-critical-count rounded-pill">
+                                                        {metrics.criticalStock.length}{" "}
+                                                        {metrics.criticalStock.length === 1
+                                                            ? "producto"
+                                                            : "productos"}
+                                                    </span>
+                                                )}
+                                            </div>
                                             <AdminResponsiveTable>
                                                 <table className="table table-custom align-middle">
                                                     <thead>

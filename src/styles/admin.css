@@ -406,6 +406,27 @@
   }
 }
 
+.card-dashboard-critical {
+  border-left: 4px solid #dc3545 !important;
+}
+
+.dashboard-critical-count {
+  background: rgba(220, 53, 69, 0.12);
+  color: #dc3545;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.4rem 0.75rem;
+}
+
+.admin-shell[data-bs-theme="dark"] .card-dashboard-critical {
+  border-left-color: #f87171 !important;
+}
+
+.admin-shell[data-bs-theme="dark"] .dashboard-critical-count {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+}
+
 .admin-shell .table-custom thead {
   background-color: var(--bs-tertiary-bg);
 }
