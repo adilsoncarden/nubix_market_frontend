@@ -2,6 +2,8 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 import { Toast } from "../../utils/swalConfig";
 import { formatSoles } from "../../utils/pricing";
+import { WALLET_KEYS } from "../../config/walletPaymentConfig";
+import WalletQrCode from "./WalletQrCode";
 import {
     delay,
     formatCardNumberDisplay,
@@ -11,25 +13,7 @@ import {
     validateCardForm,
 } from "./checkoutPaymentUtils";
 
-const WALLET_KEYS = new Set(["YAPE", "PLIN"]);
-
-function WalletQrPlaceholder({ label }) {
-    return (
-        <div className="checkout-payment-qr checkout-payment-qr--centered" aria-hidden="true">
-            <div className="checkout-payment-qr-grid">
-                {Array.from({ length: 64 }, (_, i) => (
-                    <span
-                        key={i}
-                        className={
-                            (i + label.length) % 3 === 0 ? "dark" : ""
-                        }
-                    />
-                ))}
-            </div>
-            <span className="checkout-payment-qr-label">{label}</span>
-        </div>
-    );
-}
+const WALLET_UI_KEYS = new Set([WALLET_KEYS.YAPE, WALLET_KEYS.PLIN]);
 
 export default function CheckoutPaymentSimulation({
     selectedPayment,
@@ -38,6 +22,10 @@ export default function CheckoutPaymentSimulation({
     paymentVerified,
     onPaymentVerified,
     onResetVerification,
+    /** Override futuro: payload o imagen QR desde backend */
+    walletQrPayload,
+    walletQrImageUrl,
+    orderRef,
 }) {
     const [cardForm, setCardForm] = useState({
         cardNumber: "",
@@ -50,7 +38,7 @@ export default function CheckoutPaymentSimulation({
 
     if (!selectedPayment) return null;
 
-    const isWallet = WALLET_KEYS.has(metodoPagoUi);
+    const isWallet = WALLET_UI_KEYS.has(metodoPagoUi);
     const isCard = metodoPagoUi === "TARJETA";
 
     const openWalletValidationModal = async () => {
@@ -188,9 +176,16 @@ export default function CheckoutPaymentSimulation({
                                 <p key={line}>{line}</p>
                             ))}
                         </div>
-                        <WalletQrPlaceholder label={selectedPayment.label} />
+                        <WalletQrCode
+                            walletKey={metodoPagoUi}
+                            amount={total}
+                            orderRef={orderRef}
+                            qrPayload={walletQrPayload}
+                            qrImageUrl={walletQrImageUrl}
+                        />
                         <p className="checkout-payment-hint text-center mb-0">
-                            Realiza el pago y luego valida aquí
+                            Realiza el pago escaneando el QR y luego valida
+                            aquí
                         </p>
                         <button
                             type="button"

@@ -14,7 +14,10 @@ import api from "../../config/axios";
 import CheckoutPaymentSimulation from "./CheckoutPaymentSimulation";
 import CustomSelect from "../ui/CustomSelect";
 import { generateOrderReceiptPdf } from "../../utils/generateOrderReceiptPdf";
+import { getCheckoutPaymentOptions } from "../../config/walletPaymentConfig";
 import "../../styles/checkout-modal.css";
+
+const PAYMENT_OPTIONS = getCheckoutPaymentOptions();
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -26,30 +29,6 @@ function isValidEmail(email) {
 function sanitizePhoneDigits(value) {
     return value.replace(/\D/g, "").slice(0, 9);
 }
-
-const PAYMENT_OPTIONS = [
-    {
-        uiKey: "YAPE",
-        metodoPago: "YAPE",
-        label: "Yape",
-        detailTitle: "Yape",
-        detailLines: ["Número: 999 999 999", "Nubix Market SAC"],
-    },
-    {
-        uiKey: "PLIN",
-        metodoPago: "YAPE",
-        label: "Plin",
-        detailTitle: "Plin",
-        detailLines: ["Número: 988 888 888", "Nubix Market SAC"],
-    },
-    {
-        uiKey: "TARJETA",
-        metodoPago: "TARJETA",
-        label: "Pago con tarjeta",
-        detailTitle: "Pago con tarjeta",
-        detailLines: ["Completa el formulario para procesar tu pago."],
-    },
-];
 
 const enviarEmailConfirmacion = async (orden) => {
     try {
