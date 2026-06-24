@@ -93,6 +93,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const [loading, setLoading] = useState(false);
     const [emailOk, setEmailOk] = useState(null);
     const [ventaCreada, setVentaCreada] = useState(null);
+    const [orderSummary, setOrderSummary] = useState(null);
     const [errorCheckout, setErrorCheckout] = useState(null);
     const [emailTouched, setEmailTouched] = useState(false);
     const [documentoTouched, setDocumentoTouched] = useState(false);
@@ -158,12 +159,36 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const deliveryDisabled = tipoEntrega !== "DELIVERY";
     const selectedPayment = PAYMENT_OPTIONS.find((p) => p.uiKey === metodoPagoUi);
 
+    const buildOrderSummary = (ventaFromPayment = null) => {
+        const snapshotItems = items.map((item) => ({ ...item }));
+        const computed = calcOrderTotals(snapshotItems, tipoEntrega);
+        return {
+            items: snapshotItems,
+            subtotalBase:
+                ventaFromPayment?.subtotal ?? computed.subtotalBase,
+            igv: ventaFromPayment?.igv ?? computed.igv,
+            subtotalConIgv:
+                ventaFromPayment?.subtotal != null &&
+                ventaFromPayment?.igv != null
+                    ? ventaFromPayment.subtotal + ventaFromPayment.igv
+                    : computed.subtotalConIgv,
+            delivery: ventaFromPayment?.costoEnvio ?? computed.delivery,
+            total: ventaFromPayment?.total ?? computed.total,
+            tipoEntrega,
+        };
+    };
+
+    const confirmSummary =
+        orderSummary ??
+        buildOrderSummary(ventaCreada);
+
     useEffect(() => {
         setPaymentVerified(false);
         setPaymentData(null);
     }, [metodoPagoUi]);
 
     const handlePaymentVerified = async (data) => {
+        setOrderSummary(buildOrderSummary(data?.venta ?? null));
         setPaymentData(data);
         setPaymentVerified(true);
         if (data?.venta) {
@@ -199,6 +224,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
             });
             return;
         }
+        setOrderSummary((prev) => prev ?? buildOrderSummary(ventaCreada));
         setStep(4);
     };
 
@@ -355,7 +381,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                         tipoEntrega === "DELIVERY" ? form.distrito : null,
                     referencia:
                         tipoEntrega === "DELIVERY" ? form.referencia : null,
-                    detalles: items.map((item) => ({
+                    detalles: confirmSummary.items.map((item) => ({
                         productoId: item.id,
                         cantidad: item.qty,
                     })),
@@ -384,11 +410,11 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                               direccion: form.direccion,
                               email: form.email,
                           },
-                items,
-                subtotalBase: venta.subtotal,
-                igv: venta.igv,
-                delivery: venta.costoEnvio ?? 0,
-                total: venta.total,
+                items: confirmSummary.items,
+                subtotalBase: venta.subtotal ?? confirmSummary.subtotalBase,
+                igv: venta.igv ?? confirmSummary.igv,
+                delivery: venta.costoEnvio ?? confirmSummary.delivery,
+                total: venta.total ?? confirmSummary.total,
             };
 
             const ok = await enviarEmailConfirmacion(orden);
@@ -842,7 +868,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                         </div>
 
                         <div className="confirm-items">
-                            {items.map((item) => (
+                            {confirmSummary.items.map((item) => (
                                 <div key={item.id} className="confirm-item">
                                     <span>
                                         {item.name} × {item.qty}
@@ -857,25 +883,27 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                         <div className="confirm-totales">
                             <div className="confirm-row">
                                 <span>Subtotal (sin IGV)</span>
-                                <span>{formatSoles(subtotalBase)}</span>
+                                <span>
+                                    {formatSoles(confirmSummary.subtotalBase)}
+                                </span>
                             </div>
                             <div className="confirm-row">
                                 <span>IGV (13%)</span>
-                                <span>{formatSoles(igv)}</span>
+                                <span>{formatSoles(confirmSummary.igv)}</span>
                             </div>
-                            {tipoEntrega === "DELIVERY" && (
+                            {confirmSummary.tipoEntrega === "DELIVERY" && (
                                 <div className="confirm-row">
                                     <span>Delivery</span>
                                     <span>
-                                        {delivery === 0
+                                        {confirmSummary.delivery === 0
                                             ? "Gratis"
-                                            : formatSoles(delivery)}
+                                            : formatSoles(confirmSummary.delivery)}
                                     </span>
                                 </div>
                             )}
                             <div className="confirm-row total checkout-total-highlight">
                                 <span>TOTAL</span>
-                                <span>{formatSoles(total)}</span>
+                                <span>{formatSoles(confirmSummary.total)}</span>
                             </div>
                         </div>
 
