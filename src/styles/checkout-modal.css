@@ -238,6 +238,11 @@
   animation: checkout-step-in 0.35s ease;
 }
 
+/* Evita que la animación con transform rompa el iframe de Stripe Elements */
+.checkout-step-panel--stripe {
+  animation: checkout-step-fade 0.3s ease;
+}
+
 .checkout-payment-simulation {
   margin-top: 0.5rem;
 }
@@ -328,6 +333,125 @@
 
 .checkout-payment-verified i {
   font-size: 1.15rem;
+}
+
+.checkout-stripe-info {
+  padding: 0.75rem 0.5rem;
+}
+
+.checkout-stripe-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: rgba(14, 74, 39, 0.1);
+  color: #0e4a27;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+
+.checkout-stripe-test-hints {
+  margin: 0;
+  padding-left: 1.1rem;
+  text-align: left;
+}
+
+.checkout-stripe-card-visual {
+  position: relative;
+  border-radius: 16px;
+  padding: 1.25rem 1.35rem;
+  min-height: 148px;
+  background: linear-gradient(135deg, #0e4a27 0%, #134d27 45%, #1a6b38 100%);
+  color: #f8fafc;
+  box-shadow: 0 12px 28px rgba(14, 74, 39, 0.28);
+  overflow: hidden;
+}
+
+.checkout-stripe-card-visual::after {
+  content: "";
+  position: absolute;
+  inset: -40% 30% auto auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.checkout-stripe-card-chip {
+  width: 42px;
+  height: 30px;
+  border-radius: 6px;
+  background: linear-gradient(145deg, #fbbf24, #d97706);
+  margin-bottom: 1.25rem;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+.checkout-stripe-card-number-placeholder {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+  margin-bottom: 1rem;
+  opacity: 0.92;
+}
+
+.checkout-stripe-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+}
+
+.checkout-stripe-element {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 2px solid rgba(19, 77, 39, 0.22);
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.checkout-stripe-element--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 52px;
+}
+
+.checkout-stripe-element:focus-within {
+  border-color: #134d27;
+  box-shadow: 0 0 0 0.2rem rgba(19, 77, 39, 0.15);
+}
+
+/* Contenedor interno e iframe que Stripe inyecta */
+.checkout-stripe-element > div,
+.checkout-stripe-element .StripeElement,
+.checkout-stripe-element .__PrivateStripeElement {
+  display: block !important;
+  width: 100% !important;
+  min-height: 28px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.checkout-stripe-element iframe {
+  display: block !important;
+  width: 100% !important;
+  min-height: 28px !important;
+  height: auto !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  border: 0 !important;
+}
+
+.checkout-stripe-tooltip {
+  line-height: 1;
+  text-decoration: none;
 }
 
 .checkout-card-form {
@@ -435,6 +559,15 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes checkout-step-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

@@ -1,17 +1,13 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Elements } from "@stripe/react-stripe-js";
+import { Tooltip } from "bootstrap";
 import Swal from "sweetalert2";
 import { Toast } from "../../utils/swalConfig";
 import { formatSoles } from "../../utils/pricing";
+import { getStripePromise } from "../../config/stripeClient";
 import { WALLET_KEYS } from "../../config/walletPaymentConfig";
 import WalletQrCode from "./WalletQrCode";
-import {
-    delay,
-    formatCardNumberDisplay,
-    sanitizeCardNumber,
-    sanitizeCvv,
-    sanitizeExpiry,
-    validateCardForm,
-} from "./checkoutPaymentUtils";
+import StripeCardForm from "./StripeCardForm";
 
 const WALLET_UI_KEYS = new Set([WALLET_KEYS.YAPE, WALLET_KEYS.PLIN]);
 
@@ -22,19 +18,47 @@ export default function CheckoutPaymentSimulation({
     paymentVerified,
     onPaymentVerified,
     onResetVerification,
-    /** Override futuro: payload o imagen QR desde backend */
     walletQrPayload,
     walletQrImageUrl,
     orderRef,
+    customerEmail,
+    checkoutPayload,
 }) {
-    const [cardForm, setCardForm] = useState({
-        cardNumber: "",
-        cardHolder: "",
-        expiry: "",
-        cvv: "",
-    });
-    const [cardError, setCardError] = useState("");
-    const [cardProcessing, setCardProcessing] = useState(false);
+    const [stripeLoadError, setStripeLoadError] = useState("");
+
+    const stripePublishableKey =
+        import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY?.trim() || "";
+
+    const stripePromise = useMemo(
+        () => getStripePromise(),
+        [stripePublishableKey],
+    );
+
+    useEffect(() => {
+        console.log(
+            "Stripe Key activa:",
+            import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY,
+        );
+
+        if (!stripePublishableKey) {
+            setStripeLoadError(
+                "La pasarela de pagos no está configurada (VITE_STRIPE_PUBLISHABLE_KEY).",
+            );
+            return;
+        }
+
+        setStripeLoadError("");
+    }, [stripePublishableKey]);
+
+    useEffect(() => {
+        const tooltipTriggerList = document.querySelectorAll(
+            '[data-bs-toggle="tooltip"]',
+        );
+        const tooltips = Array.from(tooltipTriggerList).map(
+            (el) => new Tooltip(el),
+        );
+        return () => tooltips.forEach((t) => t.dispose());
+    }, [metodoPagoUi, paymentVerified]);
 
     if (!selectedPayment) return null;
 
@@ -114,48 +138,6 @@ export default function CheckoutPaymentSimulation({
         }
     };
 
-    const handleProcessCard = async () => {
-        const error = validateCardForm(cardForm);
-        if (error) {
-            setCardError(error);
-            return;
-        }
-
-        setCardError("");
-        setCardProcessing(true);
-        onResetVerification();
-
-        try {
-            await delay(1500);
-            const digits = sanitizeCardNumber(cardForm.cardNumber);
-            onPaymentVerified({
-                method: "TARJETA",
-                cardLast4: digits.slice(-4),
-                cardHolder: cardForm.cardHolder.trim(),
-            });
-            Toast.fire({
-                icon: "success",
-                title: "Pago aprobado",
-            });
-        } finally {
-            setCardProcessing(false);
-        }
-    };
-
-    const updateCard = (field) => (e) => {
-        let value = e.target.value;
-        if (field === "cardNumber") {
-            value = formatCardNumberDisplay(value);
-        } else if (field === "expiry") {
-            value = sanitizeExpiry(value);
-        } else if (field === "cvv") {
-            value = sanitizeCvv(value);
-        }
-        setCardForm((prev) => ({ ...prev, [field]: value }));
-        setCardError("");
-        onResetVerification();
-    };
-
     return (
         <div className="checkout-payment-simulation">
             <div className="checkout-validation-card">
@@ -202,117 +184,42 @@ export default function CheckoutPaymentSimulation({
                 )}
 
                 {isCard && (
-                    <div className="checkout-card-form">
-                        <p className="checkout-payment-hint text-center mb-3">
-                            Simulación de pago con tarjeta. No se realizará un
-                            cobro real.
-                        </p>
-                        <div className="row g-3">
-                            <div className="col-12">
-                                <label
-                                    className="checkout-form-label"
-                                    htmlFor="checkout-card-number"
-                                >
-                                    Número de tarjeta
-                                </label>
-                                <input
-                                    id="checkout-card-number"
-                                    type="text"
-                                    inputMode="numeric"
-                                    autoComplete="cc-number"
-                                    className="form-control checkout-input w-100"
-                                    placeholder="1234 5678 9012 3456"
-                                    value={cardForm.cardNumber}
-                                    onChange={updateCard("cardNumber")}
-                                    disabled={cardProcessing || paymentVerified}
-                                />
+                    <>
+                        {stripeLoadError && (
+                            <div
+                                className="alert alert-warning py-2 small mb-3"
+                                role="alert"
+                            >
+                                <i className="bi bi-exclamation-triangle me-1" />
+                                {stripeLoadError}
                             </div>
-                            <div className="col-12">
-                                <label
-                                    className="checkout-form-label"
-                                    htmlFor="checkout-card-holder"
-                                >
-                                    Nombre del titular
-                                </label>
-                                <input
-                                    id="checkout-card-holder"
-                                    type="text"
-                                    autoComplete="cc-name"
-                                    className="form-control checkout-input w-100"
-                                    placeholder="Como aparece en la tarjeta"
-                                    value={cardForm.cardHolder}
-                                    onChange={updateCard("cardHolder")}
-                                    disabled={cardProcessing || paymentVerified}
-                                />
-                            </div>
-                            <div className="col-6">
-                                <label
-                                    className="checkout-form-label"
-                                    htmlFor="checkout-card-expiry"
-                                >
-                                    Fecha de expiración
-                                </label>
-                                <input
-                                    id="checkout-card-expiry"
-                                    type="text"
-                                    inputMode="numeric"
-                                    autoComplete="cc-exp"
-                                    className="form-control checkout-input w-100"
-                                    placeholder="MM/AA"
-                                    value={cardForm.expiry}
-                                    onChange={updateCard("expiry")}
-                                    disabled={cardProcessing || paymentVerified}
-                                />
-                            </div>
-                            <div className="col-6">
-                                <label
-                                    className="checkout-form-label"
-                                    htmlFor="checkout-card-cvv"
-                                >
-                                    CVV
-                                </label>
-                                <input
-                                    id="checkout-card-cvv"
-                                    type="password"
-                                    inputMode="numeric"
-                                    autoComplete="cc-csc"
-                                    className="form-control checkout-input w-100"
-                                    placeholder="123"
-                                    value={cardForm.cvv}
-                                    onChange={updateCard("cvv")}
-                                    disabled={cardProcessing || paymentVerified}
-                                />
-                            </div>
-                        </div>
-                        {cardError && (
-                            <span className="checkout-field-error d-block mt-2">
-                                {cardError}
-                            </span>
                         )}
-                        <button
-                            type="button"
-                            className="btn checkout-btn-primary checkout-payment-action-btn mt-3"
-                            onClick={handleProcessCard}
-                            disabled={cardProcessing || paymentVerified}
-                        >
-                            {cardProcessing ? (
-                                <>
-                                    <span className="spinner-border spinner-border-sm me-2" />
-                                    Procesando pago...
-                                </>
-                            ) : paymentVerified ? (
-                                <>
-                                    <i className="bi bi-check-circle me-2" />
-                                    Pago aprobado
-                                </>
-                            ) : (
-                                <>
-                                    <i className="bi bi-credit-card me-2" />
-                                    Procesar pago
-                                </>
-                            )}
-                        </button>
-                    </div>
+                        {stripePromise ? (
+                            <Elements stripe={stripePromise}>
+                                <StripeCardForm
+                                    total={total}
+                                    customerEmail={customerEmail}
+                                    checkoutPayload={checkoutPayload}
+                                    paymentVerified={paymentVerified}
+                                    onPaymentVerified={onPaymentVerified}
+                                    onResetVerification={onResetVerification}
+                                />
+                            </Elements>
+                        ) : (
+                            !stripeLoadError && (
+                                <div className="text-center py-3">
+                                    <span
+                                        className="spinner-border spinner-border-sm text-success"
+                                        role="status"
+                                        aria-hidden="true"
+                                    />
+                                    <p className="small text-muted mt-2 mb-0">
+                                        Cargando pasarela segura...
+                                    </p>
+                                </div>
+                            )
+                        )}
+                    </>
                 )}
 
                 {paymentVerified && (

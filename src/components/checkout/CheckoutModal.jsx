@@ -11,6 +11,8 @@ import { mergeWebUserProfile } from "../../utils/authUtils";
 import { calcOrderTotals, formatSoles } from "../../utils/pricing";
 import { Toast } from "../../utils/swalConfig";
 import api from "../../config/axios";
+import { useCart } from "../../store/CartContext";
+import { useProductCatalog } from "../../store/ProductCatalogContext";
 import CheckoutPaymentSimulation from "./CheckoutPaymentSimulation";
 import CustomSelect from "../ui/CustomSelect";
 import { generateOrderReceiptPdf } from "../../utils/generateOrderReceiptPdf";
@@ -76,6 +78,8 @@ function CheckoutStepIndicator({ step }) {
 }
 
 export default function CheckoutModal({ items, onClose, onSuccess }) {
+    const { clearCart, reloadCart } = useCart();
+    const { invalidate: invalidateCatalog } = useProductCatalog();
     const [tipoEntrega, setTipoEntrega] = useState("FAST_LANE");
     const totals = useMemo(
         () => calcOrderTotals(items, tipoEntrega),
@@ -159,9 +163,19 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         setPaymentData(null);
     }, [metodoPagoUi]);
 
-    const handlePaymentVerified = (data) => {
+    const handlePaymentVerified = async (data) => {
         setPaymentData(data);
         setPaymentVerified(true);
+        if (data?.venta) {
+            setVentaCreada(data.venta);
+            try {
+                await clearCart();
+                await reloadCart();
+                invalidateCatalog();
+            } catch (err) {
+                console.error("[Checkout] Error sincronizando carrito tras Stripe:", err);
+            }
+        }
     };
 
     const handleResetPaymentVerification = () => {
@@ -271,6 +285,35 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const displayName = form.nombreRazonSocial;
     const displayDoc = form.documento;
 
+    const buildCheckoutPayload = () => {
+        const isFactura = documentoDigits.length === 11;
+        return {
+            tipoComprobante: isFactura ? "FACTURA" : "BOLETA",
+            metodoPago: "TARJETA",
+            tipoEntrega,
+            nombreComprobante: isFactura ? null : form.nombreRazonSocial,
+            dni: isFactura ? null : documentoDigits,
+            ruc: isFactura ? documentoDigits : null,
+            razonSocial: isFactura ? form.nombreRazonSocial : null,
+            emailComprobante: form.email,
+            direccionFiscal: isFactura ? form.direccion : null,
+            direccionEntrega:
+                tipoEntrega === "DELIVERY" ? form.direccionEntrega : null,
+            distrito: tipoEntrega === "DELIVERY" ? form.distrito : null,
+            referencia: tipoEntrega === "DELIVERY" ? form.referencia : null,
+            detalles: items.map((item) => ({
+                productoId: item.id,
+                cantidad: item.qty,
+            })),
+        };
+    };
+
+    const stripeOrderRef = useMemo(
+        () => `nubix_checkout_${Date.now()}`,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- referencia estable por apertura del modal
+        [],
+    );
+
     const handleConfirmar = async () => {
         setLoading(true);
         setErrorCheckout(null);
@@ -282,28 +325,45 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         const metodoPago = selectedPayment?.metodoPago ?? "YAPE";
 
         try {
-            const isFactura = documentoDigits.length === 11;
-            const venta = await saleService.checkout({
-                tipoComprobante: isFactura ? "FACTURA" : "BOLETA",
-                metodoPago,
-                tipoEntrega,
-                nombreComprobante: isFactura ? null : form.nombreRazonSocial,
-                dni: isFactura ? null : documentoDigits,
-                ruc: isFactura ? documentoDigits : null,
-                razonSocial: isFactura ? form.nombreRazonSocial : null,
-                emailComprobante: form.email,
-                direccionFiscal: isFactura ? form.direccion : null,
-                direccionEntrega:
-                    tipoEntrega === "DELIVERY" ? form.direccionEntrega : null,
-                distrito: tipoEntrega === "DELIVERY" ? form.distrito : null,
-                referencia: tipoEntrega === "DELIVERY" ? form.referencia : null,
-                detalles: items.map((item) => ({
-                    productoId: item.id,
-                    cantidad: item.qty,
-                })),
-            });
+            const venta =
+                ventaCreada ??
+                (await saleService.checkout({
+                    tipoComprobante:
+                        documentoDigits.length === 11 ? "FACTURA" : "BOLETA",
+                    metodoPago,
+                    tipoEntrega,
+                    nombreComprobante:
+                        documentoDigits.length === 11
+                            ? null
+                            : form.nombreRazonSocial,
+                    dni:
+                        documentoDigits.length === 11 ? null : documentoDigits,
+                    ruc:
+                        documentoDigits.length === 11 ? documentoDigits : null,
+                    razonSocial:
+                        documentoDigits.length === 11
+                            ? form.nombreRazonSocial
+                            : null,
+                    emailComprobante: form.email,
+                    direccionFiscal:
+                        documentoDigits.length === 11 ? form.direccion : null,
+                    direccionEntrega:
+                        tipoEntrega === "DELIVERY"
+                            ? form.direccionEntrega
+                            : null,
+                    distrito:
+                        tipoEntrega === "DELIVERY" ? form.distrito : null,
+                    referencia:
+                        tipoEntrega === "DELIVERY" ? form.referencia : null,
+                    detalles: items.map((item) => ({
+                        productoId: item.id,
+                        cantidad: item.qty,
+                    })),
+                }));
 
-            setVentaCreada(venta);
+            if (!ventaCreada) {
+                setVentaCreada(venta);
+            }
             const numero = `V-${String(venta.id).padStart(5, "0")}`;
             const orden = {
                 ventaId: venta.id,
@@ -656,7 +716,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
 
                 {/* Paso 3: Validación de pago */}
                 {step === 3 && (
-                    <div className="modal-pago-body checkout-step-panel">
+                    <div className="modal-pago-body checkout-step-panel checkout-step-panel--stripe">
                         <p className="text-muted small mb-3 text-center">
                             Valida tu pago con{" "}
                             <strong>{selectedPayment?.label}</strong> para
@@ -670,6 +730,9 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                             paymentVerified={paymentVerified}
                             onPaymentVerified={handlePaymentVerified}
                             onResetVerification={handleResetPaymentVerification}
+                            customerEmail={form.email}
+                            checkoutPayload={buildCheckoutPayload()}
+                            orderRef={stripeOrderRef}
                         />
 
                         <div className="checkout-modal-actions">
@@ -740,6 +803,14 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                         <span>Cód. operación</span>
                                         <strong>
                                             {paymentData.codigoOperacion}
+                                        </strong>
+                                    </div>
+                                )}
+                                {paymentData?.stripePaymentIntentId && (
+                                    <div className="confirm-row">
+                                        <span>Ref. Stripe</span>
+                                        <strong className="small">
+                                            {paymentData.stripePaymentIntentId}
                                         </strong>
                                     </div>
                                 )}

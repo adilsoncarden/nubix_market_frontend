@@ -11,6 +11,8 @@
     },
     "dependencies": {
         "@react-google-maps/api": "^2.20.8",
+        "@stripe/react-stripe-js": "^6.6.0",
+        "@stripe/stripe-js": "^9.8.0",
         "apexcharts": "^5.11.0",
         "axios": "^1.16.0",
         "bootstrap": "^5.3.8",
