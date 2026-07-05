@@ -65,6 +65,11 @@ export const saleService = {
         return response.data;
     },
 
+    stripeCargo: async (cargoData) => {
+        const response = await api.post("/ventas/cargo", cargoData);
+        return response.data;
+    },
+
     getMyOrders: async (params = {}) => {
         const response = await api.get("/ventas/mis-pedidos", { params });
         return Array.isArray(response.data) ? response.data : [];

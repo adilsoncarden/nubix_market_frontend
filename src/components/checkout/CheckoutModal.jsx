@@ -11,10 +11,15 @@ import { mergeWebUserProfile } from "../../utils/authUtils";
 import { calcOrderTotals, formatSoles } from "../../utils/pricing";
 import { Toast } from "../../utils/swalConfig";
 import api from "../../config/axios";
+import { useCart } from "../../store/CartContext";
+import { useProductCatalog } from "../../store/ProductCatalogContext";
 import CheckoutPaymentSimulation from "./CheckoutPaymentSimulation";
 import CustomSelect from "../ui/CustomSelect";
 import { generateOrderReceiptPdf } from "../../utils/generateOrderReceiptPdf";
+import { getCheckoutPaymentOptions } from "../../config/walletPaymentConfig";
 import "../../styles/checkout-modal.css";
+
+const PAYMENT_OPTIONS = getCheckoutPaymentOptions();
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -26,30 +31,6 @@ function isValidEmail(email) {
 function sanitizePhoneDigits(value) {
     return value.replace(/\D/g, "").slice(0, 9);
 }
-
-const PAYMENT_OPTIONS = [
-    {
-        uiKey: "YAPE",
-        metodoPago: "YAPE",
-        label: "Yape",
-        detailTitle: "Yape",
-        detailLines: ["Número: 999 999 999", "Nubix Market SAC"],
-    },
-    {
-        uiKey: "PLIN",
-        metodoPago: "YAPE",
-        label: "Plin",
-        detailTitle: "Plin",
-        detailLines: ["Número: 988 888 888", "Nubix Market SAC"],
-    },
-    {
-        uiKey: "TARJETA",
-        metodoPago: "TARJETA",
-        label: "Pago con tarjeta",
-        detailTitle: "Pago con tarjeta",
-        detailLines: ["Completa el formulario para procesar tu pago."],
-    },
-];
 
 const enviarEmailConfirmacion = async (orden) => {
     try {
@@ -97,6 +78,8 @@ function CheckoutStepIndicator({ step }) {
 }
 
 export default function CheckoutModal({ items, onClose, onSuccess }) {
+    const { clearCart, reloadCart } = useCart();
+    const { invalidate: invalidateCatalog } = useProductCatalog();
     const [tipoEntrega, setTipoEntrega] = useState("FAST_LANE");
     const totals = useMemo(
         () => calcOrderTotals(items, tipoEntrega),
@@ -110,6 +93,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const [loading, setLoading] = useState(false);
     const [emailOk, setEmailOk] = useState(null);
     const [ventaCreada, setVentaCreada] = useState(null);
+    const [orderSummary, setOrderSummary] = useState(null);
     const [errorCheckout, setErrorCheckout] = useState(null);
     const [emailTouched, setEmailTouched] = useState(false);
     const [documentoTouched, setDocumentoTouched] = useState(false);
@@ -175,14 +159,48 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const deliveryDisabled = tipoEntrega !== "DELIVERY";
     const selectedPayment = PAYMENT_OPTIONS.find((p) => p.uiKey === metodoPagoUi);
 
+    const buildOrderSummary = (ventaFromPayment = null) => {
+        const snapshotItems = items.map((item) => ({ ...item }));
+        const computed = calcOrderTotals(snapshotItems, tipoEntrega);
+        return {
+            items: snapshotItems,
+            subtotalBase:
+                ventaFromPayment?.subtotal ?? computed.subtotalBase,
+            igv: ventaFromPayment?.igv ?? computed.igv,
+            subtotalConIgv:
+                ventaFromPayment?.subtotal != null &&
+                ventaFromPayment?.igv != null
+                    ? ventaFromPayment.subtotal + ventaFromPayment.igv
+                    : computed.subtotalConIgv,
+            delivery: ventaFromPayment?.costoEnvio ?? computed.delivery,
+            total: ventaFromPayment?.total ?? computed.total,
+            tipoEntrega,
+        };
+    };
+
+    const confirmSummary =
+        orderSummary ??
+        buildOrderSummary(ventaCreada);
+
     useEffect(() => {
         setPaymentVerified(false);
         setPaymentData(null);
     }, [metodoPagoUi]);
 
-    const handlePaymentVerified = (data) => {
+    const handlePaymentVerified = async (data) => {
+        setOrderSummary(buildOrderSummary(data?.venta ?? null));
         setPaymentData(data);
         setPaymentVerified(true);
+        if (data?.venta) {
+            setVentaCreada(data.venta);
+            try {
+                await clearCart();
+                await reloadCart();
+                invalidateCatalog();
+            } catch (err) {
+                console.error("[Checkout] Error sincronizando carrito tras Stripe:", err);
+            }
+        }
     };
 
     const handleResetPaymentVerification = () => {
@@ -206,6 +224,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
             });
             return;
         }
+        setOrderSummary((prev) => prev ?? buildOrderSummary(ventaCreada));
         setStep(4);
     };
 
@@ -292,6 +311,35 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
     const displayName = form.nombreRazonSocial;
     const displayDoc = form.documento;
 
+    const buildCheckoutPayload = () => {
+        const isFactura = documentoDigits.length === 11;
+        return {
+            tipoComprobante: isFactura ? "FACTURA" : "BOLETA",
+            metodoPago: "TARJETA",
+            tipoEntrega,
+            nombreComprobante: isFactura ? null : form.nombreRazonSocial,
+            dni: isFactura ? null : documentoDigits,
+            ruc: isFactura ? documentoDigits : null,
+            razonSocial: isFactura ? form.nombreRazonSocial : null,
+            emailComprobante: form.email,
+            direccionFiscal: isFactura ? form.direccion : null,
+            direccionEntrega:
+                tipoEntrega === "DELIVERY" ? form.direccionEntrega : null,
+            distrito: tipoEntrega === "DELIVERY" ? form.distrito : null,
+            referencia: tipoEntrega === "DELIVERY" ? form.referencia : null,
+            detalles: items.map((item) => ({
+                productoId: item.id,
+                cantidad: item.qty,
+            })),
+        };
+    };
+
+    const stripeOrderRef = useMemo(
+        () => `nubix_checkout_${Date.now()}`,
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- referencia estable por apertura del modal
+        [],
+    );
+
     const handleConfirmar = async () => {
         setLoading(true);
         setErrorCheckout(null);
@@ -303,28 +351,45 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
         const metodoPago = selectedPayment?.metodoPago ?? "YAPE";
 
         try {
-            const isFactura = documentoDigits.length === 11;
-            const venta = await saleService.checkout({
-                tipoComprobante: isFactura ? "FACTURA" : "BOLETA",
-                metodoPago,
-                tipoEntrega,
-                nombreComprobante: isFactura ? null : form.nombreRazonSocial,
-                dni: isFactura ? null : documentoDigits,
-                ruc: isFactura ? documentoDigits : null,
-                razonSocial: isFactura ? form.nombreRazonSocial : null,
-                emailComprobante: form.email,
-                direccionFiscal: isFactura ? form.direccion : null,
-                direccionEntrega:
-                    tipoEntrega === "DELIVERY" ? form.direccionEntrega : null,
-                distrito: tipoEntrega === "DELIVERY" ? form.distrito : null,
-                referencia: tipoEntrega === "DELIVERY" ? form.referencia : null,
-                detalles: items.map((item) => ({
-                    productoId: item.id,
-                    cantidad: item.qty,
-                })),
-            });
+            const venta =
+                ventaCreada ??
+                (await saleService.checkout({
+                    tipoComprobante:
+                        documentoDigits.length === 11 ? "FACTURA" : "BOLETA",
+                    metodoPago,
+                    tipoEntrega,
+                    nombreComprobante:
+                        documentoDigits.length === 11
+                            ? null
+                            : form.nombreRazonSocial,
+                    dni:
+                        documentoDigits.length === 11 ? null : documentoDigits,
+                    ruc:
+                        documentoDigits.length === 11 ? documentoDigits : null,
+                    razonSocial:
+                        documentoDigits.length === 11
+                            ? form.nombreRazonSocial
+                            : null,
+                    emailComprobante: form.email,
+                    direccionFiscal:
+                        documentoDigits.length === 11 ? form.direccion : null,
+                    direccionEntrega:
+                        tipoEntrega === "DELIVERY"
+                            ? form.direccionEntrega
+                            : null,
+                    distrito:
+                        tipoEntrega === "DELIVERY" ? form.distrito : null,
+                    referencia:
+                        tipoEntrega === "DELIVERY" ? form.referencia : null,
+                    detalles: confirmSummary.items.map((item) => ({
+                        productoId: item.id,
+                        cantidad: item.qty,
+                    })),
+                }));
 
-            setVentaCreada(venta);
+            if (!ventaCreada) {
+                setVentaCreada(venta);
+            }
             const numero = `V-${String(venta.id).padStart(5, "0")}`;
             const orden = {
                 ventaId: venta.id,
@@ -345,11 +410,11 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                               direccion: form.direccion,
                               email: form.email,
                           },
-                items,
-                subtotalBase: venta.subtotal,
-                igv: venta.igv,
-                delivery: venta.costoEnvio ?? 0,
-                total: venta.total,
+                items: confirmSummary.items,
+                subtotalBase: venta.subtotal ?? confirmSummary.subtotalBase,
+                igv: venta.igv ?? confirmSummary.igv,
+                delivery: venta.costoEnvio ?? confirmSummary.delivery,
+                total: venta.total ?? confirmSummary.total,
             };
 
             const ok = await enviarEmailConfirmacion(orden);
@@ -677,7 +742,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
 
                 {/* Paso 3: Validación de pago */}
                 {step === 3 && (
-                    <div className="modal-pago-body checkout-step-panel">
+                    <div className="modal-pago-body checkout-step-panel checkout-step-panel--stripe">
                         <p className="text-muted small mb-3 text-center">
                             Valida tu pago con{" "}
                             <strong>{selectedPayment?.label}</strong> para
@@ -691,6 +756,9 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                             paymentVerified={paymentVerified}
                             onPaymentVerified={handlePaymentVerified}
                             onResetVerification={handleResetPaymentVerification}
+                            customerEmail={form.email}
+                            checkoutPayload={buildCheckoutPayload()}
+                            orderRef={stripeOrderRef}
                         />
 
                         <div className="checkout-modal-actions">
@@ -764,6 +832,14 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                                         </strong>
                                     </div>
                                 )}
+                                {paymentData?.stripePaymentIntentId && (
+                                    <div className="confirm-row">
+                                        <span>Ref. Stripe</span>
+                                        <strong className="small">
+                                            {paymentData.stripePaymentIntentId}
+                                        </strong>
+                                    </div>
+                                )}
                                 {paymentData?.cardLast4 && (
                                     <div className="confirm-row">
                                         <span>Tarjeta</span>
@@ -792,7 +868,7 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                         </div>
 
                         <div className="confirm-items">
-                            {items.map((item) => (
+                            {confirmSummary.items.map((item) => (
                                 <div key={item.id} className="confirm-item">
                                     <span>
                                         {item.name} × {item.qty}
@@ -807,25 +883,27 @@ export default function CheckoutModal({ items, onClose, onSuccess }) {
                         <div className="confirm-totales">
                             <div className="confirm-row">
                                 <span>Subtotal (sin IGV)</span>
-                                <span>{formatSoles(subtotalBase)}</span>
+                                <span>
+                                    {formatSoles(confirmSummary.subtotalBase)}
+                                </span>
                             </div>
                             <div className="confirm-row">
                                 <span>IGV (13%)</span>
-                                <span>{formatSoles(igv)}</span>
+                                <span>{formatSoles(confirmSummary.igv)}</span>
                             </div>
-                            {tipoEntrega === "DELIVERY" && (
+                            {confirmSummary.tipoEntrega === "DELIVERY" && (
                                 <div className="confirm-row">
                                     <span>Delivery</span>
                                     <span>
-                                        {delivery === 0
+                                        {confirmSummary.delivery === 0
                                             ? "Gratis"
-                                            : formatSoles(delivery)}
+                                            : formatSoles(confirmSummary.delivery)}
                                     </span>
                                 </div>
                             )}
                             <div className="confirm-row total checkout-total-highlight">
                                 <span>TOTAL</span>
-                                <span>{formatSoles(total)}</span>
+                                <span>{formatSoles(confirmSummary.total)}</span>
                             </div>
                         </div>
 
